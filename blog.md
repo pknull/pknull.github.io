@@ -1,6 +1,6 @@
 # Blog
 
-## 2026.01.27
+## 2025.11.28
 
 I have decided to write a blog (again?). Having grown through the dotcom era, I saw so many social sites pop up. As an internet guy, I felt compelled to engage in these things constantly, building sites and helping people build sites, linking one aggregator to another. What music I'm listening to. What RSS feeds I've been gobbling up. Banners of all the standards I was supporting. Then I'd rapidly fall off. I'm not interested in showing off or trying to signal common interests.
 
@@ -12,4 +12,4 @@ I just want a place to post that doesn't feel like I'm commodifying myself to an
 
 I have a stage created here. It's ready, and waiting. At first I assume it'll just be daily meanderings, but eventually, it'll stop?
 
-![An Empty Stage](./images/2026-01-27_empty_stage.webp)
+![An Empty Stage](./images/2025-11-28_empty_stage.webp)
