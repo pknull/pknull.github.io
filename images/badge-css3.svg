@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="15">
+  <rect width="40" height="15" fill="#3c3836"/>
+  <rect x="40" width="40" height="15" fill="#504945"/>
+  <text x="4" y="11" font-family="monospace" font-size="9" fill="#ebdbb2">CSS3</text>
+  <text x="76" y="11" font-family="monospace" font-size="9" fill="#fabd2f" text-anchor="end">VALID</text>
+</svg>

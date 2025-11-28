@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- 2x2 grid of N U L L -->
+  <text x="25" y="38" font-family="monospace" font-size="28" font-weight="bold" text-anchor="middle" fill="currentColor">N</text>
+  <text x="75" y="38" font-family="monospace" font-size="28" font-weight="bold" text-anchor="middle" fill="currentColor">U</text>
+  <text x="25" y="78" font-family="monospace" font-size="28" font-weight="bold" text-anchor="middle" fill="currentColor">L</text>
+  <text x="75" y="78" font-family="monospace" font-size="28" font-weight="bold" text-anchor="middle" fill="currentColor">L</text>
+</svg>

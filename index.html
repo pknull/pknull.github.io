@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PKNULL.AI</title>
+  <meta name="description" content="PK's Personal Site">
+  <meta name="author" content="PKnull">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="PKNULL.AI">
+  <meta property="og:description" content="PK's Personal Site">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://pknull.ai/">
+  <meta property="og:image" content="https://pknull.ai/images/favicon.svg">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="PKNULL.AI">
+  <meta name="twitter:description" content="PK's Personal Site">
+
+  <link rel="canonical" href="https://pknull.ai/">
+
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link id="linkstyle" rel="stylesheet" href="css/dark.css">
+  <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+  <script defer src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+  <link id="hljs-theme" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/base16/gruvbox-dark-hard.min.css">
+  <script defer src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+</head>
+<body>
+
+<a href="#main" class="skip-link">Skip to main content</a>
+
+<header class="site-header">
+        <h1>PKNULL.AI</h1>
+        <nav class="site-nav">
+          <a href="#blog" class="nav-link active">Blog</a>
+          <a href="#meta" class="nav-link">Meta</a>
+          <a href="#link" class="nav-link">Link</a>
+          <a href="#asha" class="nav-link">Asha</a>
+          <a href="#" id="theme-toggle" class="nav-link">DARK</a>
+        </nav>
+      </header>
+
+      <main id="main" aria-live="polite">
+        Loading...
+      </main>
+      <div id="status" role="status" aria-live="polite" class="sr-only"></div>
+
+      <footer class="site-footer">
+        <div class="validation-badges">
+          <a href="https://validator.w3.org/check?uri=referer"><img src="./images/badge-html5.svg" alt="Valid HTML5"></a>
+          <a href="https://jigsaw.w3.org/css-validator/check/referer"><img src="./images/badge-css3.svg" alt="Valid CSS"></a>
+          <a href="https://www.w3.org/WAI/WCAG21/quickref/"><img src="./images/badge-wcag.svg" alt="WCAG 2.1 AA"></a>
+        </div>
+        <small aria-hidden="true">{x[t] == (a t)/(2 E^(I t)) + (a E^(I t) t)/2}</small>
+        <div class="footer-icons" aria-hidden="true">
+          <img src="./images/pk-glyph.svg" alt="">
+          <img src="./images/null.svg" alt="">
+          <img src="./images/aas-sigil.svg" alt="">
+        </div>
+</footer>
+
+<script>
+  var _0x1976 = 'CuVr.j00r.7337h.1.Lu8.jøø.!!!1one';
+
+  // Theme toggle with localStorage persistence (light -> dark -> minimal)
+  var linkstyle = document.getElementById('linkstyle');
+  var hljsTheme = document.getElementById('hljs-theme');
+  var themeToggle = document.getElementById('theme-toggle');
+  var themes = ['light', 'dark', 'minimal'];
+  var themeLabels = { light: 'LITE', dark: 'DARK', minimal: 'MINI' };
+
+  // Check localStorage, else detect OS preference, else default dark
+  var currentTheme = localStorage.getItem('theme');
+  if (!currentTheme) {
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    currentTheme = prefersDark ? 'dark' : 'light';
+  }
+  if (themes.indexOf(currentTheme) === -1) currentTheme = 'dark';
+  var hljsDark = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/base16/gruvbox-dark-hard.min.css';
+  var hljsLight = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/base16/gruvbox-light-hard.min.css';
+
+  function applyTheme(theme) {
+    if (theme === 'minimal') {
+      linkstyle.disabled = true;
+      hljsTheme.disabled = true;
+    } else {
+      linkstyle.disabled = false;
+      hljsTheme.disabled = false;
+      linkstyle.href = theme === 'dark' ? 'css/dark.css' : 'css/light.css';
+      hljsTheme.href = theme === 'dark' ? hljsDark : hljsLight;
+    }
+    themeToggle.textContent = themeLabels[theme];
+  }
+  applyTheme(currentTheme);
+
+  themeToggle.onclick = function(e) {
+    e.preventDefault();
+    var idx = themes.indexOf(currentTheme);
+    currentTheme = themes[(idx + 1) % themes.length];
+    applyTheme(currentTheme);
+    localStorage.setItem('theme', currentTheme);
+  };
+
+  // Page routing
+  var pages = {
+    blog: './blog.md',
+    meta: './meta.md',
+    link: './link.md',
+    asha: './asha.md',
+    test: './test.md'
+  };
+
+  var currentPage = 'blog';
+
+  function parseHash() {
+    var hash = window.location.hash.slice(1);
+    if (hash === 'main') return { page: currentPage, entry: null, skipOnly: true };
+    var parts = hash.split(':');
+    var page = parts[0];
+    var entry = parts[1] || null;
+    return { page: pages[page] ? page : 'blog', entry: entry };
+  }
+
+  var contentLoaded = false;
+
+  function loadPage(route) {
+    if (route.skipOnly && contentLoaded) return;
+    currentPage = route.page;
+    var url = pages[route.page] || pages.blog;
+    fetch(url)
+      .then(function(response) {
+        if (!response.ok) throw new Error('Failed to load');
+        return response.text();
+      })
+      .then(function(md) {
+        document.getElementById('main').innerHTML = DOMPurify.sanitize(marked.parse(md));
+        contentLoaded = true;
+        updateActiveNav(route.page);
+        if (route.page === 'blog') addEntryLinks();
+        if (route.entry) scrollToEntry(route.entry);
+        if (window.hljs) hljs.highlightAll();
+        addCodeCopyButtons();
+      })
+      .catch(function() {
+        document.getElementById('main').innerHTML = '<p>Failed to load content. <a href="javascript:location.reload()">Reload</a></p>';
+      });
+  }
+
+  function addEntryLinks() {
+    var headings = document.querySelectorAll('#main h3');
+    headings.forEach(function(h) {
+      var dateText = h.textContent.trim();
+      var parts = dateText.split('.');
+      if (parts.length === 3) {
+        var isoDate = parts[0] + '-' + parts[1] + '-' + parts[2];
+        var link = document.createElement('a');
+        link.href = '#blog:' + isoDate;
+        link.className = 'entry-link';
+        link.setAttribute('aria-label', 'Copy link to entry');
+        link.textContent = '#';
+        link.setAttribute('aria-hidden', 'true');
+        link.onclick = function(e) {
+          e.preventDefault();
+          var fullUrl = window.location.origin + window.location.pathname + '#blog:' + isoDate;
+          var status = document.getElementById('status');
+          function onSuccess() {
+            link.classList.add('copied');
+            status.textContent = 'Link copied';
+            setTimeout(function() {
+              link.classList.remove('copied');
+              status.textContent = '';
+            }, 1500);
+          }
+          function onError() {
+            status.textContent = 'Copy failed';
+            setTimeout(function() { status.textContent = ''; }, 1500);
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(fullUrl).then(onSuccess).catch(onError);
+          } else {
+            var textarea = document.createElement('textarea');
+            textarea.value = fullUrl;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+              document.execCommand('copy');
+              onSuccess();
+            } catch (err) {
+              onError();
+            }
+            document.body.removeChild(textarea);
+          }
+        };
+        h.appendChild(link);
+      }
+    });
+  }
+
+  function scrollToEntry(isoDate) {
+    // Convert 2026-01-27 to 2026.01.27
+    var parts = isoDate.split('-');
+    var displayDate = parts[0] + '.' + parts[1] + '.' + parts[2];
+    var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var headings = document.querySelectorAll('#main h3');
+    headings.forEach(function(h) {
+      if (h.textContent.trim().startsWith(displayDate)) {
+        h.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+      }
+    });
+  }
+
+  function addCodeCopyButtons() {
+    var codeBlocks = document.querySelectorAll('pre > code');
+    codeBlocks.forEach(function(code) {
+      var pre = code.parentElement;
+      if (pre.querySelector('.code-copy')) return;
+      var btn = document.createElement('button');
+      btn.className = 'code-copy';
+      btn.textContent = 'copy';
+      btn.setAttribute('aria-label', 'Copy code to clipboard');
+      btn.onclick = function() {
+        var text = code.textContent;
+        navigator.clipboard.writeText(text).then(function() {
+          btn.textContent = 'copied';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.textContent = 'copy';
+            btn.classList.remove('copied');
+          }, 1500);
+        });
+      };
+      pre.appendChild(btn);
+    });
+  }
+
+  function updateActiveNav(page) {
+    document.querySelectorAll('.nav-link').forEach(function(link) {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === '#' + page) {
+        link.classList.add('active');
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Configure marked to increment heading levels by 1
+    marked.use({
+      walkTokens: function(token) {
+        if (token.type === 'heading') {
+          token.depth = Math.min(token.depth + 1, 6);
+        }
+      }
+    });
+
+    loadPage(parseHash());
+
+    window.addEventListener('hashchange', function() {
+      loadPage(parseHash());
+    });
+  });
+
+</script>
+
+</body>
+</html>

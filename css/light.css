@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code&family=Montserrat&family=Share+Tech+Mono&display=swap');
+
+/* Light Theme - NieR: Automata (faithful palette) */
+:root {
+  /* Colors - from automata-theme & VS Code NieR theme */
+  --bg-primary: #dad3ba;
+  --bg-secondary: #a39e8b;
+  --text-primary: #3a3832;
+  --text-muted: #52504a;
+  --text-body: #4e4b42;
+  --accent-primary: #9d4a2e;
+  --accent-highlight: #877861;
+  --border-color: #6d6959;
+  --code-bg: #a39e8b;
+  --heading-color: #2d2b28;
+  --heading-bg: #a39e8b;
+  --blockquote-bg: rgba(163, 158, 139, 0.5);
+  --header-table-bg: #495245;
+  --icon-filter: brightness(0) invert(20%) sepia(8%) saturate(500%) hue-rotate(20deg) brightness(95%) contrast(95%);
+  --focus-color: #4e4b42;
+  --link-hover: #5a5243;
+
+  /* Fonts - same as dark theme */
+  --font-body: "Fira Code", monospace;
+  --font-h1: "Montserrat", sans-serif;
+  --font-heading: "Share Tech Mono", monospace;
+  --font-code: "Fira Code", monospace;
+}
+
+/* Vignette effect */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgba(0,0,0,0.3) 100%);
+  z-index: 9998;
+}
