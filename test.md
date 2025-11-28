@@ -268,3 +268,69 @@ Content below.
 ## Long Paragraph
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+
+## HTML Elements (Extended Testing)
+
+### Subscript and Superscript
+
+H<sub>2</sub>O is water. E = mc<sup>2</sup> is famous.
+
+The formula: <var>f</var>(<var>x</var>) = <var>a</var><sub>0</sub> + <var>a</var><sub>1</sub><var>x</var> + <var>a</var><sub>2</sub><var>x</var><sup>2</sup>
+
+### Small Text and Strikethrough
+
+<small>This is small text for fine print or copyright.</small>
+
+<s>This content is no longer accurate.</s>
+
+### Abbreviations
+
+<abbr title="HyperText Markup Language">HTML</abbr> is the standard markup language.
+
+### Keyboard Input
+
+To save, press <kbd>Ctrl</kbd> + <kbd>S</kbd> (or <kbd>Cmd</kbd> + <kbd>S</kbd> on Mac).
+
+### Sample Output
+
+<samp>
+$ ls -la
+total 64
+drwxr-xr-x  12 user  staff   384 Nov 28 05:00 .
+drwxr-xr-x   5 user  staff   160 Nov 28 04:00 ..
+-rw-r--r--   1 user  staff  2048 Nov 28 05:00 index.html
+</samp>
+
+### Figure with Caption
+
+<figure>
+  <img src="./images/favicon.svg" alt="Site favicon" width="64">
+  <figcaption>The site favicon - a minimal glyph.</figcaption>
+</figure>
+
+### Definition List
+
+<dl>
+  <dt>Coherence</dt>
+  <dd>The quality of forming a unified whole; internal consistency.</dd>
+  <dt>Resonance</dt>
+  <dd>The reinforcement of vibrations by synchronous influence.</dd>
+  <dt>Process</dt>
+  <dd>A series of actions or steps toward a particular end.</dd>
+</dl>
+
+### Details/Summary (Collapsible)
+
+<details>
+  <summary>Click to expand</summary>
+
+  This content is hidden by default and revealed on click. Useful for FAQs or optional information.
+</details>
+
+### Mark (Highlight)
+
+This sentence has <mark>highlighted text</mark> within it.
+
+### Time
+
+Published on <time datetime="2025-11-28">November 28, 2025</time>.
