@@ -7,14 +7,28 @@
   <meta name="author" content="PKnull">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-YBVLPYGBNY"></script>
+  <!-- Google Analytics with Consent Mode -->
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
+
+    // Default: denied until user consents
+    gtag('consent', 'default', {
+      'analytics_storage': 'denied',
+      'ad_storage': 'denied',
+      'wait_for_update': 500
+    });
+
+    // Check for existing consent
+    var consentGiven = localStorage.getItem('analytics_consent');
+    if (consentGiven === 'granted') {
+      gtag('consent', 'update', { 'analytics_storage': 'granted' });
+    }
+
     gtag('js', new Date());
     gtag('config', 'G-YBVLPYGBNY');
   </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-YBVLPYGBNY"></script>
 
   <!-- Open Graph -->
   <meta property="og:title" content="PKNULL.AI">
@@ -77,6 +91,16 @@
         </div>
 </footer>
 
+<!-- Cookie Consent Banner -->
+<div id="consent-banner" class="consent-banner" role="dialog" aria-labelledby="consent-title" aria-describedby="consent-desc" hidden>
+  <p id="consent-title"><strong>Analytics</strong></p>
+  <p id="consent-desc">This site uses cookies for anonymous analytics.</p>
+  <div class="consent-buttons">
+    <button id="consent-accept" class="button-primary">Accept</button>
+    <button id="consent-decline">Decline</button>
+  </div>
+</div>
+
 <script>
   var _0x1976 = 'CuVr.j00r.7337h.1.Lu8.jøø.!!!1one';
 
@@ -117,6 +141,37 @@
     currentTheme = themes[(idx + 1) % themes.length];
     applyTheme(currentTheme);
     localStorage.setItem('theme', currentTheme);
+  };
+
+  // Consent banner
+  var consentBanner = document.getElementById('consent-banner');
+  var consentAccept = document.getElementById('consent-accept');
+  var consentDecline = document.getElementById('consent-decline');
+  var storedConsent = localStorage.getItem('analytics_consent');
+
+  function showConsentBanner() {
+    consentBanner.hidden = false;
+    consentBanner.setAttribute('aria-hidden', 'false');
+  }
+
+  function hideConsentBanner() {
+    consentBanner.hidden = true;
+    consentBanner.setAttribute('aria-hidden', 'true');
+  }
+
+  if (!storedConsent) {
+    showConsentBanner();
+  }
+
+  consentAccept.onclick = function() {
+    localStorage.setItem('analytics_consent', 'granted');
+    gtag('consent', 'update', { 'analytics_storage': 'granted' });
+    hideConsentBanner();
+  };
+
+  consentDecline.onclick = function() {
+    localStorage.setItem('analytics_consent', 'denied');
+    hideConsentBanner();
   };
 
   // Page routing

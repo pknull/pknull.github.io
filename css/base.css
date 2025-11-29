@@ -725,6 +725,48 @@ img, canvas, iframe, video, svg, select, textarea {
 }
 
 
+/* Consent Banner */
+.consent-banner {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 400px;
+  width: calc(100% - 3rem);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  padding: 1.5rem;
+  z-index: 1000;
+  text-align: center;
+}
+
+.consent-banner p {
+  margin: 0 0 1rem;
+  text-align: center;
+  font-size: 1.4rem;
+}
+
+.consent-banner #consent-title {
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.consent-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.consent-buttons button {
+  margin: 0;
+  padding: 0 2rem;
+  height: 36px;
+  line-height: 34px;
+  font-size: 1rem;
+}
+
+
 /* ==========================================================================
    Media Queries
    ========================================================================== */
