@@ -7,21 +7,24 @@
   <meta name="author" content="PKnull">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Google Analytics with Consent Mode -->
+  <!-- Google Analytics with Consent Mode v2 -->
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
 
-    // Default: denied until user consents
+    // Consent Mode v2: all four required parameters
+    // Ad-related always denied (no ads on this site)
+    // Analytics denied until user consents
     gtag('consent', 'default', {
-      'analytics_storage': 'denied',
       'ad_storage': 'denied',
+      'ad_user_data': 'denied',
+      'ad_personalization': 'denied',
+      'analytics_storage': 'denied',
       'wait_for_update': 500
     });
 
-    // Check for existing consent
-    var consentGiven = localStorage.getItem('analytics_consent');
-    if (consentGiven === 'granted') {
+    // Restore previous consent choice
+    if (localStorage.getItem('analytics_consent') === 'granted') {
       gtag('consent', 'update', { 'analytics_storage': 'granted' });
     }
 
