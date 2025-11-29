@@ -733,17 +733,19 @@ img, canvas, iframe, video, svg, select, textarea {
   transform: translateX(-50%);
   max-width: 400px;
   width: calc(100% - 3rem);
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  background: var(--bg-secondary, #f5f5f5);
+  border: 1px solid var(--border-color, #333);
   padding: 1.5rem;
   z-index: 1000;
   text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .consent-banner p {
   margin: 0 0 1rem;
   text-align: center;
   font-size: 1.4rem;
+  color: var(--text-primary, #222);
 }
 
 .consent-banner #consent-title {
@@ -764,6 +766,15 @@ img, canvas, iframe, video, svg, select, textarea {
   height: 36px;
   line-height: 34px;
   font-size: 1rem;
+  background: var(--bg-primary, #fff);
+  color: var(--text-primary, #222);
+  border: 1px solid var(--border-color, #333);
+}
+
+.consent-buttons button.button-primary {
+  background: var(--accent-primary, #0000EE);
+  color: var(--bg-primary, #fff);
+  border-color: var(--accent-primary, #0000EE);
 }
 
 
