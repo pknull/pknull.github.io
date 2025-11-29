@@ -746,6 +746,7 @@ img, canvas, iframe, video, svg, select, textarea {
   text-align: center;
   font-size: 1.4rem;
   color: var(--text-primary, #222);
+  hyphens: none;
 }
 
 .consent-banner #consent-title {
