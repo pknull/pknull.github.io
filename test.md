@@ -335,30 +335,3 @@ This sentence has <mark>highlighted text</mark> within it.
 
 Published on <time datetime="2025-11-28">November 28, 2025</time>.
 
-## Comments
-
-<script>
-  // Detect current theme for Giscus
-  function getGiscusTheme() {
-    var theme = localStorage.getItem('theme') || 'light';
-    return window.location.origin + '/css/giscus-' + theme + '.css';
-  }
-</script>
-
-<script src="https://giscus.app/client.js"
-        data-repo="pknull/pknull.github.io"
-        data-repo-id="R_kgDOQewMNA"
-        data-category="Blog Comments"
-        data-category-id="DIC_kwDOQewMNM4CzNFI"
-        data-mapping="specific"
-        data-term="test"
-        data-strict="0"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-input-position="top"
-        data-theme="https://pknull.ai/css/giscus-light.css"
-        data-lang="en"
-        data-loading="lazy"
-        crossorigin="anonymous"
-        async>
-</script>

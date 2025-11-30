@@ -279,6 +279,10 @@
           mainEl.innerHTML = DOMPurify.sanitize(marked.parse(md));
           addEntryLinks();
           hideGiscus();
+        } else if (route.page === 'test') {
+          // Test page - show comments for testing
+          mainEl.innerHTML = DOMPurify.sanitize(marked.parse(md));
+          loadGiscus('test');
         } else {
           // Other pages
           mainEl.innerHTML = DOMPurify.sanitize(marked.parse(md));
