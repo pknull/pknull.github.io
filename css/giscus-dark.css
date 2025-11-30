@@ -75,3 +75,16 @@ main .gsc-comment-box {
 main .gsc-timeline {
   border-color: #504945;
 }
+
+/* Sign in button - explicit styling to prevent link hover from overriding */
+main .gsc-comment-box-buttons > a,
+main .gsc-comment-box-buttons > a:hover {
+  background-color: #fabd2f !important;
+  border-color: #fabd2f !important;
+  color: #282828 !important;
+}
+
+main .gsc-comment-box-buttons > a:hover {
+  background-color: #d79921 !important;
+  border-color: #d79921 !important;
+}
