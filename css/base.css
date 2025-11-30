@@ -672,7 +672,7 @@ hr::after {
   margin-top: 1.5rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border-color);
-  font-size: 1rem;
+  font-size: inherit;
 }
 
 .entry-footer a {
