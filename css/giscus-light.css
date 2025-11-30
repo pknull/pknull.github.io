@@ -75,3 +75,16 @@ main .gsc-comment-box {
 main .gsc-timeline {
   border-color: #a39e8b;
 }
+
+/* Sign in button - explicit styling */
+main .gsc-comment-box-buttons > a,
+main .gsc-comment-box-buttons > a:hover {
+  background-color: #495245 !important;
+  border-color: #495245 !important;
+  color: #dad3ba !important;
+}
+
+main .gsc-comment-box-buttons > a:hover {
+  background-color: #5a5243 !important;
+  border-color: #5a5243 !important;
+}
