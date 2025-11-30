@@ -1,0 +1,45 @@
+/*
+ * Giscus Theme - Minimal
+ * Transparent/browser defaults
+ */
+
+main {
+  --color-canvas-default: transparent;
+  --color-canvas-subtle: rgba(128, 128, 128, 0.1);
+  --color-canvas-inset: rgba(128, 128, 128, 0.05);
+  --color-border-default: rgba(128, 128, 128, 0.3);
+  --color-border-muted: rgba(128, 128, 128, 0.2);
+
+  --color-fg-default: inherit;
+  --color-fg-muted: rgba(128, 128, 128, 0.8);
+  --color-fg-subtle: rgba(128, 128, 128, 0.6);
+
+  --color-accent-fg: #0066cc;
+  --color-accent-emphasis: #0066cc;
+
+  --color-btn-text: #fff;
+  --color-btn-bg: #333;
+  --color-btn-border: #333;
+  --color-btn-hover-bg: #555;
+  --color-btn-hover-border: #555;
+
+  --color-btn-primary-text: #fff;
+  --color-btn-primary-bg: #333;
+  --color-btn-primary-border: #333;
+  --color-btn-primary-hover-bg: #555;
+  --color-btn-primary-hover-border: #555;
+
+  --color-neutral-muted: rgba(128, 128, 128, 0.2);
+}
+
+/* Links inherit page color */
+main a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+/* Transparent backgrounds */
+main .gsc-reactions-button,
+main .gsc-comment-box {
+  background-color: transparent;
+}

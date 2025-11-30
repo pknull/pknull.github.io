@@ -78,6 +78,10 @@
       <main id="main" aria-live="polite">
         Loading...
       </main>
+      <section id="giscus-container" class="giscus-section" hidden>
+        <h2>Comments</h2>
+        <div class="giscus"></div>
+      </section>
       <div id="status" role="status" aria-live="polite" class="sr-only"></div>
 
       <footer class="site-footer">
@@ -144,6 +148,7 @@
     currentTheme = themes[(idx + 1) % themes.length];
     applyTheme(currentTheme);
     localStorage.setItem('theme', currentTheme);
+    updateGiscusTheme();
   };
 
   // Consent banner
@@ -198,24 +203,97 @@
   }
 
   var contentLoaded = false;
+  var lastRoute = null;
+
+  // Extract a single entry from blog markdown by date
+  function extractEntry(md, isoDate) {
+    // Convert 2025-11-29 to 2025.11.29 for matching
+    var parts = isoDate.split('-');
+    var displayDate = parts[0] + '.' + parts[1] + '.' + parts[2];
+
+    // Split by H2 headings (## becomes ### after marked walkTokens)
+    // In source markdown, entries start with ## DATE
+    var lines = md.split('\n');
+    var inEntry = false;
+    var entryLines = [];
+    var foundEntry = false;
+
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      // Check if this is an entry heading (## followed by date pattern)
+      var headingMatch = line.match(/^##\s+(\d{4}\.\d{2}\.\d{2})/);
+
+      if (headingMatch) {
+        if (inEntry) {
+          // We hit the next entry, stop collecting
+          break;
+        }
+        if (headingMatch[1] === displayDate) {
+          inEntry = true;
+          foundEntry = true;
+          entryLines.push(line);
+        }
+      } else if (inEntry) {
+        entryLines.push(line);
+      }
+    }
+
+    if (!foundEntry) return null;
+    return entryLines.join('\n').trim();
+  }
 
   function loadPage(route) {
     if (route.skipOnly && contentLoaded) return;
+
+    // Check if we're just switching entries on same page
+    var sameBasePage = lastRoute && lastRoute.page === route.page;
+
     currentPage = route.page;
+    lastRoute = route;
     var url = pages[route.page] || pages.blog;
+
     fetch(url)
       .then(function(response) {
         if (!response.ok) throw new Error('Failed to load');
         return response.text();
       })
       .then(function(md) {
-        document.getElementById('main').innerHTML = DOMPurify.sanitize(marked.parse(md));
+        var mainEl = document.getElementById('main');
+
+        if (route.page === 'blog' && route.entry) {
+          // Single entry view
+          var entryMd = extractEntry(md, route.entry);
+          if (entryMd) {
+            // Add back link before content
+            var backLink = '<p class="back-link"><a href="#blog">← All entries</a></p>\n\n';
+            mainEl.innerHTML = DOMPurify.sanitize(marked.parse(backLink + entryMd));
+            loadGiscus(route.entry);
+          } else {
+            // Entry not found, show all
+            mainEl.innerHTML = DOMPurify.sanitize(marked.parse(md));
+            addEntryLinks();
+            hideGiscus();
+          }
+        } else if (route.page === 'blog') {
+          // Full blog view - no comments
+          mainEl.innerHTML = DOMPurify.sanitize(marked.parse(md));
+          addEntryLinks();
+          hideGiscus();
+        } else {
+          // Other pages
+          mainEl.innerHTML = DOMPurify.sanitize(marked.parse(md));
+          hideGiscus();
+        }
+
         contentLoaded = true;
         updateActiveNav(route.page);
-        if (route.page === 'blog') addEntryLinks();
-        if (route.entry) scrollToEntry(route.entry);
         if (window.hljs) hljs.highlightAll();
         addCodeCopyButtons();
+
+        // Scroll to top for entry views
+        if (route.entry) {
+          window.scrollTo(0, 0);
+        }
       })
       .catch(function() {
         document.getElementById('main').innerHTML = '<p>Failed to load content. <a href="javascript:location.reload()">Reload</a></p>';
@@ -232,43 +310,9 @@
         var link = document.createElement('a');
         link.href = '#blog:' + isoDate;
         link.className = 'entry-link';
-        link.setAttribute('aria-label', 'Copy link to entry');
+        link.setAttribute('aria-label', 'View entry');
         link.textContent = '#';
-        link.setAttribute('aria-hidden', 'true');
-        link.onclick = function(e) {
-          e.preventDefault();
-          var fullUrl = window.location.origin + window.location.pathname + '#blog:' + isoDate;
-          var status = document.getElementById('status');
-          function onSuccess() {
-            link.classList.add('copied');
-            status.textContent = 'Link copied';
-            setTimeout(function() {
-              link.classList.remove('copied');
-              status.textContent = '';
-            }, 1500);
-          }
-          function onError() {
-            status.textContent = 'Copy failed';
-            setTimeout(function() { status.textContent = ''; }, 1500);
-          }
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(fullUrl).then(onSuccess).catch(onError);
-          } else {
-            var textarea = document.createElement('textarea');
-            textarea.value = fullUrl;
-            textarea.style.position = 'fixed';
-            textarea.style.opacity = '0';
-            document.body.appendChild(textarea);
-            textarea.select();
-            try {
-              document.execCommand('copy');
-              onSuccess();
-            } catch (err) {
-              onError();
-            }
-            document.body.removeChild(textarea);
-          }
-        };
+        // Let normal navigation happen - no onclick override
         h.appendChild(link);
       }
     });
@@ -318,6 +362,75 @@
         link.classList.add('active');
       }
     });
+  }
+
+  // Giscus comments
+  var giscusContainer = document.getElementById('giscus-container');
+  var giscusLoaded = false;
+  var lastGiscusTerm = null;
+
+  function getGiscusTheme() {
+    // Use built-in themes on localhost (CORS blocks custom CSS)
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      if (currentTheme === 'dark') return 'dark';
+      if (currentTheme === 'minimal') return 'transparent_dark';
+      return 'light';
+    }
+    // Use custom themes on production
+    var baseUrl = window.location.origin + '/css/giscus-';
+    if (currentTheme === 'dark') {
+      return baseUrl + 'dark.css';
+    } else if (currentTheme === 'minimal') {
+      return baseUrl + 'minimal.css';
+    }
+    return baseUrl + 'light.css';
+  }
+
+  function loadGiscus(term, forceReload) {
+    if (!term) term = 'blog';
+
+    // Don't reload if same term unless forced
+    if (giscusLoaded && lastGiscusTerm === term && !forceReload) {
+      giscusContainer.hidden = false;
+      return;
+    }
+
+    lastGiscusTerm = term;
+    var giscusDiv = giscusContainer.querySelector('.giscus');
+    giscusDiv.innerHTML = '';
+
+    var script = document.createElement('script');
+    script.src = 'https://giscus.app/client.js';
+    script.setAttribute('data-repo', 'pknull/pknull.github.io');
+    script.setAttribute('data-repo-id', 'R_kgDOQewMNA');
+    script.setAttribute('data-category', 'Blog Comments');
+    script.setAttribute('data-category-id', 'DIC_kwDOQewMNM4CzNFI');
+    script.setAttribute('data-mapping', 'specific');
+    script.setAttribute('data-term', term);
+    script.setAttribute('data-strict', '0');
+    script.setAttribute('data-reactions-enabled', '1');
+    script.setAttribute('data-emit-metadata', '0');
+    script.setAttribute('data-input-position', 'top');
+    script.setAttribute('data-theme', getGiscusTheme());
+    script.setAttribute('data-lang', 'en');
+    script.setAttribute('data-loading', 'lazy');
+    script.crossOrigin = 'anonymous';
+    script.async = true;
+
+    giscusDiv.appendChild(script);
+    giscusContainer.hidden = false;
+    giscusLoaded = true;
+  }
+
+  function hideGiscus() {
+    giscusContainer.hidden = true;
+  }
+
+  function updateGiscusTheme() {
+    // Force reload with new theme if Giscus is visible
+    if (giscusLoaded && !giscusContainer.hidden && lastGiscusTerm) {
+      loadGiscus(lastGiscusTerm, true);
+    }
   }
 
   document.addEventListener('DOMContentLoaded', function() {

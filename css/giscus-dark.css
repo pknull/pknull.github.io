@@ -1,0 +1,77 @@
+/*
+ * Giscus Theme - Dark (Gruvbox)
+ * Matches dark.css palette
+ */
+
+main {
+  --color-canvas-default: #282828;
+  --color-canvas-subtle: #3c3836;
+  --color-canvas-inset: #1d2021;
+  --color-border-default: #504945;
+  --color-border-muted: #3c3836;
+
+  --color-fg-default: #ebdbb2;
+  --color-fg-muted: #a89984;
+  --color-fg-subtle: #928374;
+
+  --color-accent-fg: #fabd2f;
+  --color-accent-emphasis: #fabd2f;
+
+  --color-btn-text: #282828;
+  --color-btn-bg: #fabd2f;
+  --color-btn-border: #fabd2f;
+  --color-btn-hover-bg: #d79921;
+  --color-btn-hover-border: #d79921;
+
+  --color-btn-primary-text: #282828;
+  --color-btn-primary-bg: #b8bb26;
+  --color-btn-primary-border: #b8bb26;
+  --color-btn-primary-hover-bg: #98971a;
+  --color-btn-primary-hover-border: #98971a;
+
+  --color-neutral-muted: rgba(110, 118, 129, 0.4);
+
+  color-scheme: dark;
+}
+
+/* Links */
+main a {
+  color: #fabd2f;
+}
+
+main a:hover {
+  color: #fe8019;
+}
+
+/* Textarea styling */
+main textarea,
+main input {
+  background-color: #3c3836 !important;
+  border-color: #504945 !important;
+  color: #ebdbb2 !important;
+}
+
+main textarea::placeholder {
+  color: #928374 !important;
+}
+
+/* Reactions */
+main .gsc-reactions-button {
+  background-color: #3c3836;
+  border-color: #504945;
+}
+
+main .gsc-reactions-button:hover {
+  background-color: #504945;
+}
+
+/* Comment box */
+main .gsc-comment-box {
+  background-color: #3c3836;
+  border-color: #504945;
+}
+
+/* Timeline */
+main .gsc-timeline {
+  border-color: #504945;
+}
