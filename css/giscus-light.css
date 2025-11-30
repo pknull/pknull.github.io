@@ -20,14 +20,14 @@ main {
   --color-btn-text: #dad3ba;
   --color-btn-bg: #495245;
   --color-btn-border: #495245;
-  --color-btn-hover-bg: #3a3832;
-  --color-btn-hover-border: #3a3832;
+  --color-btn-hover-bg: #5a5243;
+  --color-btn-hover-border: #5a5243;
 
   --color-btn-primary-text: #dad3ba;
   --color-btn-primary-bg: #495245;
   --color-btn-primary-border: #495245;
-  --color-btn-primary-hover-bg: #3a3832;
-  --color-btn-primary-hover-border: #3a3832;
+  --color-btn-primary-hover-bg: #5a5243;
+  --color-btn-primary-hover-border: #5a5243;
 
   --color-neutral-muted: rgba(109, 105, 89, 0.2);
 
