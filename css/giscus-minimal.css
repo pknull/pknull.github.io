@@ -63,11 +63,11 @@ main .gsc-comment-box-buttons > a:hover {
 main .gsc-social-reaction-summary-item-popover,
 main .gsc-reactions-popover,
 main [role="group"] > div:last-child {
-  background-color: rgba(40, 40, 40, 0.95) !important;
-  border: 1px solid rgba(128, 128, 128, 0.4) !important;
+  background-color: rgba(245, 245, 245, 0.98) !important;
+  border: 1px solid rgba(128, 128, 128, 0.3) !important;
   border-radius: 6px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  color: #ebdbb2;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  color: #333;
 }
 
 /* Reaction picker emoji buttons */
@@ -78,7 +78,7 @@ main .gsc-reactions-popover button {
 
 main .gsc-social-reaction-summary-item-popover button:hover,
 main .gsc-reactions-popover button:hover {
-  background-color: rgba(128, 128, 128, 0.3);
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 /* Popup link color */
