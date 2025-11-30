@@ -18,16 +18,16 @@ main {
   --color-accent-emphasis: #0066cc;
 
   --color-btn-text: #fff;
-  --color-btn-bg: #333;
-  --color-btn-border: #333;
-  --color-btn-hover-bg: #555;
-  --color-btn-hover-border: #555;
+  --color-btn-bg: #2ea44f;
+  --color-btn-border: #2ea44f;
+  --color-btn-hover-bg: #22863a;
+  --color-btn-hover-border: #22863a;
 
   --color-btn-primary-text: #fff;
-  --color-btn-primary-bg: #333;
-  --color-btn-primary-border: #333;
-  --color-btn-primary-hover-bg: #555;
-  --color-btn-primary-hover-border: #555;
+  --color-btn-primary-bg: #2ea44f;
+  --color-btn-primary-border: #2ea44f;
+  --color-btn-primary-hover-bg: #22863a;
+  --color-btn-primary-hover-border: #22863a;
 
   --color-neutral-muted: rgba(128, 128, 128, 0.2);
 }
@@ -42,4 +42,19 @@ main a {
 main .gsc-reactions-button,
 main .gsc-comment-box {
   background-color: transparent;
+}
+
+/* Sign in button - explicit styling for hover */
+main .gsc-comment-box-buttons > a,
+main .gsc-comment-box-buttons > a:link,
+main .gsc-comment-box-buttons > a:visited {
+  background-color: #2ea44f !important;
+  border-color: #2ea44f !important;
+  color: #fff !important;
+}
+
+main .gsc-comment-box-buttons > a:hover {
+  background-color: #22863a !important;
+  border-color: #22863a !important;
+  color: #fff !important;
 }

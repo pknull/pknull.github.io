@@ -865,3 +865,51 @@ img, canvas, iframe, video, svg, select, textarea {
 .giscus-section .giscus {
   min-height: 150px;
 }
+
+
+/* Giscus Element Base Styles (for test page)
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.gsc-comment-box-buttons > a {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  border: 1px solid;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.gsc-comment-box-buttons > a svg {
+  margin-right: 4px;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.gsc-reactions-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  transition: background-color 0.2s;
+}
+
+.gsc-reactions-button:hover {
+  background-color: var(--bg-primary);
+}
+
+.gsc-comment-box {
+  padding: 16px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  margin: 16px 0;
+}
