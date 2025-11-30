@@ -58,3 +58,32 @@ main .gsc-comment-box-buttons > a:hover {
   border-color: #22863a !important;
   color: #fff !important;
 }
+
+/* Reaction picker popup - needs solid background even in minimal theme */
+main .gsc-social-reaction-summary-item-popover,
+main .gsc-reactions-popover,
+main [role="group"] > div:last-child {
+  background-color: rgba(40, 40, 40, 0.95) !important;
+  border: 1px solid rgba(128, 128, 128, 0.4) !important;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  color: #ebdbb2;
+}
+
+/* Reaction picker emoji buttons */
+main .gsc-social-reaction-summary-item-popover button,
+main .gsc-reactions-popover button {
+  background-color: transparent;
+}
+
+main .gsc-social-reaction-summary-item-popover button:hover,
+main .gsc-reactions-popover button:hover {
+  background-color: rgba(128, 128, 128, 0.3);
+}
+
+/* Popup link color */
+main .gsc-social-reaction-summary-item-popover a,
+main .gsc-reactions-popover a,
+main [role="group"] > div:last-child a {
+  color: #0066cc !important;
+}
