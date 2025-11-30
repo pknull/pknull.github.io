@@ -76,6 +76,27 @@ main .gsc-timeline {
   border-color: #504945;
 }
 
+/* Reaction picker popup */
+main .gsc-social-reaction-summary-item-popover,
+main .gsc-reactions-popover,
+main [role="group"] > div:last-child {
+  background-color: #3c3836 !important;
+  border: 1px solid #504945 !important;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Reaction picker emoji buttons */
+main .gsc-social-reaction-summary-item-popover button,
+main .gsc-reactions-popover button {
+  background-color: transparent;
+}
+
+main .gsc-social-reaction-summary-item-popover button:hover,
+main .gsc-reactions-popover button:hover {
+  background-color: #504945;
+}
+
 /* Sign in button - dark hover with orange text for WCAG contrast */
 main .gsc-comment-box-buttons > a,
 main .gsc-comment-box-buttons > a:hover,
