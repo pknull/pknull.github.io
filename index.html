@@ -305,19 +305,43 @@
   }
 
   function addEntryLinks() {
-    var headings = document.querySelectorAll('#main h3');
-    headings.forEach(function(h) {
+    var mainEl = document.getElementById('main');
+    var headings = Array.from(document.querySelectorAll('#main h3'));
+
+    headings.forEach(function(h, index) {
       var dateText = h.textContent.trim();
       var parts = dateText.split('.');
       if (parts.length === 3) {
         var isoDate = parts[0] + '-' + parts[1] + '-' + parts[2];
-        var link = document.createElement('a');
-        link.href = '#blog:' + isoDate;
-        link.className = 'entry-link';
-        link.setAttribute('aria-label', 'View entry');
-        link.textContent = '#';
-        // Let normal navigation happen - no onclick override
-        h.appendChild(link);
+
+        // Find where this entry ends (next h3 or end of main)
+        var nextHeading = headings[index + 1];
+        var insertBefore = nextHeading || null;
+
+        // Create footer element
+        var footer = document.createElement('p');
+        footer.className = 'entry-footer';
+
+        var linkToThis = document.createElement('a');
+        linkToThis.href = '#blog:' + isoDate;
+        linkToThis.textContent = 'Link to this';
+
+        var separator = document.createTextNode(' · ');
+
+        var commentsLink = document.createElement('a');
+        commentsLink.href = '#blog:' + isoDate;
+        commentsLink.textContent = 'Comments';
+
+        footer.appendChild(linkToThis);
+        footer.appendChild(separator);
+        footer.appendChild(commentsLink);
+
+        // Insert before next heading or at end of main
+        if (insertBefore) {
+          mainEl.insertBefore(footer, insertBefore);
+        } else {
+          mainEl.appendChild(footer);
+        }
       }
     });
   }

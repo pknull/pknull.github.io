@@ -667,23 +667,21 @@ hr::after {
 }
 
 
-/* Entry Links */
-.entry-link {
-  margin-left: 0.5rem;
-  opacity: 0.4;
-  border-bottom: none;
-  transition: opacity 0.2s ease;
+/* Entry Footer */
+.entry-footer {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.9rem;
+  opacity: 0.7;
 }
 
-.entry-link:hover,
-.entry-link:focus {
-  opacity: 1;
+.entry-footer a {
   border-bottom: none;
 }
 
-.entry-link.copied {
+.entry-footer a:hover {
   opacity: 1;
-  color: var(--accent-highlight);
 }
 
 
