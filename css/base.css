@@ -670,8 +670,7 @@ hr::after {
 /* Entry Footer */
 .entry-footer {
   margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
+  text-align: center;
   font-size: 15px;
 }
 
