@@ -115,8 +115,8 @@
   var linkstyle = document.getElementById('linkstyle');
   var hljsTheme = document.getElementById('hljs-theme');
   var themeToggle = document.getElementById('theme-toggle');
-  var themes = ['dark', 'minimal', 'mcmo', 'sakr', 'jmmy', 'blad', 'void', 'term', 'garm'];
-  var themeLabels = { dark: 'GRUV', minimal: 'MODE', mcmo: 'MCMO', sakr: 'SAKR', jmmy: 'JMMY', blad: 'BLAD', void: 'VOID', term: 'TERM', garm: 'GARM' };
+  var themes = ['dark', 'minimal', 'mcmo', 'sakr', 'jmmy', 'blad', 'void', 'term', 'garm', 'mate'];
+  var themeLabels = { dark: 'GRUV', minimal: 'MODE', mcmo: 'MCMO', sakr: 'SAKR', jmmy: 'JMMY', blad: 'BLAD', void: 'VOID', term: 'TERM', garm: 'GARM', mate: 'MATE' };
 
   // Check localStorage, else detect OS preference, else default dark
   var currentTheme = localStorage.getItem('theme');
@@ -157,6 +157,9 @@
       hljsTheme.href = hljsDark;
     } else if (theme === 'garm') {
       linkstyle.href = 'css/garm.css';
+      hljsTheme.href = hljsLight;
+    } else if (theme === 'mate') {
+      linkstyle.href = 'css/mate.css';
       hljsTheme.href = hljsLight;
     } else {
       linkstyle.href = 'css/dark.css';
