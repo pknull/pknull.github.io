@@ -1,0 +1,239 @@
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+/* GARM Theme - Garments (CSS Zen Garden #220 inspired) + NULL watermark */
+:root {
+  /* Colors - fashion editorial palette */
+  --bg-primary: #e8ecf0;
+  --bg-secondary: #dce2e8;
+  --text-primary: #333333;
+  --text-muted: #666666;
+  --text-body: #444444;
+  --accent-primary: #a28351;
+  --accent-highlight: #c9a86c;
+  --border-color: #aab5c0;
+  --code-bg: #dce2e8;
+  --heading-color: #182e4f;
+  --heading-bg: #dce2e8;
+  --blockquote-bg: rgba(162, 131, 81, 0.08);
+  --header-table-bg: #182e4f;
+  --icon-filter: brightness(0) invert(15%) sepia(30%) saturate(500%) hue-rotate(190deg);
+  --focus-color: #a28351;
+  --link-hover: #182e4f;
+
+  /* Fonts - editorial elegance */
+  --font-body: "Libre Baskerville", Georgia, serif;
+  --font-h1: "Montserrat", sans-serif;
+  --font-heading: "Montserrat", sans-serif;
+  --font-code: "IBM Plex Mono", monospace;
+}
+
+/* Text selection - tan accent */
+::selection {
+  background: #a28351;
+  color: #ffffff;
+}
+
+/* Heading styles - uppercase tracking */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h1 {
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+/* Links - tan underline, editorial style */
+a {
+  border-bottom: 1px solid var(--accent-primary);
+  transition: all 0.2s ease;
+}
+
+a:hover {
+  color: var(--heading-color);
+  border-bottom-color: var(--heading-color);
+}
+
+/* HR - simple elegant line */
+hr {
+  position: relative;
+  height: 1px;
+  margin: 3em 0;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--border-color) 20%,
+    var(--accent-primary) 50%,
+    var(--border-color) 80%,
+    transparent
+  );
+}
+
+hr::before {
+  content: "✦";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.8em;
+  color: var(--accent-primary);
+  background: var(--bg-primary);
+  padding: 0 1em;
+}
+
+hr::after {
+  display: none;
+}
+
+/* Blockquote - subtle left border */
+blockquote {
+  position: relative;
+  border-left: 3px solid var(--accent-primary);
+  border-top: none;
+  border-bottom: none;
+  padding: 1em 1.5em;
+  font-style: italic;
+}
+
+blockquote::before,
+blockquote::after {
+  display: none;
+}
+
+/* Code blocks - clean border */
+pre {
+  position: relative;
+  border: 1px solid var(--border-color);
+  border-top: 3px solid var(--accent-primary);
+}
+
+/* H2 with elegant underline */
+h2 {
+  position: relative;
+  padding-bottom: 0.5em;
+}
+
+h2::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 60px;
+  height: 2px;
+  background: var(--accent-primary);
+}
+
+/* Giant NULL watermark background */
+body::before {
+  content: "";
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80vw;
+  height: 80vw;
+  max-width: 800px;
+  max-height: 800px;
+  background-image: url('../images/null.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.035;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Subtle vignette - very light */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 0%, transparent 60%, rgba(24, 46, 79, 0.08) 100%);
+  z-index: 9998;
+}
+
+/* Header - editorial banner feel */
+.site-header {
+  position: relative;
+}
+
+.site-header::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--accent-primary) 30%,
+    var(--accent-primary) 70%,
+    transparent
+  );
+}
+
+/* Elegant fade-in on h1 */
+@keyframes editorial-reveal {
+  0% {
+    opacity: 0;
+    letter-spacing: 0.2em;
+  }
+  100% {
+    opacity: 1;
+    letter-spacing: 0.12em;
+  }
+}
+
+h1 {
+  animation: editorial-reveal 1.2s ease-out forwards;
+}
+
+/* Subtle pulse on NULL watermark */
+@keyframes watermark-breathe {
+  0%, 100% {
+    opacity: 0.035;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.045;
+    transform: translate(-50%, -50%) scale(1.02);
+  }
+}
+
+body::before {
+  animation: watermark-breathe 12s ease-in-out infinite;
+}
+
+/* Blockquote hover lift */
+blockquote {
+  transition: all 0.3s ease;
+}
+
+blockquote:hover {
+  transform: translateX(4px);
+  border-left-color: var(--heading-color);
+}
+
+/* Link hover elegance */
+a:hover {
+  letter-spacing: 0.01em;
+}
+
+/* Clean entry date styling */
+h2 {
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+/* Refined image presentation */
+img {
+  filter: contrast(1.02) saturate(0.95);
+}
+
