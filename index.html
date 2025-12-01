@@ -115,23 +115,32 @@
   var linkstyle = document.getElementById('linkstyle');
   var hljsTheme = document.getElementById('hljs-theme');
   var themeToggle = document.getElementById('theme-toggle');
-  var themes = ['dark', 'minimal', 'mcmo', 'sakr', 'jmmy', 'blad', 'void', 'term', 'garm', 'mate'];
-  var themeLabels = { dark: 'GRUV', minimal: 'MODE', mcmo: 'MCMO', sakr: 'SAKR', jmmy: 'JMMY', blad: 'BLAD', void: 'VOID', term: 'TERM', garm: 'GARM', mate: 'MATE' };
+  var themes = ['comp', 'dark', 'minimal', 'mcmo', 'sakr', 'jmmy', 'blad', 'void', 'term', 'garm', 'mate'];
+  var themeLabels = { comp: 'COMP', dark: 'GRUV', minimal: 'MODE', mcmo: 'MCMO', sakr: 'SAKR', jmmy: 'JMMY', blad: 'BLAD', void: 'VOID', term: 'TERM', garm: 'GARM', mate: 'MATE' };
 
-  // Check localStorage, else detect OS preference, else default dark
+  // Check localStorage, else default to COMP (auto light/dark)
   var currentTheme = localStorage.getItem('theme');
   if (!currentTheme) {
-    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    currentTheme = prefersDark ? 'dark' : 'minimal';
+    currentTheme = 'comp';
   }
-  if (themes.indexOf(currentTheme) === -1) currentTheme = 'dark';
+  if (themes.indexOf(currentTheme) === -1) currentTheme = 'comp';
   var hljsDark = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/base16/gruvbox-dark-hard.min.css';
   var hljsLight = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/base16/gruvbox-light-hard.min.css';
 
   function applyTheme(theme) {
     linkstyle.disabled = false;
     hljsTheme.disabled = false;
-    if (theme === 'minimal') {
+    if (theme === 'comp') {
+      // COMP: auto-select based on OS preference (MATE for light, GRUV for dark)
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (prefersDark) {
+        linkstyle.href = 'css/dark.css';
+        hljsTheme.href = hljsDark;
+      } else {
+        linkstyle.href = 'css/mate.css';
+        hljsTheme.href = hljsLight;
+      }
+    } else if (theme === 'minimal') {
       linkstyle.href = 'css/minimal.css';
       hljsTheme.href = hljsLight;
     } else if (theme === 'dark') {
@@ -162,8 +171,15 @@
       linkstyle.href = 'css/mate.css';
       hljsTheme.href = hljsLight;
     } else {
-      linkstyle.href = 'css/dark.css';
-      hljsTheme.href = hljsDark;
+      // Fallback: same as COMP (OS preference)
+      var prefersDarkFallback = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (prefersDarkFallback) {
+        linkstyle.href = 'css/dark.css';
+        hljsTheme.href = hljsDark;
+      } else {
+        linkstyle.href = 'css/mate.css';
+        hljsTheme.href = hljsLight;
+      }
     }
     themeToggle.textContent = themeLabels[theme];
   }
