@@ -204,9 +204,9 @@ blockquote:hover {
   border-left-color: var(--heading-color);
 }
 
-/* Link hover elegance */
+/* Link hover - color change only, no layout shift */
 a:hover {
-  letter-spacing: 0.01em;
+  color: var(--heading-color);
 }
 
 /* Clean entry date styling */

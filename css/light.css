@@ -1,36 +1,42 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
-/* NIER Theme - NieR: Automata (faithful palette) */
-:root {
-  /* Colors - from automata-theme & VS Code NieR theme */
-  --bg-primary: #dad3ba;
-  --bg-secondary: #a39e8b;
-  --text-primary: #2d2b28;
-  --text-muted: #454340;
-  --text-body: #3a3832;
-  --accent-primary: #9d4a2e;
-  --accent-highlight: #9d4a2e;
-  --border-color: #6d6959;
-  --code-bg: #a39e8b;
-  --heading-color: #2d2b28;
-  --heading-bg: #a39e8b;
-  --blockquote-bg: rgba(163, 158, 139, 0.5);
-  --header-table-bg: #495245;
-  --icon-filter: brightness(0) invert(20%) sepia(8%) saturate(500%) hue-rotate(20deg) brightness(95%) contrast(95%);
-  --focus-color: #4e4b42;
-  --link-hover: #5a5243;
+/* NIER Theme - NieR: Automata (faithful to game UI)
+   Design philosophy: "Systematic and sterile, but also beautiful"
+   - Clean, graceful, flat design
+   - Limited color palette (beige + muddy grey-brown)
+   - Orange used sparingly, only when necessary for readability
+   Reference: https://www.platinumgames.com/official-blog/article/9624 */
 
-  /* Fonts - elegant serif body, angular headers (NieR UI inspired) */
+:root {
+  /* Colors - faithful to actual game UI */
+  --bg-primary: #ddd8c7;       /* Actual NieR menu beige */
+  --bg-secondary: #afaa96;     /* Secondary panels */
+  --text-primary: #4a473e;     /* Actual NieR "muddy dark grey" */
+  --text-muted: #696868;       /* Muted text */
+  --text-body: #49463d;        /* Body text */
+  --accent-primary: #9d4a2e;   /* Drab red-orange - use sparingly */
+  --accent-highlight: #9d4a2e;
+  --border-color: #8a857a;     /* Subtle dividers */
+  --code-bg: #c8c2aa;          /* Code background */
+  --heading-color: #4a473e;    /* Same as text for flatness */
+  --heading-bg: transparent;
+  --blockquote-bg: rgba(175, 170, 150, 0.3);
+  --header-table-bg: #4a473e;
+  --icon-filter: brightness(0) invert(28%) sepia(5%) saturate(500%) hue-rotate(20deg);
+  --focus-color: #4a473e;
+  --link-hover: #3a3832;
+
+  /* Fonts - angular headers (NieR UI inspired), elegant serif body */
   --font-body: "Cormorant Garamond", Georgia, serif;
   --font-h1: "Rajdhani", sans-serif;
   --font-heading: "Rajdhani", sans-serif;
   --font-code: "IBM Plex Mono", monospace;
 }
 
-/* Text selection - high contrast */
+/* Text selection - minimal contrast */
 ::selection {
-  background: #2d2b28;
-  color: #ffffff;
+  background: #4a473e;
+  color: #ddd8c7;
 }
 
 /* Larger body text for elegant serif readability */
@@ -38,7 +44,58 @@ body {
   font-size: 1.8em;
 }
 
-/* Vignette effect */
+/* Headings - clean, no decoration */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+h1 {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* Links - subtle underline, minimal hover */
+a {
+  border-bottom: 1px solid var(--border-color);
+  transition: border-color 0.2s ease;
+}
+
+a:hover {
+  border-bottom-color: var(--text-primary);
+}
+
+/* HR - simple thin line (NieR menus use minimal dividers) */
+hr {
+  height: 1px;
+  margin: 2em 0;
+  background: var(--border-color);
+  border: none;
+}
+
+hr::before,
+hr::after {
+  display: none;
+}
+
+/* Blockquote - subtle background only (faithful to game panels) */
+blockquote {
+  border-left: none;
+  padding: 1em 1.5em;
+  background: var(--blockquote-bg);
+}
+
+/* H2 - clean, no decoration (faithful to game) */
+h2 {
+  font-size: 1.1em;
+}
+
+/* Code blocks - flat, minimal border */
+pre {
+  border: 1px solid var(--border-color);
+}
+
+/* Very subtle convex screen effect (mentioned in design doc) */
 body::after {
   content: "";
   position: fixed;
@@ -47,121 +104,6 @@ body::after {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  background: radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgba(0,0,0,0.3) 100%);
+  background: radial-gradient(ellipse at center, transparent 0%, transparent 70%, rgba(74, 71, 62, 0.08) 100%);
   z-index: 9998;
-}
-
-/* Android glitch effect on h1 */
-@keyframes nier-glitch {
-  0%, 100% {
-    text-shadow: none;
-    transform: translateX(0);
-  }
-  92% {
-    text-shadow: none;
-    transform: translateX(0);
-  }
-  93% {
-    text-shadow: -2px 0 var(--accent-primary), 2px 0 var(--accent-primary);
-    transform: translateX(-1px);
-  }
-  94% {
-    text-shadow: 2px 0 var(--accent-primary), -2px 0 var(--accent-primary);
-    transform: translateX(1px);
-  }
-  95% {
-    text-shadow: none;
-    transform: translateX(0);
-  }
-}
-
-h1 {
-  animation: nier-glitch 8s ease-in-out infinite;
-}
-
-/* Machine hum pulse on blockquotes */
-@keyframes machine-hum {
-  0%, 100% {
-    border-left-color: var(--border-color);
-    background: var(--blockquote-bg);
-  }
-  50% {
-    border-left-color: var(--accent-primary);
-    background: rgba(163, 158, 139, 0.6);
-  }
-}
-
-blockquote {
-  border-left: 3px solid var(--border-color);
-  animation: machine-hum 6s ease-in-out infinite;
-}
-
-/* Pod interface scan line */
-@keyframes pod-scan {
-  0% {
-    top: 0;
-    opacity: 0;
-  }
-  5% {
-    opacity: 0.15;
-  }
-  95% {
-    opacity: 0.15;
-  }
-  100% {
-    top: 100%;
-    opacity: 0;
-  }
-}
-
-.site-header::before {
-  content: "";
-  position: fixed;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(to right, transparent, var(--accent-primary), transparent);
-  z-index: 9997;
-  pointer-events: none;
-  animation: pod-scan 12s linear infinite;
-}
-
-/* Subtle static noise overlay */
-.site-header::after {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  opacity: 0.015;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  z-index: 9996;
-}
-
-/* Angular data display on links */
-a {
-  transition: all 0.2s ease;
-}
-
-a:hover {
-  letter-spacing: 0.02em;
-  background: linear-gradient(to right, transparent, rgba(157, 74, 46, 0.08), transparent);
-}
-
-/* YoRHa-style underline on h2 */
-h2 {
-  position: relative;
-  padding-bottom: 0.5em;
-}
-
-h2::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(to right, var(--accent-primary), transparent 80%);
 }
