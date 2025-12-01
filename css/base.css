@@ -661,6 +661,10 @@ hr::after {
   animation-delay: 2.6s;
 }
 
+.footer-icons img:nth-child(4) {
+  animation-delay: 3.9s;
+}
+
 @keyframes sigil-pulse {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 0.5; }
