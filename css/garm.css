@@ -157,26 +157,9 @@ body::after {
   z-index: 9998;
 }
 
-/* Header - editorial banner feel */
-.site-header {
-  position: relative;
-}
-
+/* Header - clean, no underline */
 .site-header::before {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60%;
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    var(--accent-primary) 30%,
-    var(--accent-primary) 70%,
-    transparent
-  );
+  display: none;
 }
 
 /* Elegant fade-in on h1 */
