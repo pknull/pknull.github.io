@@ -51,14 +51,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css" integrity="sha384-fRuya36Gb/YRGgzq/ichTstZs3FgqUTsL6+s+RTc8uT0oRO5zHMymXMJ+cS2dh3s" crossorigin="anonymous">
   <link rel="stylesheet" href="css/base.css">
   <link id="linkstyle" rel="stylesheet" href="css/dark.css">
   <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
-  <script defer src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
-  <link id="hljs-theme" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/base16/gruvbox-dark-hard.min.css">
-  <script defer src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" integrity="sha384-948ahk4ZmxYVYOc+rxN1H2gM1EJ2Duhp7uHtZ4WSLkV4Vtx5MUqnV+l7u9B+jFv+" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js" integrity="sha384-+qi1h9Ene5uYXijovnRnDpm2TZiNyVFgYjKIqjw6id8zLdWYt+tCPG9/1u6yLaNj" crossorigin="anonymous"></script>
+  <link id="hljs-theme" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/base16/gruvbox-dark-hard.min.css" integrity="sha384-hZVY9d5XrlCe4nkT4qgsficXip2xO/Oo46Ysj4koXpIOlTA/PlLBmfVmTl6uLS3+" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js" integrity="sha384-F/bZzf7p3Joyp5psL90p/p89AZJsndkSoGwRpXcZhleCWhd8SnRuoYo4d0yirjJp" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -75,7 +75,7 @@
         </nav>
       </header>
 
-      <main id="main" aria-live="polite">
+      <main id="main">
         Loading...
       </main>
       <section id="giscus-container" class="giscus-section" hidden>
@@ -116,8 +116,20 @@
   var linkstyle = document.getElementById('linkstyle');
   var hljsTheme = document.getElementById('hljs-theme');
   var themeToggle = document.getElementById('theme-toggle');
-  var themes = ['comp', 'dark', 'minimal', 'mcmo', 'sakr', 'jmmy', 'blad', 'void', 'term', 'garm', 'mate'];
-  var themeLabels = { comp: 'COMP', dark: 'GRUV', minimal: 'MODE', mcmo: 'MCMO', sakr: 'SAKR', jmmy: 'JMMY', blad: 'BLAD', void: 'VOID', term: 'TERM', garm: 'GARM', mate: 'MATE' };
+  var THEME_CONFIG = {
+    comp: { css: null, hljs: null, isDark: 'auto', label: 'COMP' },
+    dark: { css: 'css/dark.css', hljs: 'dark', isDark: true, label: 'GRUV' },
+    minimal: { css: 'css/minimal.css', hljs: 'light', isDark: false, label: 'MODE' },
+    mcmo: { css: 'css/mcmo.css', hljs: 'light', isDark: false, label: 'MCMO' },
+    sakr: { css: 'css/sakr.css', hljs: 'light', isDark: false, label: 'SAKR' },
+    jmmy: { css: 'css/jmmy.css', hljs: 'light', isDark: false, label: 'JMMY' },
+    blad: { css: 'css/blad.css', hljs: 'dark', isDark: true, label: 'BLAD' },
+    void: { css: 'css/void.css', hljs: 'dark', isDark: true, label: 'VOID' },
+    term: { css: 'css/term.css', hljs: 'dark', isDark: true, label: 'TERM' },
+    garm: { css: 'css/garm.css', hljs: 'light', isDark: false, label: 'GARM' },
+    mate: { css: 'css/mate.css', hljs: 'light', isDark: false, label: 'MATE' }
+  };
+  var themes = Object.keys(THEME_CONFIG);
 
   // Check localStorage, else default to COMP (auto light/dark)
   var currentTheme = localStorage.getItem('theme');
@@ -127,62 +139,27 @@
   if (themes.indexOf(currentTheme) === -1) currentTheme = 'comp';
   var hljsDark = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/base16/gruvbox-dark-hard.min.css';
   var hljsLight = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/base16/gruvbox-light-hard.min.css';
+  var hljsDarkIntegrity = 'sha384-hZVY9d5XrlCe4nkT4qgsficXip2xO/Oo46Ysj4koXpIOlTA/PlLBmfVmTl6uLS3+';
+  var hljsLightIntegrity = 'sha384-vpayKGwduWhgY00faoPtbmJwz8TjOLnnDuqvy+xWy2DWuIVxIt0dxj0mjrMVPxdd';
 
   function applyTheme(theme) {
+    var config = THEME_CONFIG[theme] || THEME_CONFIG.comp;
     linkstyle.disabled = false;
     hljsTheme.disabled = false;
-    if (theme === 'comp') {
-      // COMP: auto-select based on OS preference (MATE for light, GRUV for dark)
+
+    if (config.isDark === 'auto') {
+      // COMP: auto-select based on OS preference
       var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (prefersDark) {
-        linkstyle.href = 'css/dark.css';
-        hljsTheme.href = hljsDark;
-      } else {
-        linkstyle.href = 'css/mate.css';
-        hljsTheme.href = hljsLight;
-      }
-    } else if (theme === 'minimal') {
-      linkstyle.href = 'css/minimal.css';
-      hljsTheme.href = hljsLight;
-    } else if (theme === 'dark') {
-      linkstyle.href = 'css/dark.css';
-      hljsTheme.href = hljsDark;
-    } else if (theme === 'mcmo') {
-      linkstyle.href = 'css/mcmo.css';
-      hljsTheme.href = hljsLight;
-    } else if (theme === 'sakr') {
-      linkstyle.href = 'css/sakr.css';
-      hljsTheme.href = hljsLight;
-    } else if (theme === 'jmmy') {
-      linkstyle.href = 'css/jmmy.css';
-      hljsTheme.href = hljsLight;
-    } else if (theme === 'blad') {
-      linkstyle.href = 'css/blad.css';
-      hljsTheme.href = hljsDark;
-    } else if (theme === 'void') {
-      linkstyle.href = 'css/void.css';
-      hljsTheme.href = hljsDark;
-    } else if (theme === 'term') {
-      linkstyle.href = 'css/term.css';
-      hljsTheme.href = hljsDark;
-    } else if (theme === 'garm') {
-      linkstyle.href = 'css/garm.css';
-      hljsTheme.href = hljsLight;
-    } else if (theme === 'mate') {
-      linkstyle.href = 'css/mate.css';
-      hljsTheme.href = hljsLight;
+      linkstyle.href = prefersDark ? 'css/dark.css' : 'css/mate.css';
+      hljsTheme.href = prefersDark ? hljsDark : hljsLight;
+      hljsTheme.integrity = prefersDark ? hljsDarkIntegrity : hljsLightIntegrity;
     } else {
-      // Fallback: same as COMP (OS preference)
-      var prefersDarkFallback = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (prefersDarkFallback) {
-        linkstyle.href = 'css/dark.css';
-        hljsTheme.href = hljsDark;
-      } else {
-        linkstyle.href = 'css/mate.css';
-        hljsTheme.href = hljsLight;
-      }
+      linkstyle.href = config.css;
+      hljsTheme.href = config.hljs === 'dark' ? hljsDark : hljsLight;
+      hljsTheme.integrity = config.hljs === 'dark' ? hljsDarkIntegrity : hljsLightIntegrity;
     }
-    themeToggle.textContent = themeLabels[theme];
+
+    themeToggle.textContent = config.label;
   }
   applyTheme(currentTheme);
 
@@ -519,9 +496,11 @@
   var lastGiscusTerm = null;
 
   function getGiscusTheme() {
-    // Use built-in gruvbox themes for all site themes
-    var darkThemes = ['dark', 'blad', 'void', 'term'];
-    return darkThemes.indexOf(currentTheme) !== -1 ? 'gruvbox_dark' : 'gruvbox_light';
+    var config = THEME_CONFIG[currentTheme];
+    if (!config || config.isDark === 'auto') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'gruvbox_dark' : 'gruvbox_light';
+    }
+    return config.isDark ? 'gruvbox_dark' : 'gruvbox_light';
   }
 
   function loadGiscus(term, forceReload) {
