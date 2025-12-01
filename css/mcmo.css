@@ -150,16 +150,7 @@ body::after {
   z-index: 9998;
 }
 
-/* Animated sunburst rays */
-@keyframes sunburst-rotate {
-  from {
-    transform: translate(-50%, -40%) rotate(0deg);
-  }
-  to {
-    transform: translate(-50%, -40%) rotate(360deg);
-  }
-}
-
+/* Static sunburst rays (no rotation) */
 .site-header::after {
   content: "";
   position: absolute;
@@ -183,21 +174,6 @@ body::after {
   border-radius: 50%;
   z-index: -1;
   pointer-events: none;
-  animation: sunburst-rotate 60s linear infinite;
-}
-
-/* Retro bounce on h1 */
-@keyframes retro-bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-3px);
-  }
-}
-
-h1 {
-  animation: retro-bounce 4s ease-in-out infinite;
 }
 
 /* Color-shifting gradient on HR star */
