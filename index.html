@@ -95,6 +95,7 @@
           <img src="./images/pk-glyph.svg" alt="">
           <img src="./images/null.svg" alt="">
           <img src="./images/aas-sigil.svg" alt="">
+          <img src="./images/pookimon.svg" alt="">
         </div>
 </footer>
 
@@ -464,23 +465,42 @@
     var codeBlocks = document.querySelectorAll('pre > code');
     codeBlocks.forEach(function(code) {
       var pre = code.parentElement;
-      if (pre.querySelector('.code-copy')) return;
-      var btn = document.createElement('button');
-      btn.className = 'code-copy';
-      btn.textContent = 'copy';
-      btn.setAttribute('aria-label', 'Copy code to clipboard');
-      btn.onclick = function() {
+      if (pre.querySelector('.code-toolbar')) return;
+
+      // Create toolbar container
+      var toolbar = document.createElement('div');
+      toolbar.className = 'code-toolbar';
+
+      // Copy button
+      var copyBtn = document.createElement('button');
+      copyBtn.className = 'code-copy';
+      copyBtn.textContent = 'copy';
+      copyBtn.setAttribute('aria-label', 'Copy code to clipboard');
+      copyBtn.onclick = function() {
         var text = code.textContent;
         navigator.clipboard.writeText(text).then(function() {
-          btn.textContent = 'copied';
-          btn.classList.add('copied');
+          copyBtn.textContent = 'copied';
+          copyBtn.classList.add('copied');
           setTimeout(function() {
-            btn.textContent = 'copy';
-            btn.classList.remove('copied');
+            copyBtn.textContent = 'copy';
+            copyBtn.classList.remove('copied');
           }, 1500);
         });
       };
-      pre.appendChild(btn);
+
+      // Expand button
+      var expandBtn = document.createElement('button');
+      expandBtn.className = 'code-expand';
+      expandBtn.textContent = 'expand';
+      expandBtn.setAttribute('aria-label', 'Toggle full width');
+      expandBtn.onclick = function() {
+        pre.classList.toggle('expanded');
+        expandBtn.textContent = pre.classList.contains('expanded') ? 'collapse' : 'expand';
+      };
+
+      toolbar.appendChild(copyBtn);
+      toolbar.appendChild(expandBtn);
+      pre.appendChild(toolbar);
     });
   }
 
