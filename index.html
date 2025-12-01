@@ -117,17 +117,17 @@
   var hljsTheme = document.getElementById('hljs-theme');
   var themeToggle = document.getElementById('theme-toggle');
   var THEME_CONFIG = {
-    comp: { css: null, hljs: null, isDark: 'auto', label: 'COMP' },
-    dark: { css: 'css/dark.css', hljs: 'dark', isDark: true, label: 'GRUV' },
-    minimal: { css: 'css/minimal.css', hljs: 'light', isDark: false, label: 'MODE' },
-    mcmo: { css: 'css/mcmo.css', hljs: 'light', isDark: false, label: 'MCMO' },
-    sakr: { css: 'css/sakr.css', hljs: 'light', isDark: false, label: 'SAKR' },
-    jmmy: { css: 'css/jmmy.css', hljs: 'light', isDark: false, label: 'JMMY' },
-    blad: { css: 'css/blad.css', hljs: 'dark', isDark: true, label: 'BLAD' },
-    void: { css: 'css/void.css', hljs: 'dark', isDark: true, label: 'VOID' },
-    term: { css: 'css/term.css', hljs: 'dark', isDark: true, label: 'TERM' },
-    garm: { css: 'css/garm.css', hljs: 'light', isDark: false, label: 'GARM' },
-    mate: { css: 'css/mate.css', hljs: 'light', isDark: false, label: 'MATE' }
+    comp: { css: null, isDark: 'auto', label: 'COMP' },
+    dark: { css: 'css/dark.css', isDark: true, label: 'GRUV' },
+    minimal: { css: 'css/minimal.css', isDark: false, label: 'MODE' },
+    mcmo: { css: 'css/mcmo.css', isDark: false, label: 'MCMO' },
+    sakr: { css: 'css/sakr.css', isDark: false, label: 'SAKR' },
+    jmmy: { css: 'css/jmmy.css', isDark: false, label: 'JMMY' },
+    blad: { css: 'css/blad.css', isDark: true, label: 'BLAD' },
+    void: { css: 'css/void.css', isDark: true, label: 'VOID' },
+    term: { css: 'css/term.css', isDark: true, label: 'TERM' },
+    garm: { css: 'css/garm.css', isDark: false, label: 'GARM' },
+    mate: { css: 'css/mate.css', isDark: false, label: 'MATE' }
   };
   var themes = Object.keys(THEME_CONFIG);
 
@@ -138,9 +138,7 @@
   }
   if (themes.indexOf(currentTheme) === -1) currentTheme = 'comp';
   var hljsDark = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/base16/gruvbox-dark-hard.min.css';
-  var hljsLight = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/base16/gruvbox-light-hard.min.css';
   var hljsDarkIntegrity = 'sha384-hZVY9d5XrlCe4nkT4qgsficXip2xO/Oo46Ysj4koXpIOlTA/PlLBmfVmTl6uLS3+';
-  var hljsLightIntegrity = 'sha384-vpayKGwduWhgY00faoPtbmJwz8TjOLnnDuqvy+xWy2DWuIVxIt0dxj0mjrMVPxdd';
 
   function applyTheme(theme) {
     var config = THEME_CONFIG[theme] || THEME_CONFIG.comp;
@@ -151,13 +149,12 @@
       // COMP: auto-select based on OS preference
       var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       linkstyle.href = prefersDark ? 'css/dark.css' : 'css/mate.css';
-      hljsTheme.href = prefersDark ? hljsDark : hljsLight;
-      hljsTheme.integrity = prefersDark ? hljsDarkIntegrity : hljsLightIntegrity;
     } else {
       linkstyle.href = config.css;
-      hljsTheme.href = config.hljs === 'dark' ? hljsDark : hljsLight;
-      hljsTheme.integrity = config.hljs === 'dark' ? hljsDarkIntegrity : hljsLightIntegrity;
     }
+    // Always use gruvbox dark for code blocks
+    hljsTheme.href = hljsDark;
+    hljsTheme.integrity = hljsDarkIntegrity;
 
     themeToggle.textContent = config.label;
   }
@@ -496,11 +493,8 @@
   var lastGiscusTerm = null;
 
   function getGiscusTheme() {
-    var config = THEME_CONFIG[currentTheme];
-    if (!config || config.isDark === 'auto') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'gruvbox_dark' : 'gruvbox_light';
-    }
-    return config.isDark ? 'gruvbox_dark' : 'gruvbox_light';
+    // Always use gruvbox dark for Giscus
+    return 'gruvbox_dark';
   }
 
   function loadGiscus(term, forceReload) {
