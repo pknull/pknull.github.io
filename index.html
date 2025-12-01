@@ -115,14 +115,14 @@
   var linkstyle = document.getElementById('linkstyle');
   var hljsTheme = document.getElementById('hljs-theme');
   var themeToggle = document.getElementById('theme-toggle');
-  var themes = ['light', 'dark', 'minimal', 'mcmo', 'sakr', 'jmmy', 'blad', 'void', 'term', 'garm'];
-  var themeLabels = { light: 'NIER', dark: 'GRUV', minimal: 'MODE', mcmo: 'MCMO', sakr: 'SAKR', jmmy: 'JMMY', blad: 'BLAD', void: 'VOID', term: 'TERM', garm: 'GARM' };
+  var themes = ['dark', 'minimal', 'mcmo', 'sakr', 'jmmy', 'blad', 'void', 'term', 'garm'];
+  var themeLabels = { dark: 'GRUV', minimal: 'MODE', mcmo: 'MCMO', sakr: 'SAKR', jmmy: 'JMMY', blad: 'BLAD', void: 'VOID', term: 'TERM', garm: 'GARM' };
 
   // Check localStorage, else detect OS preference, else default dark
   var currentTheme = localStorage.getItem('theme');
   if (!currentTheme) {
     var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    currentTheme = prefersDark ? 'dark' : 'light';
+    currentTheme = prefersDark ? 'dark' : 'minimal';
   }
   if (themes.indexOf(currentTheme) === -1) currentTheme = 'dark';
   var hljsDark = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/base16/gruvbox-dark-hard.min.css';
@@ -159,8 +159,8 @@
       linkstyle.href = 'css/garm.css';
       hljsTheme.href = hljsLight;
     } else {
-      linkstyle.href = 'css/light.css';
-      hljsTheme.href = hljsLight;
+      linkstyle.href = 'css/dark.css';
+      hljsTheme.href = hljsDark;
     }
     themeToggle.textContent = themeLabels[theme];
   }
