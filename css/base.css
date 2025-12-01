@@ -909,3 +909,93 @@ img, canvas, iframe, video, svg, select, textarea {
   background-color: var(--bg-secondary);
   margin: 16px 0;
 }
+
+
+/* Model Tabs (Asha identity page) - CSS-only with radio buttons
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.model-tabs {
+  margin: 3rem 0;
+}
+
+/* Hide radio inputs */
+.model-tabs input[type="radio"] {
+  display: none;
+}
+
+.tab-labels {
+  display: flex;
+  gap: 0;
+  margin-bottom: 0;
+}
+
+.tab-label {
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.tab-label:hover {
+  color: var(--text-primary);
+}
+
+/* Active tab label styling */
+#tab-claude:checked ~ .tab-labels label[for="tab-claude"],
+#tab-gemini:checked ~ .tab-labels label[for="tab-gemini"],
+#tab-codex:checked ~ .tab-labels label[for="tab-codex"],
+#tab-mistral:checked ~ .tab-labels label[for="tab-mistral"] {
+  color: var(--accent-primary);
+  border-bottom-color: var(--accent-primary);
+}
+
+.tab-content {
+  display: none;
+  padding: 2rem 0;
+  border-top: none;
+}
+
+/* Show content when corresponding radio is checked */
+#tab-claude:checked ~ .tab-content-claude,
+#tab-gemini:checked ~ .tab-content-gemini,
+#tab-codex:checked ~ .tab-content-codex,
+#tab-mistral:checked ~ .tab-content-mistral {
+  display: block;
+}
+
+.tab-content h2 {
+  font-size: 2.4rem;
+}
+
+.tab-content h3 {
+  font-size: 1.8rem;
+  text-align: left;
+}
+
+.prompt-block {
+  margin-bottom: 3rem;
+}
+
+.prompt-block summary {
+  cursor: pointer;
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 1.4rem;
+  color: var(--text-muted);
+  padding: 0.5rem 0;
+}
+
+.prompt-block summary:hover {
+  color: var(--accent-primary);
+}
+
+.prompt-block[open] summary {
+  margin-bottom: 1rem;
+}

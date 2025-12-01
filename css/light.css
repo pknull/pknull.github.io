@@ -9,7 +9,7 @@
   --text-muted: #52504a;
   --text-body: #4e4b42;
   --accent-primary: #9d4a2e;
-  --accent-highlight: #877861;
+  --accent-highlight: #9d4a2e;
   --border-color: #6d6959;
   --code-bg: #a39e8b;
   --heading-color: #2d2b28;
@@ -25,6 +25,12 @@
   --font-h1: "Montserrat", sans-serif;
   --font-heading: "Share Tech Mono", monospace;
   --font-code: "Fira Code", monospace;
+}
+
+/* Text selection - high contrast for MINI theme */
+::selection {
+  background: #2d2b28;
+  color: #ffffff;
 }
 
 /* Vignette effect */
