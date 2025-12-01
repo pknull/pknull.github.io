@@ -160,3 +160,75 @@ body::after {
   background: radial-gradient(ellipse at center, transparent 0%, transparent 40%, rgba(0, 0, 0, 0.5) 100%);
   z-index: 9998;
 }
+
+/* Neon flicker animation */
+@keyframes neon-flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    text-shadow:
+      0 0 4px #00e5ff,
+      0 0 11px #00e5ff,
+      0 0 19px #00e5ff,
+      0 0 40px #00e5ff;
+  }
+  20%, 24%, 55% {
+    text-shadow: none;
+  }
+}
+
+h1 {
+  animation: neon-flicker 3s infinite;
+}
+
+/* Layered glow on accent elements */
+@keyframes glow-breathe {
+  0%, 100% {
+    box-shadow:
+      0 0 5px rgba(0, 229, 255, 0.4),
+      0 0 10px rgba(0, 229, 255, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 10px rgba(0, 229, 255, 0.6),
+      0 0 20px rgba(0, 229, 255, 0.3),
+      0 0 30px rgba(255, 45, 149, 0.2);
+  }
+}
+
+blockquote {
+  animation: glow-breathe 4s ease-in-out infinite;
+}
+
+/* Link hover bloom */
+a:hover {
+  filter: brightness(1.2);
+  text-shadow:
+    0 0 8px rgba(255, 45, 149, 0.8),
+    0 0 16px rgba(255, 45, 149, 0.4);
+}
+
+/* Rain streaks effect */
+@keyframes rain {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 0% 100%; }
+}
+
+.site-header::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0px,
+    transparent 20px,
+    rgba(0, 229, 255, 0.015) 20px,
+    rgba(0, 229, 255, 0.015) 21px
+  );
+  background-size: 100% 200%;
+  animation: rain 2s linear infinite;
+  z-index: 9995;
+  opacity: 0.5;
+}

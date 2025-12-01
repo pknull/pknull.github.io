@@ -152,3 +152,81 @@ body::after {
   background: radial-gradient(ellipse at center, transparent 0%, transparent 30%, rgba(0, 0, 0, 0.6) 100%);
   z-index: 9998;
 }
+
+/* Breathing nebula animation */
+@keyframes nebula-breathe {
+  0%, 100% {
+    opacity: 0.04;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.08;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+}
+
+.site-header::before {
+  animation: nebula-breathe 12s ease-in-out infinite;
+}
+
+/* Distant star twinkle */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+.site-header::after {
+  content: "✦";
+  position: absolute;
+  top: 20%;
+  right: 15%;
+  font-size: 0.6em;
+  color: var(--accent-highlight);
+  animation: twinkle 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Aurora shimmer on headings */
+@keyframes aurora {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+h1 {
+  background: linear-gradient(
+    90deg,
+    var(--heading-color) 0%,
+    var(--accent-primary) 25%,
+    var(--accent-highlight) 50%,
+    var(--accent-primary) 75%,
+    var(--heading-color) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: aurora 8s ease-in-out infinite;
+}
+
+/* Subtle star field */
+#main::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 10% 20%, rgba(200, 200, 216, 0.4) 50%, transparent 50%),
+    radial-gradient(1px 1px at 40% 60%, rgba(200, 200, 216, 0.3) 50%, transparent 50%),
+    radial-gradient(1px 1px at 70% 30%, rgba(200, 200, 216, 0.5) 50%, transparent 50%),
+    radial-gradient(1px 1px at 90% 80%, rgba(200, 200, 216, 0.2) 50%, transparent 50%),
+    radial-gradient(1px 1px at 25% 85%, rgba(139, 125, 216, 0.4) 50%, transparent 50%),
+    radial-gradient(1px 1px at 55% 15%, rgba(90, 159, 212, 0.3) 50%, transparent 50%);
+  z-index: -1;
+}

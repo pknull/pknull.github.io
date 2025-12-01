@@ -1,0 +1,275 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+/* MCMO Theme - Mid Century Modern (CSS Zen Garden #221 inspired) */
+:root {
+  /* Colors - warm cream with bold retro accents */
+  --bg-primary: #f6efe5;
+  --bg-secondary: #ebe4d6;
+  --text-primary: #0d2c40;
+  --text-muted: #3a5163;
+  --text-body: #1a3a52;
+  --accent-primary: #f15a30;
+  --accent-highlight: #c879b2;
+  --border-color: #c879b2;
+  --code-bg: #ebe4d6;
+  --heading-color: #0d2c40;
+  --heading-bg: #ebe4d6;
+  --blockquote-bg: rgba(200, 121, 178, 0.15);
+  --header-table-bg: #0d2c40;
+  --icon-filter: brightness(0) invert(12%) sepia(30%) saturate(1000%) hue-rotate(175deg);
+  --focus-color: #31c5da;
+  --link-hover: #0d2c40;
+
+  /* Fonts - clean humanist sans with bold display headings */
+  --font-body: "DM Sans", system-ui, sans-serif;
+  --font-h1: "Bebas Neue", sans-serif;
+  --font-heading: "Bebas Neue", sans-serif;
+  --font-code: "IBM Plex Mono", monospace;
+}
+
+/* Text selection - cyan accent */
+::selection {
+  background: #31c5da;
+  color: #0d2c40;
+}
+
+/* Extra letter-spacing for Bebas Neue */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: 0.08em;
+}
+
+/* Links - solid underline */
+a {
+  border-bottom-style: solid;
+}
+
+/* HR - geometric star divider */
+hr {
+  position: relative;
+  height: 2em;
+  margin: 2.5em 0;
+}
+
+hr::before {
+  content: "★";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.2em;
+  color: var(--accent-primary);
+  background: var(--bg-primary);
+  padding: 0 1em;
+  z-index: 1;
+}
+
+hr::after {
+  content: "";
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  top: 50%;
+  height: 3px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--accent-highlight) 10%,
+    var(--accent-primary) 50%,
+    var(--accent-highlight) 90%,
+    transparent
+  );
+}
+
+/* Blockquote - mauve accent bar */
+blockquote {
+  position: relative;
+  border-left: 4px solid var(--accent-highlight);
+  border-top: none;
+  border-bottom: none;
+  padding: 1em 1.5em;
+}
+
+blockquote::before,
+blockquote::after {
+  display: none;
+}
+
+/* Code blocks - orange accent bar */
+pre {
+  position: relative;
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--accent-primary);
+}
+
+/* H2 with geometric underline */
+h2 {
+  position: relative;
+  padding-bottom: 0.5em;
+}
+
+h2::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--accent-primary);
+}
+
+/* Header decorative element - mid-century sunburst hint */
+.site-header::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -40%);
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(
+    circle,
+    rgba(241, 90, 48, 0.08) 0%,
+    rgba(200, 121, 178, 0.05) 40%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Subtle warm vignette */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 0%, transparent 55%, rgba(13, 44, 64, 0.08) 100%);
+  z-index: 9998;
+}
+
+/* Animated sunburst rays */
+@keyframes sunburst-rotate {
+  from {
+    transform: translate(-50%, -40%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -40%) rotate(360deg);
+  }
+}
+
+.site-header::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -40%);
+  width: 500px;
+  height: 500px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(241, 90, 48, 0.06) 15deg,
+    transparent 30deg,
+    transparent 45deg,
+    rgba(200, 121, 178, 0.04) 60deg,
+    transparent 75deg,
+    transparent 90deg,
+    rgba(49, 197, 218, 0.03) 105deg,
+    transparent 120deg
+  );
+  border-radius: 50%;
+  z-index: -1;
+  pointer-events: none;
+  animation: sunburst-rotate 60s linear infinite;
+}
+
+/* Retro bounce on h1 */
+@keyframes retro-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+h1 {
+  animation: retro-bounce 4s ease-in-out infinite;
+}
+
+/* Color-shifting gradient on HR star */
+@keyframes star-shift {
+  0%, 100% {
+    color: var(--accent-primary);
+    text-shadow: 0 0 8px rgba(241, 90, 48, 0.4);
+  }
+  33% {
+    color: var(--accent-highlight);
+    text-shadow: 0 0 8px rgba(200, 121, 178, 0.4);
+  }
+  66% {
+    color: #31c5da;
+    text-shadow: 0 0 8px rgba(49, 197, 218, 0.4);
+  }
+}
+
+hr::before {
+  animation: star-shift 6s ease-in-out infinite;
+}
+
+/* Geometric pattern hover on blockquotes */
+blockquote {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+blockquote::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 60px;
+  height: 60px;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 5px,
+    rgba(200, 121, 178, 0.08) 5px,
+    rgba(200, 121, 178, 0.08) 10px
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+blockquote:hover::after {
+  opacity: 1;
+}
+
+/* Mid-century link animation */
+a {
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+a:hover {
+  transform: translateX(2px);
+}
+
+/* Atomic age pulse on code blocks */
+@keyframes atomic-pulse {
+  0%, 100% {
+    border-left-color: var(--accent-primary);
+  }
+  50% {
+    border-left-color: var(--accent-highlight);
+  }
+}
+
+pre {
+  animation: atomic-pulse 3s ease-in-out infinite;
+}

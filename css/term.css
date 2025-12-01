@@ -1,0 +1,235 @@
+@import url('https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+/* TERM Theme - Retro terminal (phosphor green CRT) */
+:root {
+  /* Colors - classic green phosphor on black */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #111111;
+  --text-primary: #33ff33;
+  --text-muted: #1a991a;
+  --text-body: #2bdd2b;
+  --accent-primary: #33ff33;
+  --accent-highlight: #66ff66;
+  --border-color: #1a661a;
+  --code-bg: #111111;
+  --heading-color: #44ff44;
+  --heading-bg: #111111;
+  --blockquote-bg: rgba(51, 255, 51, 0.05);
+  --header-table-bg: #1a661a;
+  --icon-filter: brightness(0) invert(70%) sepia(100%) saturate(500%) hue-rotate(80deg);
+  --focus-color: #66ff66;
+  --link-hover: #66ff66;
+
+  /* Fonts - monospace everything */
+  --font-body: "IBM Plex Mono", monospace;
+  --font-h1: "VT323", monospace;
+  --font-heading: "VT323", monospace;
+  --font-code: "IBM Plex Mono", monospace;
+}
+
+/* Text selection - inverted */
+::selection {
+  background: #33ff33;
+  color: #0a0a0a;
+}
+
+/* VT323 needs larger sizing */
+h1 {
+  font-size: 2.8em;
+  letter-spacing: 0.05em;
+}
+
+h2, h3, h4, h5, h6 {
+  letter-spacing: 0.03em;
+}
+
+/* Subtle text glow */
+body {
+  text-shadow: 0 0 2px rgba(51, 255, 51, 0.3);
+}
+
+/* Links - underline only, bright on hover */
+a {
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+}
+
+a:hover {
+  text-shadow: 0 0 8px rgba(51, 255, 51, 0.6);
+}
+
+/* HR - ASCII-style divider */
+hr {
+  position: relative;
+  height: 2em;
+  margin: 2.5em 0;
+}
+
+hr::before {
+  content: "[===]";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-code);
+  font-size: 0.9em;
+  color: var(--accent-primary);
+  background: var(--bg-primary);
+  padding: 0 0.5em;
+  z-index: 1;
+  letter-spacing: 0;
+}
+
+hr::after {
+  content: "";
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  top: 50%;
+  height: 1px;
+  background: repeating-linear-gradient(
+    to right,
+    var(--accent-primary) 0px,
+    var(--accent-primary) 4px,
+    transparent 4px,
+    transparent 8px
+  );
+  opacity: 0.6;
+}
+
+/* Blockquote - pipe prefix style */
+blockquote {
+  position: relative;
+  border-left: 3px solid var(--accent-primary);
+  border-top: none;
+  border-bottom: none;
+  padding: 1em 1.5em;
+}
+
+blockquote::before,
+blockquote::after {
+  display: none;
+}
+
+/* Code blocks - bright border */
+pre {
+  position: relative;
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--accent-primary);
+}
+
+/* H2 with dashed underline */
+h2 {
+  position: relative;
+  padding-bottom: 0.5em;
+}
+
+h2::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: repeating-linear-gradient(
+    to right,
+    var(--accent-primary) 0px,
+    var(--accent-primary) 8px,
+    transparent 8px,
+    transparent 12px
+  );
+}
+
+/* Header - no fancy decoration, just clean */
+.site-header::before {
+  display: none;
+}
+
+/* CRT scanline effect */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.1) 2px,
+    rgba(0, 0, 0, 0.1) 4px
+  );
+  z-index: 9997;
+}
+
+/* CRT vignette - darker edges */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgba(0, 0, 0, 0.5) 100%);
+  z-index: 9998;
+}
+
+/* Moving refresh scanline */
+@keyframes refresh-line {
+  0% { top: -5%; }
+  100% { top: 105%; }
+}
+
+.site-header::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(51, 255, 51, 0.15),
+    transparent
+  );
+  z-index: 9996;
+  pointer-events: none;
+  animation: refresh-line 8s linear infinite;
+}
+
+/* Subtle text flicker */
+@keyframes flicker {
+  0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% {
+    opacity: 1;
+  }
+  20%, 21.999%, 63%, 63.999%, 65%, 69.999% {
+    opacity: 0.85;
+  }
+}
+
+h1 {
+  animation: flicker 4s infinite;
+}
+
+/* Phosphor glow pulse on links */
+@keyframes phosphor-pulse {
+  0%, 100% { text-shadow: 0 0 2px rgba(51, 255, 51, 0.3); }
+  50% { text-shadow: 0 0 8px rgba(51, 255, 51, 0.6), 0 0 12px rgba(51, 255, 51, 0.3); }
+}
+
+a:hover {
+  animation: phosphor-pulse 1.5s ease-in-out infinite;
+}
+
+/* Cursor blink for active elements */
+@keyframes cursor-blink {
+  0%, 50% { border-color: var(--accent-primary); }
+  51%, 100% { border-color: transparent; }
+}
+
+input:focus, textarea:focus {
+  animation: cursor-blink 1s step-end infinite;
+}
