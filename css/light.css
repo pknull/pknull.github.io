@@ -8,23 +8,23 @@
    Reference: https://www.platinumgames.com/official-blog/article/9624 */
 
 :root {
-  /* Colors - faithful to actual game UI */
-  --bg-primary: #ddd8c7;       /* Actual NieR menu beige */
-  --bg-secondary: #afaa96;     /* Secondary panels */
-  --text-primary: #4a473e;     /* Actual NieR "muddy dark grey" */
-  --text-muted: #696868;       /* Muted text */
-  --text-body: #49463d;        /* Body text */
+  /* Colors - faithful to actual game UI, starker beige */
+  --bg-primary: #d4c9a8;       /* Starker NieR beige-yellow */
+  --bg-secondary: #c4b998;     /* Secondary panels */
+  --text-primary: #454138;     /* NieR "muddy dark grey" */
+  --text-muted: #5a564a;       /* Muted text */
+  --text-body: #454138;        /* Body text */
   --accent-primary: #9d4a2e;   /* Drab red-orange - use sparingly */
   --accent-highlight: #9d4a2e;
-  --border-color: #8a857a;     /* Subtle dividers */
-  --code-bg: #c8c2aa;          /* Code background */
-  --heading-color: #4a473e;    /* Same as text for flatness */
-  --heading-bg: transparent;
-  --blockquote-bg: rgba(175, 170, 150, 0.3);
-  --header-table-bg: #4a473e;
+  --border-color: #7a7568;     /* Subtle dividers */
+  --code-bg: #c4b998;          /* Code background */
+  --heading-color: #d4c9a8;    /* Light text for inverted headers */
+  --heading-bg: #454138;       /* Dark background for headers */
+  --blockquote-bg: rgba(150, 140, 120, 0.25);
+  --header-table-bg: #454138;
   --icon-filter: brightness(0) invert(28%) sepia(5%) saturate(500%) hue-rotate(20deg);
-  --focus-color: #4a473e;
-  --link-hover: #3a3832;
+  --focus-color: #454138;
+  --link-hover: #2a2822;
 
   /* Fonts - angular headers (NieR UI inspired), elegant serif body */
   --font-body: "Cormorant Garamond", Georgia, serif;
@@ -44,10 +44,14 @@ body {
   font-size: 1.8em;
 }
 
-/* Headings - clean, no decoration */
+/* Headings - inverted dark tabs (faithful to game UI) */
 h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  background: var(--heading-bg);
+  color: var(--heading-color);
+  padding: 0.4em 0.6em;
+  display: inline-block;
 }
 
 h1 {
