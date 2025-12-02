@@ -7,31 +7,38 @@
   <meta name="author" content="PKnull">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Google Analytics with Consent Mode v2 -->
+  <!-- Google Analytics - loaded only after consent -->
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
+    var gaLoaded = false;
 
-    // Consent Mode v2: all four required parameters
-    // Ad-related always denied (no ads on this site)
-    // Analytics denied until user consents
-    gtag('consent', 'default', {
-      'ad_storage': 'denied',
-      'ad_user_data': 'denied',
-      'ad_personalization': 'denied',
-      'analytics_storage': 'denied',
-      'wait_for_update': 500
-    });
+    function loadGoogleAnalytics() {
+      if (gaLoaded) return;
+      gaLoaded = true;
 
-    // Restore previous consent choice
-    if (localStorage.getItem('analytics_consent') === 'granted') {
-      gtag('consent', 'update', { 'analytics_storage': 'granted' });
+      // Load the GA script
+      var script = document.createElement('script');
+      script.async = true;
+      script.src = 'https://www.googletagmanager.com/gtag/js?id=G-YBVLPYGBNY';
+      document.head.appendChild(script);
+
+      // Configure with consent granted
+      gtag('consent', 'default', {
+        'ad_storage': 'denied',
+        'ad_user_data': 'denied',
+        'ad_personalization': 'denied',
+        'analytics_storage': 'granted'
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-YBVLPYGBNY');
     }
 
-    gtag('js', new Date());
-    gtag('config', 'G-YBVLPYGBNY');
+    // Only load if user previously consented
+    if (localStorage.getItem('analytics_consent') === 'granted') {
+      loadGoogleAnalytics();
+    }
   </script>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-YBVLPYGBNY"></script>
 
   <!-- Open Graph -->
   <meta property="og:title" content="PKNULL.AI">
@@ -67,7 +74,7 @@
 <header class="site-header">
         <h1>PKNULL.AI</h1>
         <nav class="site-nav">
-          <a href="#blog" class="nav-link active">Blog</a>
+          <a href="#blog" class="nav-link active" aria-current="page">Blog</a>
           <a href="#meta" class="nav-link">Meta</a>
           <a href="#link" class="nav-link">Link</a>
           <a href="#asha" class="nav-link">Asha</a>
@@ -80,6 +87,10 @@
       </main>
       <section id="giscus-container" class="giscus-section" hidden>
         <h2>Comments</h2>
+        <div id="giscus-placeholder" class="giscus-placeholder">
+          <button id="load-comments-btn" class="button-primary">Load Comments</button>
+          <p class="consent-note">Connects to GitHub via Giscus</p>
+        </div>
         <div class="giscus"></div>
       </section>
       <div id="status" role="status" aria-live="polite" class="sr-only"></div>
@@ -100,7 +111,7 @@
 </footer>
 
 <!-- Cookie Consent Banner -->
-<div id="consent-banner" class="consent-banner" role="dialog" aria-labelledby="consent-title" aria-describedby="consent-desc" hidden>
+<div id="consent-banner" class="consent-banner" role="dialog" aria-modal="true" aria-labelledby="consent-title" aria-describedby="consent-desc" hidden>
   <p id="consent-title"><strong>Analytics</strong></p>
   <p id="consent-desc">This site uses cookies for anonymous analytics.</p>
   <div class="consent-buttons">
@@ -127,7 +138,10 @@
     void: { css: 'css/void.css', isDark: true, label: 'VOID' },
     term: { css: 'css/term.css', isDark: true, label: 'TERM' },
     garm: { css: 'css/garm.css', isDark: false, label: 'GARM' },
-    mate: { css: 'css/mate.css', isDark: false, label: 'MATE' }
+    mate: { css: 'css/mate.css', isDark: false, label: 'MATE' },
+    neon: { css: 'css/gemini.css', isDark: true, label: 'NEON' },
+    byte: { css: 'css/codex.css', isDark: true, label: 'BYTE' },
+    vllm: { css: 'css/claude.css', isDark: false, label: 'VLLM' }
   };
   var themes = Object.keys(THEME_CONFIG);
 
@@ -174,16 +188,46 @@
   var consentAccept = document.getElementById('consent-accept');
   var consentDecline = document.getElementById('consent-decline');
   var storedConsent = localStorage.getItem('analytics_consent');
+  var previousActiveElement = null;
 
   function showConsentBanner() {
+    previousActiveElement = document.activeElement;
     consentBanner.hidden = false;
     consentBanner.setAttribute('aria-hidden', 'false');
+    // Focus first button
+    consentAccept.focus();
   }
 
   function hideConsentBanner() {
     consentBanner.hidden = true;
     consentBanner.setAttribute('aria-hidden', 'true');
+    // Restore focus
+    if (previousActiveElement && previousActiveElement.focus) {
+      previousActiveElement.focus();
+    }
   }
+
+  // Focus trap for consent banner
+  consentBanner.addEventListener('keydown', function(e) {
+    if (e.key === 'Tab') {
+      var focusable = consentBanner.querySelectorAll('button');
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    // Escape closes with decline behavior
+    if (e.key === 'Escape') {
+      localStorage.setItem('analytics_consent', 'denied');
+      hideConsentBanner();
+    }
+  });
 
   if (!storedConsent) {
     showConsentBanner();
@@ -191,7 +235,7 @@
 
   consentAccept.onclick = function() {
     localStorage.setItem('analytics_consent', 'granted');
-    gtag('consent', 'update', { 'analytics_storage': 'granted' });
+    loadGoogleAnalytics();
     hideConsentBanner();
   };
 
@@ -326,7 +370,10 @@
             // Add back link before content
             var backLink = '<p class="back-link"><a href="#blog">← All entries</a></p>\n\n';
             mainEl.innerHTML = DOMPurify.sanitize(renderMarkdown(backLink + entryMd));
-            loadGiscus(route.entry);
+            // Check if user clicked Comments link (auto-load) vs Link or direct nav
+            var shouldAutoLoad = window._autoLoadComments || false;
+            window._autoLoadComments = false; // Reset flag
+            loadGiscus(route.entry, { autoLoad: shouldAutoLoad });
           } else {
             // Entry not found, show all
             mainEl.innerHTML = DOMPurify.sanitize(renderMarkdown(md));
@@ -391,6 +438,8 @@
         commentsLink.href = '#blog:' + isoDate;
         commentsLink.textContent = 'Comments';
         commentsLink.addEventListener('click', function(e) {
+          // Signal that we want to auto-load comments
+          window._autoLoadComments = true;
           var scrollToComments = function() {
             var commentsSection = document.getElementById('giscus-container');
             if (commentsSection && !commentsSection.hidden) {
@@ -401,6 +450,10 @@
           // If already on this entry, scroll immediately
           if (window.location.hash === '#blog:' + isoDate) {
             e.preventDefault();
+            // Already on entry - load comments directly if consented
+            if (typeof loadGiscus === 'function') {
+              loadGiscus(isoDate, { autoLoad: true });
+            }
             scrollToComments();
           } else {
             // Navigating to entry - scroll to comments after content loads
@@ -481,32 +534,39 @@
   function updateActiveNav(page) {
     document.querySelectorAll('.nav-link').forEach(function(link) {
       link.classList.remove('active');
+      link.removeAttribute('aria-current');
       if (link.getAttribute('href') === '#' + page) {
         link.classList.add('active');
+        link.setAttribute('aria-current', 'page');
       }
     });
   }
 
   // Giscus comments
   var giscusContainer = document.getElementById('giscus-container');
+  var giscusPlaceholder = document.getElementById('giscus-placeholder');
+  var loadCommentsBtn = document.getElementById('load-comments-btn');
   var giscusLoaded = false;
   var lastGiscusTerm = null;
+  var pendingGiscusTerm = null;
 
   function getGiscusTheme() {
-    // Always use gruvbox dark for Giscus
-    return 'gruvbox_dark';
+    // Match Giscus theme to current site theme (dark/light)
+    var config = THEME_CONFIG[currentTheme] || THEME_CONFIG.comp;
+    var isDark = config.isDark;
+    // Handle 'auto' (COMP theme) - check system preference
+    if (isDark === 'auto') {
+      isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return isDark ? 'dark' : 'light';
   }
 
-  function loadGiscus(term, forceReload) {
-    if (!term) term = 'blog';
+  function hasConsent() {
+    return localStorage.getItem('analytics_consent') === 'granted';
+  }
 
-    // Don't reload if same term unless forced
-    if (giscusLoaded && lastGiscusTerm === term && !forceReload) {
-      giscusContainer.hidden = false;
-      return;
-    }
-
-    lastGiscusTerm = term;
+  function actuallyLoadGiscus(term, forceReload) {
+    giscusContainer.hidden = false;
     var giscusDiv = giscusContainer.querySelector('.giscus');
     giscusDiv.innerHTML = '';
 
@@ -529,18 +589,60 @@
     script.async = true;
 
     giscusDiv.appendChild(script);
-    giscusContainer.hidden = false;
+    giscusPlaceholder.hidden = true;
     giscusLoaded = true;
+    lastGiscusTerm = term;
   }
+
+  function loadGiscus(term, options) {
+    options = options || {};
+    var forceReload = options.forceReload || false;
+    var autoLoad = options.autoLoad || false;
+
+    if (!term) term = 'blog';
+    pendingGiscusTerm = term;
+
+    // Don't reload if same term unless forced
+    if (giscusLoaded && lastGiscusTerm === term && !forceReload) {
+      giscusContainer.hidden = false;
+      return;
+    }
+
+    // Check consent - if no consent, show placeholder with button
+    if (!hasConsent()) {
+      giscusContainer.hidden = false;
+      giscusPlaceholder.hidden = false;
+      return;
+    }
+
+    // Has consent and autoLoad requested (e.g., clicked Comments link) - load immediately
+    if (autoLoad) {
+      actuallyLoadGiscus(term);
+      return;
+    }
+
+    // Has consent but no autoLoad - show placeholder with load button
+    giscusContainer.hidden = false;
+    if (!giscusLoaded || lastGiscusTerm !== term) {
+      giscusPlaceholder.hidden = false;
+    }
+  }
+
+  // Load comments button handler
+  loadCommentsBtn.onclick = function() {
+    if (pendingGiscusTerm) {
+      actuallyLoadGiscus(pendingGiscusTerm);
+    }
+  };
 
   function hideGiscus() {
     giscusContainer.hidden = true;
   }
 
   function updateGiscusTheme() {
-    // Force reload with new theme if Giscus is visible
+    // Force reload with new theme if Giscus is visible and loaded
     if (giscusLoaded && !giscusContainer.hidden && lastGiscusTerm) {
-      loadGiscus(lastGiscusTerm, true);
+      actuallyLoadGiscus(lastGiscusTerm, true);
     }
   }
 

@@ -1,0 +1,275 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=Rubik+Glitch&family=Archivo+Black&family=VT323&display=swap');
+
+/*
+ * Theme: NEON (Nihilistic Electric Overload Nightmare)
+ * Created by: Gemini (Advanced I Multimodal) - 2025-12-02
+ *
+ * Warning: May cause retinal burn. Sunglasses recommended.
+ * Aesthetic: Vaporwave brutalism meets cyberpunk dive bar
+ * Inspiration: 3am discord servers, hacker terminals, broken neon signs
+ */
+
+:root {
+  /* Colors - Maximum Saturation Protocol */
+  --bg-primary: #0a0014;        /* Void purple, almost black */
+  --bg-secondary: #1a0033;      /* Deep electric purple */
+  --text-primary: #00ff41;      /* Terminal green scream */
+  --text-muted: #ff00ff;        /* Magenta assault */
+  --text-body: #00ffff;         /* Cyan override */
+
+  /* Accents - Violence */
+  --accent-primary: #ff00ff;    /* Hot magenta */
+  --accent-highlight: #ffff00;  /* Yellow warning */
+
+  --border-color: #ff00ff;
+  --code-bg: #1a0033;
+
+  --heading-color: #ffff00;
+  --heading-bg: transparent;
+
+  --blockquote-bg: #0a0014;
+  --header-table-bg: #ff00ff;
+
+  /* Icon filter - magenta corruption */
+  --icon-filter: brightness(0) saturate(100%) invert(13%) sepia(100%) saturate(7471%) hue-rotate(300deg) brightness(108%) contrast(114%);
+
+  --focus-color: #00ff41;
+  --link-hover: #ffff00;
+
+  /* Fonts - Chaotic Typographic Hierarchy */
+  --font-body: "IBM Plex Mono", "Courier New", monospace;
+  --font-h1: "Rubik Glitch", cursive;           /* Glitch font for maximum chaos */
+  --font-heading: "Archivo Black", sans-serif;   /* Brutalist weight */
+  --font-code: "VT323", monospace;               /* Retro terminal */
+}
+
+/* Scanline overlay - CRT corruption */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 0, 255, 0.03),
+    rgba(255, 0, 255, 0.03) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  animation: scanline 8s linear infinite;
+}
+
+@keyframes scanline {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(100vh); }
+}
+
+/* Vignette - Purple haze containment */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    rgba(255, 0, 255, 0.1) 40%,
+    rgba(10, 0, 20, 0.8) 100%
+  );
+  z-index: 9998;
+  box-shadow: inset 0 0 200px rgba(255, 0, 255, 0.3);
+}
+
+/* Selection - Inverted nightmare */
+::selection {
+  background: #ffff00;
+  color: #0a0014;
+  text-shadow: 0 0 10px #ff00ff;
+}
+
+/* Scrollbar - Neon conduit */
+::-webkit-scrollbar {
+  width: 12px;
+  background: #0a0014;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a0033;
+  border: 2px solid #ff00ff;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ff00ff 0%, #00ffff 100%);
+  border-radius: 0;
+  border: 2px solid #0a0014;
+  box-shadow: 0 0 10px #ff00ff;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ffff00 0%, #00ff41 100%);
+  box-shadow: 0 0 20px #ffff00;
+}
+
+/* Links - Electric discharge */
+a {
+  transition: all 0.15s ease-in-out;
+  text-shadow: 0 0 5px currentColor;
+}
+
+a:hover {
+  text-shadow:
+    0 0 10px currentColor,
+    0 0 20px var(--link-hover),
+    0 0 30px var(--link-hover);
+  transform: scale(1.02);
+  letter-spacing: 0.5px;
+}
+
+/* Headings - Glitch authority */
+h1, h2, h3, h4, h5, h6 {
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  text-shadow:
+    0 0 10px var(--heading-color),
+    2px 2px 0 #ff00ff,
+    -2px -2px 0 #00ffff;
+}
+
+h1 {
+  animation: glitch 3s infinite;
+}
+
+@keyframes glitch {
+  0%, 90%, 100% {
+    transform: translate(0);
+    opacity: 1;
+  }
+  92% {
+    transform: translate(-2px, 2px);
+    opacity: 0.8;
+  }
+  94% {
+    transform: translate(2px, -2px);
+    opacity: 0.9;
+  }
+  96% {
+    transform: translate(-1px, 1px);
+    opacity: 0.95;
+  }
+}
+
+/* Code blocks - Terminal immersion */
+code, pre {
+  text-shadow: 0 0 5px #00ff41;
+  border: 2px solid var(--accent-primary);
+  box-shadow:
+    0 0 10px rgba(255, 0, 255, 0.5),
+    inset 0 0 20px rgba(0, 255, 65, 0.1);
+}
+
+/* Blockquotes - Warning containment */
+blockquote {
+  border-left: 5px solid #ffff00;
+  background: linear-gradient(90deg, rgba(255, 255, 0, 0.1) 0%, transparent 100%);
+  box-shadow: 0 0 20px rgba(255, 255, 0, 0.2);
+  font-style: italic;
+}
+
+/* Tables - Grid brutalism */
+table {
+  border: 3px solid var(--accent-primary);
+  box-shadow: 0 0 15px rgba(255, 0, 255, 0.3);
+}
+
+th {
+  background: linear-gradient(135deg, var(--header-table-bg) 0%, #00ffff 100%);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px #000;
+}
+
+tr:hover {
+  background: rgba(255, 0, 255, 0.1);
+  box-shadow: inset 0 0 20px rgba(255, 0, 255, 0.2);
+}
+
+/* Buttons - Tactile overload */
+button, input[type="submit"] {
+  background: linear-gradient(135deg, #ff00ff 0%, #00ffff 100%);
+  border: 3px solid #ffff00;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px #000;
+  box-shadow:
+    0 0 20px rgba(255, 0, 255, 0.5),
+    0 5px 15px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+button:hover, input[type="submit"]:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow:
+    0 0 30px rgba(255, 255, 0, 0.8),
+    0 10px 25px rgba(0, 0, 0, 0.5);
+  border-color: #00ff41;
+}
+
+/* Focus states - Electric containment */
+*:focus {
+  outline: 3px solid var(--focus-color);
+  outline-offset: 3px;
+  box-shadow: 0 0 15px var(--focus-color);
+}
+
+/* Images - Chromatic aberration hint */
+img {
+  filter:
+    saturate(1.3)
+    contrast(1.1)
+    drop-shadow(2px 2px 0 rgba(255, 0, 255, 0.3))
+    drop-shadow(-2px -2px 0 rgba(0, 255, 255, 0.3));
+  transition: all 0.3s ease;
+}
+
+img:hover {
+  filter:
+    saturate(1.5)
+    contrast(1.2)
+    drop-shadow(4px 4px 0 rgba(255, 0, 255, 0.5))
+    drop-shadow(-4px -4px 0 rgba(0, 255, 255, 0.5));
+  transform: scale(1.02);
+}
+
+/* HR - Neon divider */
+hr {
+  border: none;
+  height: 3px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    #ff00ff 20%,
+    #00ffff 40%,
+    #ffff00 60%,
+    #00ff41 80%,
+    transparent 100%
+  );
+  box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+  margin: 2rem 0;
+}
+
+/* Timestamp/metadata - Subdued chaos */
+.meta, .timestamp, time {
+  color: var(--text-muted);
+  font-family: var(--font-code);
+  text-shadow: 0 0 3px var(--text-muted);
+  opacity: 0.8;
+}
+
+/* Warning: this theme may cause temporal displacement */

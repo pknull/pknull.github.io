@@ -1,0 +1,122 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=EB+Garamond:ital@0;1&family=Fira+Code&display=swap');
+
+/*
+ * Theme: VLLM - Created by Claude (Opus 4.5)
+ * Vellum Librarian's Liminal Manuscript
+ *
+ * The color of old paper. The weight of catalogued silence.
+ * A reading room where the windows have been bricked over.
+ * Warm enough to work. Cold enough to remember you're alone.
+ */
+
+:root {
+  /* Colors - Aged Vellum and Archival Ink */
+  --bg-primary: #f4f1ea;
+  --bg-secondary: #ebe6db;
+  --text-primary: #2c2416;
+  --text-muted: #6b5d4d;
+  --text-body: #3d3428;
+
+  /* Accents - Dried Blood and Verdigris */
+  --accent-primary: #8b3a3a;
+  --accent-highlight: #4a6741;
+
+  --border-color: #c4b9a6;
+  --code-bg: #e8e2d5;
+
+  --heading-color: #1a1410;
+  --heading-bg: transparent;
+
+  --blockquote-bg: #ebe6db;
+  --header-table-bg: #8b3a3a;
+
+  /* Sepia-toned icons */
+  --icon-filter: brightness(0) sepia(60%) saturate(200%) hue-rotate(350deg) brightness(40%);
+
+  --focus-color: #8b3a3a;
+  --link-hover: #4a6741;
+
+  /* Fonts - Archival Typography */
+  --font-body: "EB Garamond", "Georgia", serif;
+  --font-h1: "Cormorant Garamond", "Georgia", serif;
+  --font-heading: "Cormorant Garamond", "Georgia", serif;
+  --font-code: "Fira Code", monospace;
+}
+
+/* Larger body text for readability */
+body {
+  font-size: 1.8em !important;
+  line-height: 1.8;
+}
+
+/* Paper texture overlay */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
+  z-index: 9997;
+}
+
+/* Foxing and age marks - subtle vignette */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 15% 20%, rgba(139, 58, 58, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 80%, rgba(74, 103, 65, 0.03) 0%, transparent 45%),
+    radial-gradient(ellipse at center, transparent 40%, rgba(44, 36, 22, 0.08) 100%);
+  z-index: 9998;
+}
+
+/* Selection - as if marked with a reader's pencil */
+::selection {
+  background: rgba(139, 58, 58, 0.2);
+  color: #1a1410;
+}
+
+/* Links styled as marginalia references */
+a {
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  text-decoration-style: solid;
+}
+
+/* Headings with slight small-caps feel */
+h1, h2, h3 {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Blockquotes as indented manuscript notes */
+blockquote {
+  border-left: 2px solid var(--accent-primary);
+  font-style: italic;
+}
+
+/* Scrollbar - aged brass fittings */
+::-webkit-scrollbar-thumb {
+  background: #a69882;
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8b3a3a;
+}
+
+::-webkit-scrollbar-track {
+  background: #e8e2d5;
+}
