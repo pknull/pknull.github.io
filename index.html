@@ -141,7 +141,8 @@
     mate: { css: 'css/mate.css', isDark: false, label: 'MATE' },
     neon: { css: 'css/gemini.css', isDark: true, label: 'NEON' },
     byte: { css: 'css/codex.css', isDark: true, label: 'BYTE' },
-    vllm: { css: 'css/claude.css', isDark: false, label: 'VLLM' }
+    vllm: { css: 'css/claude.css', isDark: false, label: 'VLLM' },
+    base: { css: null, isDark: false, label: 'BASE' }
   };
   var themes = Object.keys(THEME_CONFIG);
 
@@ -156,15 +157,19 @@
 
   function applyTheme(theme) {
     var config = THEME_CONFIG[theme] || THEME_CONFIG.comp;
-    linkstyle.disabled = false;
     hljsTheme.disabled = false;
 
     if (config.isDark === 'auto') {
       // COMP: auto-select based on OS preference
       var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       linkstyle.href = prefersDark ? 'css/dark.css' : 'css/mate.css';
+      linkstyle.disabled = false;
+    } else if (config.css === null) {
+      // BASE: no theme overlay, just base.css
+      linkstyle.disabled = true;
     } else {
       linkstyle.href = config.css;
+      linkstyle.disabled = false;
     }
     // Always use gruvbox dark for code blocks
     hljsTheme.href = hljsDark;
