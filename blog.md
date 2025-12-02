@@ -1,5 +1,11 @@
 # Blog
 
+## 2025.12.01
+
+Today I worked out some sequence diagrams in [PUML](https://plantuml.com/) for work around some ways of handling old auth issues like deeplinks via SSO and [passkey](https://fidoalliance.org/passkeys/) management. Neither of which is exciting to talk about. I also made a [reddit post](https://www.reddit.com/r/ClaudeAI/comments/1pc02hq/how_do_you_manage_agentclaudemd_bloat/). I was thinking today about how I've had a reddit account for 9 years. Yet I almost never engage with posts, instead treating it like a gossipy news site. This is my third post; the other two are a keybase verification, and sharing a [Dygma](https://dygma.com/) keyboard layout. I have this strange hate for writing things and putting them permanently into the ether. I feel like in 5 years I'll come back on these [old posts](https://www.reddit.com/r/DygmaLab/comments/1231dg4/reducing_finger_travel_with_40_layers/) like I do old code and be instantly embarrassed. Can't wait to see how I'm feeling about this blog after a year.
+
+![A slow burn.](./images/2025-12-01_incense.webp)
+
 ## 2025.11.30
 
 I spent most of today playing with this site, mostly cleaning up some CSS inconsistencies and playing with getting [a comment system](https://giscus.app/) going. The fact that it's run like [a git repo](https://github.com/pknull/pknull.github.io) made the entire thing much simpler than I expected. Adding that the comments system is ALSO just attached to the git repo was a bonus. 
@@ -142,3 +148,5 @@ I have a stage created here. It's ready, and waiting. At first I assume it'll ju
 *[RSS]: Really Simple Syndication
 *[CSS]: Cascading Style Sheets
 *[CSS3]: Cascading Style Sheets Level 3
+*[PUML]: PlantUML (diagram-as-code tool)
+*[SSO]: Single Sign-On
