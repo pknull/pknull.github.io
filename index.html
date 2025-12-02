@@ -54,17 +54,13 @@
 
   <link rel="canonical" href="https://pknull.ai/">
 
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css" integrity="sha384-fRuya36Gb/YRGgzq/ichTstZs3FgqUTsL6+s+RTc8uT0oRO5zHMymXMJ+cS2dh3s" crossorigin="anonymous">
   <link rel="stylesheet" href="css/base.css">
-  <link id="linkstyle" rel="stylesheet" href="css/dark.css">
+  <link id="linkstyle" rel="stylesheet" href="" disabled>
   <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
   <script defer src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" integrity="sha384-948ahk4ZmxYVYOc+rxN1H2gM1EJ2Duhp7uHtZ4WSLkV4Vtx5MUqnV+l7u9B+jFv+" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js" integrity="sha384-+qi1h9Ene5uYXijovnRnDpm2TZiNyVFgYjKIqjw6id8zLdWYt+tCPG9/1u6yLaNj" crossorigin="anonymous"></script>
-  <link id="hljs-theme" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/base16/gruvbox-dark-hard.min.css" integrity="sha384-hZVY9d5XrlCe4nkT4qgsficXip2xO/Oo46Ysj4koXpIOlTA/PlLBmfVmTl6uLS3+" crossorigin="anonymous">
+  <link id="hljs-theme" rel="stylesheet" href="" disabled>
   <script defer src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js" integrity="sha384-F/bZzf7p3Joyp5psL90p/p89AZJsndkSoGwRpXcZhleCWhd8SnRuoYo4d0yirjJp" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -97,16 +93,16 @@
 
       <footer class="site-footer">
         <div class="validation-badges">
-          <a href="https://validator.w3.org/check?uri=referer"><img src="./images/badge-html5.svg" alt="Valid HTML5"></a>
-          <a href="https://jigsaw.w3.org/css-validator/check/referer"><img src="./images/badge-css3.svg" alt="Valid CSS"></a>
-          <a href="https://www.w3.org/WAI/WCAG21/quickref/"><img src="./images/badge-wcag.svg" alt="WCAG 2.1 AA"></a>
+          <a href="https://validator.w3.org/check?uri=referer"><img loading="lazy" src="./images/badge-html5.svg" alt="Valid HTML5"></a>
+          <a href="https://jigsaw.w3.org/css-validator/check/referer"><img loading="lazy" src="./images/badge-css3.svg" alt="Valid CSS"></a>
+          <a href="https://www.w3.org/WAI/WCAG21/quickref/"><img loading="lazy" src="./images/badge-wcag.svg" alt="WCAG 2.1 AA"></a>
         </div>
         <small aria-hidden="true">{x[t] == (a t)/(2 E^(I t)) + (a E^(I t) t)/2}</small>
         <div class="footer-icons" aria-hidden="true">
-          <img src="./images/pk-glyph.svg" alt="">
-          <img src="./images/null.svg" alt="">
-          <img src="./images/aas-sigil.svg" alt="">
-          <img src="./images/pookimon.svg" alt="">
+          <img loading="lazy" src="./images/pk-glyph.svg" alt="">
+          <img loading="lazy" src="./images/null.svg" alt="">
+          <img loading="lazy" src="./images/aas-sigil.svg" alt="">
+          <img loading="lazy" src="./images/pookimon.svg" alt="">
         </div>
 </footer>
 
@@ -127,6 +123,18 @@
   var linkstyle = document.getElementById('linkstyle');
   var hljsTheme = document.getElementById('hljs-theme');
   var themeToggle = document.getElementById('theme-toggle');
+  // Daily cache-buster to avoid manual bumps; override via meta[name="build-id"] if present
+  var CACHE_VERSION = (document.querySelector('meta[name="build-id"]') || {}).content || new Date().toISOString().slice(0, 10);
+  var HLJS_THEMES = {
+    dark: {
+      href: 'css/hljs-dark.css',
+      integrity: ''
+    },
+    light: {
+      href: 'css/hljs-light.css',
+      integrity: ''
+    }
+  };
   var THEME_CONFIG = {
     comp: { css: null, isDark: 'auto', label: 'COMP' },
     dark: { css: 'css/dark.css', isDark: true, label: 'GRUV' },
@@ -145,6 +153,24 @@
     base: { css: null, isDark: false, label: 'BASE' }
   };
   var themes = Object.keys(THEME_CONFIG);
+  var preconnectInserted = false;
+
+  function insertPreconnects() {
+    if (preconnectInserted) return;
+    preconnectInserted = true;
+    var head = document.head;
+    [
+      { href: 'https://cdn.jsdelivr.net', crossorigin: 'anonymous' },
+      { href: 'https://fonts.googleapis.com', crossorigin: 'anonymous' },
+      { href: 'https://fonts.gstatic.com', crossorigin: 'anonymous' }
+    ].forEach(function(cfg) {
+      var link = document.createElement('link');
+      link.rel = 'preconnect';
+      link.href = cfg.href;
+      if (cfg.crossorigin) link.crossOrigin = cfg.crossorigin;
+      head.appendChild(link);
+    });
+  }
 
   // Check localStorage, else default to COMP (auto light/dark)
   var currentTheme = localStorage.getItem('theme');
@@ -152,16 +178,31 @@
     currentTheme = 'comp';
   }
   if (themes.indexOf(currentTheme) === -1) currentTheme = 'comp';
-  var hljsDark = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/base16/gruvbox-dark-hard.min.css';
-  var hljsDarkIntegrity = 'sha384-hZVY9d5XrlCe4nkT4qgsficXip2xO/Oo46Ysj4koXpIOlTA/PlLBmfVmTl6uLS3+';
+
+  function setHighlightTheme(isDark) {
+    var theme = isDark ? HLJS_THEMES.dark : HLJS_THEMES.light;
+    if (!theme) {
+      hljsTheme.disabled = true;
+      return;
+    }
+    hljsTheme.disabled = false;
+    hljsTheme.href = theme.href;
+    if (theme.integrity) {
+      hljsTheme.integrity = theme.integrity;
+      hljsTheme.crossOrigin = 'anonymous';
+    } else {
+      hljsTheme.removeAttribute('integrity');
+      hljsTheme.removeAttribute('crossorigin');
+    }
+  }
 
   function applyTheme(theme) {
     var config = THEME_CONFIG[theme] || THEME_CONFIG.comp;
-    hljsTheme.disabled = false;
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var resolvedIsDark = config.isDark === 'auto' ? prefersDark : !!config.isDark;
 
     if (config.isDark === 'auto') {
       // COMP: auto-select based on OS preference
-      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       linkstyle.href = prefersDark ? 'css/dark.css' : 'css/mate.css';
       linkstyle.disabled = false;
     } else if (config.css === null) {
@@ -171,9 +212,7 @@
       linkstyle.href = config.css;
       linkstyle.disabled = false;
     }
-    // Always use gruvbox dark for code blocks
-    hljsTheme.href = hljsDark;
-    hljsTheme.integrity = hljsDarkIntegrity;
+    setHighlightTheme(resolvedIsDark);
 
     themeToggle.textContent = config.label;
   }
@@ -259,6 +298,7 @@
   };
 
   var currentPage = 'blog';
+  var pagesCache = {};
 
   function parseHash() {
     var hash = window.location.hash.slice(1);
@@ -269,14 +309,28 @@
     return { page: pages[page] ? page : 'blog', entry: entry };
   }
 
-  var contentLoaded = false;
-  var lastRoute = null;
+    var contentLoaded = false;
+    var lastRoute = null;
 
-  // Abbreviation processing (Kramdown-style *[ABBR]: Definition)
-  function extractAbbreviations(md) {
-    var abbrs = {};
-    var lines = md.split('\n');
-    var contentLines = [];
+    function setLazyImages(scope) {
+      var root = scope || document;
+      var imgs = root.querySelectorAll('img');
+      imgs.forEach(function(img) {
+        if (!img.hasAttribute('loading')) {
+          img.loading = 'lazy';
+        }
+      });
+    }
+
+    function escapeRegExp(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // Abbreviation processing (Kramdown-style *[ABBR]: Definition)
+    function extractAbbreviations(md) {
+      var abbrs = {};
+      var lines = md.split('\n');
+      var contentLines = [];
     var abbrPattern = /^\*\[([^\]]+)\]:\s*(.+)$/;
 
     for (var i = 0; i < lines.length; i++) {
@@ -287,29 +341,67 @@
         contentLines.push(lines[i]);
       }
     }
-    return { content: contentLines.join('\n'), abbrs: abbrs };
-  }
-
-  function applyAbbreviations(html, abbrs) {
-    var keys = Object.keys(abbrs);
-    if (keys.length === 0) return html;
-
-    // Sort by length descending to match longer terms first
-    keys.sort(function(a, b) { return b.length - a.length; });
-
-    for (var i = 0; i < keys.length; i++) {
-      var term = keys[i];
-      var def = abbrs[term];
-      // Match whole words only, not inside tags or existing abbr
-      var regex = new RegExp('\\b(' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')\\b(?![^<]*>)', 'g');
-      html = html.replace(regex, '<abbr title="' + def + '">$1</abbr>');
+      return { content: contentLines.join('\n'), abbrs: abbrs };
     }
-    return html;
-  }
 
-  function renderMarkdown(md) {
-    var extracted = extractAbbreviations(md);
-    var html = marked.parse(extracted.content);
+    function applyAbbreviations(html, abbrs) {
+      var keys = Object.keys(abbrs);
+      if (keys.length === 0) return html;
+
+      keys.sort(function(a, b) { return b.length - a.length; });
+      var pattern = new RegExp('\\b(' + keys.map(escapeRegExp).join('|') + ')\\b', 'g');
+      var template = document.createElement('template');
+      template.innerHTML = html;
+      var walker = document.createTreeWalker(template.content, NodeFilter.SHOW_TEXT, null, false);
+
+      function shouldSkip(node) {
+        var el = node.parentElement;
+        while (el) {
+          var tag = el.tagName && el.tagName.toLowerCase();
+          if (tag === 'code' || tag === 'pre' || tag === 'kbd' || tag === 'samp' || tag === 'abbr') return true;
+          el = el.parentElement;
+        }
+        return false;
+      }
+
+      while (walker.nextNode()) {
+        var node = walker.currentNode;
+        var text = node.nodeValue;
+        if (!text || !text.trim()) continue;
+        if (shouldSkip(node)) continue;
+
+        var lastIndex = 0;
+        var match;
+        var frag = null;
+        pattern.lastIndex = 0;
+
+        while ((match = pattern.exec(text)) !== null) {
+          if (!frag) frag = document.createDocumentFragment();
+          if (match.index > lastIndex) {
+            frag.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+          }
+          var term = match[1];
+          var abbr = document.createElement('abbr');
+          abbr.title = abbrs[term];
+          abbr.textContent = term;
+          frag.appendChild(abbr);
+          lastIndex = match.index + term.length;
+        }
+
+        if (frag) {
+          if (lastIndex < text.length) {
+            frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+          }
+          node.parentNode.replaceChild(frag, node);
+        }
+      }
+
+      return template.innerHTML;
+    }
+
+    function renderMarkdown(md) {
+      var extracted = extractAbbreviations(md);
+      var html = marked.parse(extracted.content);
     return applyAbbreviations(html, extracted.abbrs);
   }
 
@@ -359,56 +451,68 @@
     currentPage = route.page;
     lastRoute = route;
     var url = pages[route.page] || pages.blog;
+    var cacheKey = url + '?v=' + CACHE_VERSION;
 
-    fetch(url)
+    function renderFromMarkdown(md) {
+      var mainEl = document.getElementById('main');
+
+      if (route.page === 'blog' && route.entry) {
+        // Single entry view
+        var entryMd = extractEntry(md, route.entry);
+        if (entryMd) {
+          // Add back link before content
+          var backLink = '<p class="back-link"><a href="#blog">← All entries</a></p>\n\n';
+          mainEl.innerHTML = DOMPurify.sanitize(renderMarkdown(backLink + entryMd));
+          // Check if user clicked Comments link (auto-load) vs Link or direct nav
+          var shouldAutoLoad = window._autoLoadComments || false;
+          window._autoLoadComments = false; // Reset flag
+          loadGiscus(route.entry, { autoLoad: shouldAutoLoad });
+        } else {
+          // Entry not found, show all
+          mainEl.innerHTML = DOMPurify.sanitize(renderMarkdown(md));
+          addEntryLinks();
+          hideGiscus();
+        }
+      } else if (route.page === 'blog') {
+        // Full blog view - no comments
+        mainEl.innerHTML = DOMPurify.sanitize(renderMarkdown(md));
+        addEntryLinks();
+        hideGiscus();
+      } else if (route.page === 'test') {
+        // Test page - show comments for testing
+        mainEl.innerHTML = DOMPurify.sanitize(renderMarkdown(md));
+        loadGiscus('test');
+      } else {
+        // Other pages
+        mainEl.innerHTML = DOMPurify.sanitize(renderMarkdown(md));
+        hideGiscus();
+      }
+
+      setLazyImages(mainEl);
+      contentLoaded = true;
+      updateActiveNav(route.page);
+      if (window.hljs) hljs.highlightAll();
+      addCodeCopyButtons();
+
+      // Scroll to top for entry views
+      if (route.entry) {
+        window.scrollTo(0, 0);
+      }
+    }
+
+    if (pagesCache[cacheKey]) {
+      renderFromMarkdown(pagesCache[cacheKey]);
+      return;
+    }
+
+    fetch(cacheKey, { cache: 'no-cache' })
       .then(function(response) {
         if (!response.ok) throw new Error('Failed to load');
         return response.text();
       })
       .then(function(md) {
-        var mainEl = document.getElementById('main');
-
-        if (route.page === 'blog' && route.entry) {
-          // Single entry view
-          var entryMd = extractEntry(md, route.entry);
-          if (entryMd) {
-            // Add back link before content
-            var backLink = '<p class="back-link"><a href="#blog">← All entries</a></p>\n\n';
-            mainEl.innerHTML = DOMPurify.sanitize(renderMarkdown(backLink + entryMd));
-            // Check if user clicked Comments link (auto-load) vs Link or direct nav
-            var shouldAutoLoad = window._autoLoadComments || false;
-            window._autoLoadComments = false; // Reset flag
-            loadGiscus(route.entry, { autoLoad: shouldAutoLoad });
-          } else {
-            // Entry not found, show all
-            mainEl.innerHTML = DOMPurify.sanitize(renderMarkdown(md));
-            addEntryLinks();
-            hideGiscus();
-          }
-        } else if (route.page === 'blog') {
-          // Full blog view - no comments
-          mainEl.innerHTML = DOMPurify.sanitize(renderMarkdown(md));
-          addEntryLinks();
-          hideGiscus();
-        } else if (route.page === 'test') {
-          // Test page - show comments for testing
-          mainEl.innerHTML = DOMPurify.sanitize(renderMarkdown(md));
-          loadGiscus('test');
-        } else {
-          // Other pages
-          mainEl.innerHTML = DOMPurify.sanitize(renderMarkdown(md));
-          hideGiscus();
-        }
-
-        contentLoaded = true;
-        updateActiveNav(route.page);
-        if (window.hljs) hljs.highlightAll();
-        addCodeCopyButtons();
-
-        // Scroll to top for entry views
-        if (route.entry) {
-          window.scrollTo(0, 0);
-        }
+        pagesCache[cacheKey] = md;
+        renderFromMarkdown(md);
       })
       .catch(function() {
         document.getElementById('main').innerHTML = '<p>Failed to load content. <a href="javascript:location.reload()">Reload</a></p>';
@@ -566,13 +670,17 @@
     return isDark ? 'dark' : 'light';
   }
 
-  function hasConsent() {
-    return localStorage.getItem('analytics_consent') === 'granted';
-  }
+    function hasAnalyticsConsent() {
+      return localStorage.getItem('analytics_consent') === 'granted';
+    }
 
-  function actuallyLoadGiscus(term, forceReload) {
-    giscusContainer.hidden = false;
-    var giscusDiv = giscusContainer.querySelector('.giscus');
+    function hasCommentsConsent() {
+      return localStorage.getItem('comments_consent') === 'granted';
+    }
+
+    function actuallyLoadGiscus(term, forceReload) {
+      giscusContainer.hidden = false;
+      var giscusDiv = giscusContainer.querySelector('.giscus');
     giscusDiv.innerHTML = '';
 
     var script = document.createElement('script');
@@ -599,12 +707,12 @@
     lastGiscusTerm = term;
   }
 
-  function loadGiscus(term, options) {
-    options = options || {};
-    var forceReload = options.forceReload || false;
-    var autoLoad = options.autoLoad || false;
+    function loadGiscus(term, options) {
+      options = options || {};
+      var forceReload = options.forceReload || false;
+      var autoLoad = options.autoLoad || false;
 
-    if (!term) term = 'blog';
+      if (!term) term = 'blog';
     pendingGiscusTerm = term;
 
     // Don't reload if same term unless forced
@@ -613,12 +721,12 @@
       return;
     }
 
-    // Check consent - if no consent, show placeholder with button
-    if (!hasConsent()) {
-      giscusContainer.hidden = false;
-      giscusPlaceholder.hidden = false;
-      return;
-    }
+      // Check comments consent - if no consent, show placeholder with button
+      if (!hasCommentsConsent()) {
+        giscusContainer.hidden = false;
+        giscusPlaceholder.hidden = false;
+        return;
+      }
 
     // Has consent and autoLoad requested (e.g., clicked Comments link) - load immediately
     if (autoLoad) {
@@ -633,12 +741,13 @@
     }
   }
 
-  // Load comments button handler
-  loadCommentsBtn.onclick = function() {
-    if (pendingGiscusTerm) {
-      actuallyLoadGiscus(pendingGiscusTerm);
-    }
-  };
+    // Load comments button handler
+    loadCommentsBtn.onclick = function() {
+      localStorage.setItem('comments_consent', 'granted');
+      if (pendingGiscusTerm) {
+        actuallyLoadGiscus(pendingGiscusTerm);
+      }
+    };
 
   function hideGiscus() {
     giscusContainer.hidden = true;
@@ -652,6 +761,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', function() {
+    insertPreconnects();
     // Configure marked to increment heading levels by 1
     marked.use({
       walkTokens: function(token) {

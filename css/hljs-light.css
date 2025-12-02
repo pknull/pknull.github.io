@@ -1,0 +1,64 @@
+.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1rem 1.5rem;
+  background: var(--code-bg);
+  color: #1f2937;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal {
+  color: #0f4c81;
+  font-weight: 600;
+}
+
+.hljs-type,
+.hljs-name,
+.hljs-attribute,
+.hljs-built_in,
+.hljs-tag {
+  color: #0f4c81;
+}
+
+.hljs-number,
+.hljs-attr,
+.hljs-template-variable {
+  color: #b45309;
+}
+
+.hljs-string,
+.hljs-meta-string {
+  color: #065f46;
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-selector-id {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.hljs-symbol,
+.hljs-bullet {
+  color: #be123c;
+}
+
+.hljs-link {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: 700;
+}
