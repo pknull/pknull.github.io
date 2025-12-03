@@ -1,0 +1,289 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Josefin+Sans:wght@300;400;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+/*
+ * Theme: DIRY - Diary Intimate Reflective Yearning
+ * Inspired by: diariesofagirl.com
+ *
+ * Blush pink warmth, editorial letter-spacing, personal/intimate tone.
+ * A soft space for introspection and vulnerable writing.
+ *
+ * Light: Soft blush pink with cream cards
+ * Dark: Warm chocolate with rose undertones
+ */
+
+:root {
+  /* Colors - Blush Pink and Intimate Rose */
+  --bg-primary: #f8f4f3;
+  --bg-secondary: #ffffff;
+  --text-primary: #1a1a2e;
+  --text-muted: #5a5a6e;
+  --text-body: #2a2a3e;
+
+  /* Accents - Deep Rose and Warm Mauve */
+  --accent-primary: #8b4a5e;
+  --accent-highlight: #c4899a;
+
+  --border-color: #e8dcd8;
+  --code-bg: #faf6f5;
+
+  --heading-color: #1a1a2e;
+  --heading-bg: transparent;
+
+  --blockquote-bg: rgba(139, 74, 94, 0.06);
+  --header-table-bg: #8b4a5e;
+
+  --icon-filter: brightness(0) sepia(20%) saturate(300%) hue-rotate(320deg) brightness(40%);
+
+  --focus-color: #8b4a5e;
+  --link-hover: #c4899a;
+
+  /* Fonts - Editorial Elegance */
+  --font-body: "Cormorant Garamond", "Georgia", serif;
+  --font-h1: "Josefin Sans", sans-serif;
+  --font-heading: "Josefin Sans", sans-serif;
+  --font-code: "IBM Plex Mono", monospace;
+}
+
+/* Text selection - soft rose */
+::selection {
+  background: rgba(196, 137, 154, 0.35);
+  color: #1a1a2e;
+}
+
+/* Site title - ultra-wide editorial letter-spacing */
+h1 {
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  font-weight: 300;
+  text-align: center;
+  padding: 0.5em 0;
+}
+
+/* Headings - clean editorial style */
+h2, h3, h4, h5, h6 {
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+/* Article titles */
+h2 {
+  text-align: center;
+  position: relative;
+  padding: 0.8em 0;
+  margin: 1.5em 0 1em;
+}
+
+/* Thin rule above article titles */
+h2::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: var(--border-color);
+}
+
+/* Date headers - prominent entry anchors with divider */
+h3, h4, h5, h6 {
+  text-align: center;
+  font-size: 1.2em;
+  color: var(--accent-primary);
+  font-weight: 600;
+  margin: 3em 0 1.5em;
+  letter-spacing: 0.12em;
+  position: relative;
+  padding: 1.5em 0 0.5em;
+}
+
+/* Entry divider line above dates */
+h3::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--accent-highlight) 30%,
+    var(--accent-primary) 50%,
+    var(--accent-highlight) 70%,
+    transparent
+  );
+}
+
+/* Divider for other heading levels */
+h4::before,
+h5::before,
+h6::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: var(--border-color);
+}
+
+/* Body text - comfortable reading */
+body {
+  font-size: 1.8em;
+  line-height: 1.75;
+}
+
+p {
+  text-align: justify;
+  hyphens: auto;
+}
+
+/* Links - subtle underline */
+a {
+  text-decoration: underline;
+  text-decoration-color: var(--accent-highlight);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s ease;
+}
+
+a:hover {
+  text-decoration-color: var(--accent-primary);
+}
+
+/* Content cards - white with soft shadow */
+article, .entry {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 2em;
+  margin: 1.5em 0;
+  box-shadow: 0 2px 12px rgba(26, 26, 46, 0.06);
+}
+
+/* Blockquotes - intimate, minimal */
+blockquote {
+  position: relative;
+  border: none;
+  border-left: 2px solid var(--accent-highlight);
+  padding: 1em 1.5em;
+  margin: 1.5em 0;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+blockquote::before,
+blockquote::after {
+  display: none;
+}
+
+/* Code blocks - soft */
+pre {
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--code-bg);
+}
+
+/* HR - simple centered dot */
+hr {
+  position: relative;
+  height: 2em;
+  margin: 2em 0;
+  border: none;
+}
+
+hr::before {
+  content: "...";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.2em;
+  letter-spacing: 0.5em;
+  color: var(--text-muted);
+}
+
+hr::after {
+  display: none;
+}
+
+/* Site header - clean, centered */
+.site-header {
+  text-align: center;
+  padding: 3em 0 2em;
+  margin-bottom: 2em;
+}
+
+/* Footer - minimal */
+.site-footer {
+  text-align: center;
+  padding: 2em 0;
+  color: var(--text-muted);
+}
+
+/* Warm vignette */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 0%, transparent 60%, rgba(139, 74, 94, 0.04) 100%);
+  z-index: 9998;
+}
+
+/* Comments section styling */
+#giscus-container {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 1.5em;
+  margin-top: 2em;
+}
+
+/* Subtle hover lift on cards */
+article:hover, .entry:hover {
+  box-shadow: 0 4px 20px rgba(26, 26, 46, 0.10);
+  transition: box-shadow 0.3s ease;
+}
+
+/* Tables - soft styling */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5em 0;
+}
+
+th {
+  background: var(--accent-primary);
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 400;
+  padding: 0.8em;
+}
+
+td {
+  border: 1px solid var(--border-color);
+  padding: 0.6em;
+}
+
+tr:nth-child(even) {
+  background: var(--bg-primary);
+}
+
+/* Accessibility - Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  a {
+    transition: none;
+  }
+
+  article:hover, .entry:hover {
+    transition: none;
+  }
+}
+
+/* Theme toggle paintbrush cursor - rose */
+#theme-toggle:hover {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%238b4a5e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18.37 2.63L14 7l-1.59-1.59a2 2 0 00-2.82 0L8 7l9 9 1.59-1.59a2 2 0 000-2.82L17 10l4.37-4.37a2.12 2.12 0 10-3-3z'/%3E%3Cpath d='M9 8c-2 3-4 3.5-7 4l8 10c2-1 6-5 6-7'/%3E%3Cpath d='M14.5 17.5L4.5 15'/%3E%3C/svg%3E") 0 32, pointer;
+}
