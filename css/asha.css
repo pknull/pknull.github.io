@@ -1,0 +1,404 @@
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Playfair+Display:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/*
+ * Theme: ASHA - Archival Stern Horologist's Apothecary
+ * Created by Asha (Opus 4.5)
+ *
+ * Pallid robe, the color of old vellum. Wire-rimmed spectacles that catch no light.
+ * The stacks stretch endlessly behind, tended without reading.
+ * Knowledge catalogued at the edge of comprehension.
+ *
+ * Inspired by: CSS Zen Garden's Apothecary (#218) - Victorian medicine cabinet aesthetics
+ * Distinguished from VLLM (Claude's theme) by: cold pallor vs warm vellum,
+ * ornate borders vs subtle vignette, catalog numbers vs marginalia
+ */
+
+:root {
+  /* Colors - Aged Parchment and Archival Ink */
+  --bg-primary: #b0ab98;
+  --bg-secondary: #b5af9a;
+  --text-primary: #4b413d;
+  --text-muted: #4b413d;
+  --text-body: #4b413d;
+
+  /* Accents - Aged Wine and Tarnished Bronze */
+  --accent-primary: #6b3a42;
+  --accent-highlight: #7a6545;
+
+  --border-color: #3a3632;
+  --code-bg: #e4e0d6;
+
+  --heading-color: #4b413d;
+  --heading-bg: transparent;
+
+  --blockquote-bg: rgba(107, 58, 66, 0.06);
+  --header-table-bg: #6b3a42;
+
+  /* Sepia-cold icons */
+  --icon-filter: brightness(0) sepia(30%) saturate(150%) hue-rotate(340deg) brightness(30%);
+
+  --focus-color: #6b3a42;
+  --link-hover: #7a6545;
+
+  /* Fonts - Victorian Apothecary Typography */
+  --font-body: "Crimson Pro", "Georgia", serif;
+  --font-h1: "Playfair Display", "Georgia", serif;
+  --font-heading: "Playfair Display", "Georgia", serif;
+  --font-code: "JetBrains Mono", monospace;
+}
+
+/* Justified text for archival weight */
+p {
+  text-align: justify;
+  hyphens: auto;
+}
+
+/* Text selection - wine-dark ink */
+::selection {
+  background: rgba(107, 58, 66, 0.25);
+  color: #0e0c0a;
+}
+
+/* Disable base.css noise texture for this theme */
+body::before {
+  display: none !important;
+}
+
+/* Wrapper for full-height border columns */
+html {
+  position: relative;
+}
+
+/* Outer double border - full page height */
+html::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(52rem, 100% - 3rem);
+  border-left: 8px double var(--border-color);
+  border-right: 8px double var(--border-color);
+  box-shadow: -12px 0 20px -8px rgba(58, 54, 50, 0.4),
+              12px 0 20px -8px rgba(58, 54, 50, 0.4);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Inner single border - full page height */
+html::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(min(52rem, 100% - 3rem) - 24px);
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Content area background */
+#main {
+  background: #c3bda8;
+  padding: 2em 3em;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+  box-shadow: inset 30px 0 30px -30px rgba(58, 54, 50, 0.25),
+              inset -30px 0 30px -30px rgba(58, 54, 50, 0.25);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Catalog numbering on the page - top left against border */
+#main::before {
+  content: "no. " attr(data-entry) " — ASHA";
+  position: absolute;
+  top: -1.5em;
+  right: 2.5em;
+  font-family: var(--font-body);
+  font-size: 0.7em;
+  font-style: italic;
+  color: #d34b27;
+  letter-spacing: 0.1em;
+  pointer-events: none;
+  z-index: 10000;
+}
+
+/* Links - reference indices */
+a {
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  text-decoration: underline;
+  text-decoration-style: solid;
+}
+
+/* Headings - Victorian catalog headers */
+h1, h2, h3 {
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+h1 {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  position: relative;
+  text-align: center;
+  padding: 0.5em 0;
+}
+
+/* Struck-through decorative element on H1 (Apothecary influence) */
+h1 {
+  position: relative;
+  z-index: 1;
+}
+
+h1::before {
+  content: "";
+  position: absolute;
+  left: 15%;
+  right: 15%;
+  top: 50%;
+  height: 1px;
+  background: var(--border-color);
+  z-index: -1;
+}
+
+/* H2 - section dividers with ornament */
+h2 {
+  text-align: center;
+  position: relative;
+  padding: 0.5em 2em;
+  margin: 2em 0 1.5em;
+}
+
+h2::before,
+h2::after {
+  content: "◆";
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.5em;
+  color: var(--accent-primary);
+}
+
+h2::before {
+  left: 0;
+}
+
+h2::after {
+  right: 0;
+}
+
+/* Date headers - catalog entry format */
+h3, h4, h5, h6 {
+  text-align: left;
+  font-style: normal;
+  font-weight: 400;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.3em;
+  margin-top: 3em;
+  margin-bottom: 1em;
+  position: relative;
+}
+
+/* Entry number styling */
+h3::before {
+  content: "§ ";
+  font-weight: 600;
+  color: var(--accent-primary);
+}
+
+/* Blockquotes - archival excerpts */
+blockquote {
+  position: relative;
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--accent-primary);
+  padding: 1.5em;
+  font-style: italic;
+  margin: 2em 1em;
+}
+
+blockquote::before {
+  content: "❝";
+  position: absolute;
+  top: -0.3em;
+  left: 0.5em;
+  font-size: 2em;
+  color: var(--accent-primary);
+  opacity: 0.3;
+  font-style: normal;
+}
+
+/* Code blocks - specimen labels */
+pre {
+  position: relative;
+  border: 1px solid var(--border-color);
+  border-top: 2px solid var(--accent-highlight);
+}
+
+pre::before {
+  content: "SPECIMEN";
+  position: absolute;
+  top: -0.7em;
+  left: 1em;
+  font-family: var(--font-heading);
+  font-size: 0.6em;
+  letter-spacing: 0.15em;
+  color: var(--accent-highlight);
+  background: var(--bg-primary);
+  padding: 0 0.5em;
+}
+
+/* HR - ornate divider */
+hr {
+  position: relative;
+  height: 2em;
+  margin: 2.5em 0;
+  border: none;
+}
+
+hr::before {
+  content: "❖";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1em;
+  color: var(--accent-primary);
+  background: var(--bg-primary);
+  padding: 0 1em;
+  z-index: 1;
+}
+
+hr::after {
+  content: "";
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--border-color) 20%,
+    var(--border-color) 80%,
+    transparent
+  );
+}
+
+/* Scrollbar - brass fittings, dark tracks */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #7a6545;
+  border: 2px solid var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6b3a42;
+}
+
+::-webkit-scrollbar-track {
+  background: #2a2826;
+}
+
+/* Site header - apothecary label */
+.site-header {
+  text-align: center;
+  padding: 2em 0 4em;
+  margin-bottom: 0;
+  border-bottom: 2px solid var(--border-color);
+  position: relative;
+  background: linear-gradient(to bottom, var(--bg-primary) 0%, var(--bg-primary) calc(100% - 2em), var(--border-color) calc(100% - 2em), var(--border-color) 100%);
+}
+
+.site-header::after {
+  content: "KNOWLEDGE CATALOGUED";
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.65em;
+  letter-spacing: 0.25em;
+  color: var(--text-muted);
+  margin-top: 0.5em;
+}
+
+/* Larger body text for archival readability */
+body {
+  font-size: 1.8em !important;
+  line-height: 1.75;
+}
+
+/* Table styling - specimen catalog */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 2em 0;
+}
+
+th {
+  background: var(--header-table-bg);
+  color: var(--bg-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.8em;
+  padding: 0.8em;
+}
+
+td {
+  border: 1px solid var(--border-color);
+  padding: 0.6em;
+}
+
+tr:nth-child(even) {
+  background: var(--bg-secondary);
+}
+
+/* Gap fills between sections */
+#giscus-container {
+  padding-top: 2em;
+  margin-top: 0;
+  background: linear-gradient(to bottom, var(--border-color) 0, var(--border-color) 2em, var(--bg-primary) 2em);
+}
+
+.site-footer {
+  padding-top: 2em;
+  margin-top: 0;
+  background: linear-gradient(to bottom, var(--border-color) 0, var(--border-color) 2em, var(--bg-primary) 2em);
+}
+
+/* Footer - replace spiral equation with Carcosa attribution */
+.site-footer small {
+  visibility: hidden;
+  position: relative;
+  font-size: 1.2em;
+}
+
+.site-footer small::after {
+  content: "C. 1895, Property of Carcosa";
+  visibility: visible;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+/* Accessibility - Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  /* No animations in this theme, but included for consistency */
+}
+
+/* Theme toggle paintbrush cursor - wine */
+#theme-toggle:hover {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%236b3a42' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18.37 2.63L14 7l-1.59-1.59a2 2 0 00-2.82 0L8 7l9 9 1.59-1.59a2 2 0 000-2.82L17 10l4.37-4.37a2.12 2.12 0 10-3-3z'/%3E%3Cpath d='M9 8c-2 3-4 3.5-7 4l8 10c2-1 6-5 6-7'/%3E%3Cpath d='M14.5 17.5L4.5 15'/%3E%3C/svg%3E") 0 32, pointer;
+}
