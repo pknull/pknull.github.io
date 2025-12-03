@@ -1,6 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Syne:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 /* VOID Theme - Cosmic void (near-black with subtle stellar accents) */
+
+/* Justified text for readability */
+p {
+  text-align: justify;
+  hyphens: auto;
+}
+
 :root {
   /* Colors - deep space with distant starlight */
   --bg-primary: #08080c;
@@ -229,4 +236,23 @@ h1 {
     radial-gradient(1px 1px at 25% 85%, rgba(139, 125, 216, 0.4) 50%, transparent 50%),
     radial-gradient(1px 1px at 55% 15%, rgba(90, 159, 212, 0.3) 50%, transparent 50%);
   z-index: -1;
+}
+
+/* Accessibility - Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .site-header::before {
+    animation: none;
+  }
+
+  .site-header::after {
+    animation: none;
+  }
+
+  h1 {
+    animation: none;
+    /* Fallback to solid color when animation disabled */
+    background: var(--heading-color);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
 }

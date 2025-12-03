@@ -125,8 +125,6 @@ h6 {
 p {
   margin-top: 0;
   color: var(--text-body);
-  text-align: justify;
-  hyphens: auto;
 }
 
 small {
@@ -728,13 +726,13 @@ img, canvas, iframe, video, svg, select, textarea {
 
 /* Selection */
 ::-moz-selection {
-  background: var(--accent-highlight);
-  color: var(--bg-primary);
+  background: var(--accent-highlight, #0066cc);
+  color: var(--bg-primary, #ffffff);
 }
 
 ::selection {
-  background: var(--accent-highlight);
-  color: var(--bg-primary);
+  background: var(--accent-highlight, #0066cc);
+  color: var(--bg-primary, #ffffff);
 }
 
 

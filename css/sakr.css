@@ -300,3 +300,29 @@ a:hover {
 hr::before {
   animation: petal-drift 4s ease-in-out infinite;
 }
+
+/* Accessibility - Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .site-header::after,
+  #main::before,
+  #main::after {
+    animation: none;
+    display: none;
+  }
+
+  .site-header::before {
+    animation: none;
+  }
+
+  h1 {
+    animation: none;
+  }
+
+  hr::before {
+    animation: none;
+  }
+
+  a {
+    transition: none;
+  }
+}

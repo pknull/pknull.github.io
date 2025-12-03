@@ -33,6 +33,12 @@
   color: #ffffff;
 }
 
+/* Justified text suits serif/editorial themes */
+p {
+  text-align: justify;
+  hyphens: auto;
+}
+
 /* Heading styles - uppercase tracking */
 h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.08em;
@@ -41,6 +47,20 @@ h1, h2, h3, h4, h5, h6 {
 
 h1 {
   font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+/* Date headers - editorial masthead style */
+h3, h4, h5, h6 {
+  text-align: left;
+  font-weight: 600;
+  font-size: 1em;
+  color: var(--heading-color);
+  border-top: 1px solid var(--accent-primary);
+  border-bottom: 1px solid var(--accent-primary);
+  padding: 0.5em 0;
+  margin: 2.5em 0 1.5em 0;
+  text-transform: uppercase;
   letter-spacing: 0.12em;
 }
 
@@ -200,7 +220,6 @@ blockquote {
 }
 
 blockquote:hover {
-  transform: translateX(4px);
   border-left-color: var(--heading-color);
 }
 
@@ -218,5 +237,24 @@ h2 {
 /* Refined image presentation */
 img {
   filter: contrast(1.02) saturate(0.95);
+}
+
+/* Accessibility - Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  h1 {
+    animation: none;
+  }
+
+  body::before {
+    animation: none;
+  }
+
+  blockquote {
+    transition: none;
+  }
+
+  a {
+    transition: none;
+  }
 }
 

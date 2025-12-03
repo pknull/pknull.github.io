@@ -1,6 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600&family=Orbitron:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 /* BLAD Theme - Blade Runner (neon noir cyberpunk) */
+
+/* Justified text for readability */
+p {
+  text-align: justify;
+  hyphens: auto;
+}
+
 :root {
   /* Colors - rain-soaked neon on deep blue-black */
   --bg-primary: #0a0e14;
@@ -231,4 +238,24 @@ a:hover {
   animation: rain 2s linear infinite;
   z-index: 9995;
   opacity: 0.5;
+}
+
+/* Accessibility - Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  h1 {
+    animation: none;
+  }
+
+  blockquote {
+    animation: none;
+  }
+
+  .site-header::after {
+    animation: none;
+  }
+
+  a, a:hover {
+    transition: none;
+    filter: none;
+  }
 }

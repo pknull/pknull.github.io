@@ -1,6 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 /* MODE Theme - Modern Apothecary (CSS Zen Garden #218 inspired) */
+
+/* Justified text for readability */
+p {
+  text-align: justify;
+  hyphens: auto;
+}
+
 :root {
   /* Colors - warm cream and sepia tones */
   --bg-primary: #faf3e6;
@@ -36,6 +43,34 @@
 /* Refined letter-spacing for headings */
 h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.02em;
+}
+
+/* Date headers - small caps with minimal lines */
+h3, h4, h5, h6 {
+  text-align: center;
+  font-variant: small-caps;
+  font-weight: 400;
+  color: var(--text-muted);
+  position: relative;
+  padding: 0.5em 2em;
+}
+
+h3::before,
+h3::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 2em;
+  height: 1px;
+  background: var(--border-color);
+}
+
+h3::before {
+  left: 0;
+}
+
+h3::after {
+  right: 0;
 }
 
 /* Links - dotted underline like abbreviations */
@@ -210,7 +245,6 @@ blockquote {
 }
 
 blockquote:hover {
-  transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(63, 61, 58, 0.12);
   background: rgba(240, 232, 216, 0.6);
 }
@@ -252,4 +286,27 @@ a {
 
 a:hover {
   border-bottom-style: solid;
+}
+
+/* Accessibility - Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .site-header::before {
+    animation: none;
+  }
+
+  h1 {
+    animation: none;
+  }
+
+  h2::after {
+    animation: none;
+  }
+
+  blockquote {
+    transition: none;
+  }
+
+  a {
+    transition: none;
+  }
 }

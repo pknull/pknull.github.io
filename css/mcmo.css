@@ -38,6 +38,31 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.08em;
 }
 
+/* Date headers - left-aligned with decorative bracket */
+h3, h4, h5, h6 {
+  text-align: left;
+  position: relative;
+  padding-left: 1.5em;
+}
+
+h3::before {
+  content: "◆";
+  position: absolute;
+  left: 0;
+  color: var(--accent-primary);
+  font-size: 0.8em;
+}
+
+h3::after {
+  content: "";
+  display: inline-block;
+  width: 3em;
+  height: 2px;
+  background: linear-gradient(to right, var(--accent-highlight), transparent);
+  margin-left: 0.75em;
+  vertical-align: middle;
+}
+
 /* Links - solid underline */
 a {
   border-bottom-style: solid;
@@ -233,7 +258,7 @@ a {
 }
 
 a:hover {
-  transform: translateX(2px);
+  color: var(--link-hover);
 }
 
 /* Atomic age pulse on code blocks */
@@ -248,4 +273,27 @@ a:hover {
 
 pre {
   animation: atomic-pulse 3s ease-in-out infinite;
+}
+
+/* Accessibility - Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  hr::before {
+    animation: none;
+  }
+
+  blockquote {
+    transition: none;
+  }
+
+  blockquote::after {
+    transition: none;
+  }
+
+  pre {
+    animation: none;
+  }
+
+  a {
+    transition: none;
+  }
 }

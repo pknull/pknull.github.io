@@ -1,6 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code&family=Montserrat&family=Share+Tech+Mono&display=swap');
 
 /* Dark Theme - Gruvbox */
+
+/* Justified text for readability */
+p {
+  text-align: justify;
+  hyphens: auto;
+}
+
 :root {
   /* Colors */
   --bg-primary: #282828;

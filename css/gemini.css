@@ -128,8 +128,6 @@ a:hover {
     0 0 10px currentColor,
     0 0 20px var(--link-hover),
     0 0 30px var(--link-hover);
-  transform: scale(1.02);
-  letter-spacing: 0.5px;
 }
 
 /* Headings - Glitch authority */
@@ -270,6 +268,25 @@ hr {
   font-family: var(--font-code);
   text-shadow: 0 0 3px var(--text-muted);
   opacity: 0.8;
+}
+
+/* Accessibility - Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+  }
+
+  h1 {
+    animation: none;
+  }
+
+  a, img, button, input[type="submit"] {
+    transition: none;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    box-shadow: none;
+  }
 }
 
 /* Warning: this theme may cause temporal displacement */

@@ -230,7 +230,6 @@ a {
 }
 
 a:hover {
-  transform: translateY(-1px);
   text-shadow: 0 2px 4px rgba(43, 171, 225, 0.3);
 }
 
@@ -278,4 +277,35 @@ h1 {
 
 pre {
   animation: processing 4s linear infinite;
+}
+
+/* Accessibility - Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .site-header::before {
+    animation: none;
+  }
+
+  blockquote {
+    animation: none;
+  }
+
+  hr::before {
+    animation: none;
+  }
+
+  h2::after {
+    animation: none;
+  }
+
+  h1 {
+    animation: none;
+  }
+
+  pre {
+    animation: none;
+  }
+
+  a {
+    transition: none;
+  }
 }
