@@ -1054,3 +1054,14 @@ img, canvas, iframe, video, svg, select, textarea {
 .prompt-block[open] summary {
   margin-bottom: 1rem;
 }
+
+/* Read Time
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.read-time {
+  text-align: center;
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  opacity: 0.8;
+  margin-top: -0.5rem;
+  margin-bottom: 1.5rem;
+}

@@ -465,6 +465,7 @@
           // Add back link before content
           var backLink = '<p class="back-link"><a href="#blog">← All entries</a></p>\n\n';
           mainEl.innerHTML = DOMPurify.sanitize(renderMarkdown(backLink + entryMd));
+          addReadTime();
           // Check if user clicked Comments link (auto-load) vs Link or direct nav
           var shouldAutoLoad = window._autoLoadComments || false;
           window._autoLoadComments = false; // Reset flag
@@ -479,6 +480,7 @@
         // Full blog view - no comments
         mainEl.innerHTML = DOMPurify.sanitize(renderMarkdown(md));
         addEntryLinks();
+        addReadTime();
         hideGiscus();
       } else if (route.page === 'test') {
         // Test page - show comments for testing
@@ -519,6 +521,40 @@
       .catch(function() {
         document.getElementById('main').innerHTML = '<p>Failed to load content. <a href="javascript:location.reload()">Reload</a></p>';
       });
+  }
+
+  function addReadTime() {
+    var mainEl = document.getElementById('main');
+    var headings = Array.from(mainEl.querySelectorAll('h3'));
+
+    headings.forEach(function(h, index) {
+      var dateText = h.textContent.trim();
+      // Only process date headings (YYYY.MM.DD format)
+      if (!/^\d{4}\.\d{2}\.\d{2}$/.test(dateText)) return;
+
+      // Find content between this heading and the next
+      var nextHeading = headings[index + 1];
+      var content = '';
+      var sibling = h.nextElementSibling;
+
+      while (sibling && sibling !== nextHeading) {
+        // Skip code blocks when counting
+        if (sibling.tagName !== 'PRE') {
+          content += ' ' + sibling.textContent;
+        }
+        sibling = sibling.nextElementSibling;
+      }
+
+      // Count words (split on whitespace, filter empty)
+      var words = content.trim().split(/\s+/).filter(function(w) { return w.length > 0; }).length;
+      var minutes = Math.max(1, Math.ceil(words / 200));
+
+      // Insert centered below date heading
+      var readTime = document.createElement('p');
+      readTime.className = 'read-time';
+      readTime.textContent = minutes + ' min read';
+      h.insertAdjacentElement('afterend', readTime);
+    });
   }
 
   function addEntryLinks() {
