@@ -42,6 +42,9 @@ body {
   background-color: var(--bg-primary);
   margin: 0;
   padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Noise texture overlay */
@@ -610,11 +613,7 @@ hr::after {
 
 /* Main Content */
 #main {
-  min-height: calc(100vh - 20rem);
-}
-
-#main.single-entry {
-  min-height: auto;
+  flex: 1;
 }
 
 #main img {
