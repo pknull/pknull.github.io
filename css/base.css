@@ -610,7 +610,7 @@ hr::after {
 
 /* Main Content */
 #main {
-  min-height: 50vh;
+  min-height: calc(100vh - 20rem);
 }
 
 #main img {
