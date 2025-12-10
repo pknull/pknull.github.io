@@ -613,6 +613,10 @@ hr::after {
   min-height: calc(100vh - 20rem);
 }
 
+#main.single-entry {
+  min-height: auto;
+}
+
 #main img {
   border-radius: 0;
   margin: 1rem auto;

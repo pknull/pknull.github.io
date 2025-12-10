@@ -460,6 +460,7 @@
 
       if (route.page === 'blog' && route.entry) {
         // Single entry view
+        mainEl.classList.add('single-entry');
         var entryMd = extractEntry(md, route.entry);
         if (entryMd) {
           // Add back link before content
@@ -478,6 +479,7 @@
         }
       } else if (route.page === 'blog') {
         // Full blog view - no comments
+        mainEl.classList.remove('single-entry');
         mainEl.innerHTML = DOMPurify.sanitize(renderMarkdown(md));
         addEntryLinks();
         addReadTime();
