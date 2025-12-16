@@ -1,5 +1,31 @@
 # Blog
 
+## 2025.12.09
+
+Wow, 
+
+Movies
+- JJK
+- The Brood (Art Houuse)
+- It Ends (stream)
+- Chainsaw Man (stream)
+
+TV
+- Pluribus
+
+Vibe Coded
+- termart
+- mplay
+
+Book
+- Been working on finding voice
+
+The nicer we talk an LLM, the better the answer we receive
+- Don't want to give it the wrong idea
+
+Failed at finishing my Cawl Ball.
+
+
 ## 2025.12.04
 
 I have company tonight and unfortunately it's gotten too late for this.
