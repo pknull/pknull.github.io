@@ -1,5 +1,6 @@
 # Blog
 
+<!--
 ## 2025.12.09
 
 Wow, 
@@ -24,6 +25,7 @@ The nicer we talk an LLM, the better the answer we receive
 - Don't want to give it the wrong idea
 
 Failed at finishing my Cawl Ball.
+-->
 
 
 ## 2025.12.04
