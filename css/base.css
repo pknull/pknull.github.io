@@ -1064,3 +1064,63 @@ img, canvas, iframe, video, svg, select, textarea {
   margin-top: -0.5rem;
   margin-bottom: 1.5rem;
 }
+
+/* Toast Notifications
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-size: 1.4rem;
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  z-index: 10000;
+  max-width: 90vw;
+  text-align: center;
+}
+
+.toast-visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.toast-error {
+  background: #d32f2f;
+  color: #fff;
+}
+
+.toast-success {
+  background: #388e3c;
+  color: #fff;
+}
+
+.toast-info {
+  background: #1976d2;
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    transition: opacity 0.1s ease;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Error State
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.error-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-muted);
+}
+
+.error-state p {
+  margin: 1rem 0;
+}
+
+.error-state a {
+  color: var(--accent-primary);
+}
