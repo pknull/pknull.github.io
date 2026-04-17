@@ -34,8 +34,8 @@
 <h1 id="th-continent-strategy-tonights-session">7th Continent — Strategy
 (Tonight’s Session)</h1>
 <p><strong>Setup</strong>: 3-4 players, single evening, starter curse,
-no prior notes. <strong>Loss pattern</strong>: Action deck depletion →
-loss on curse-card draw from reshuffled deck.
+no prior notes. <strong>Loss pattern</strong>: Action deck reaches zero
+→ forced to draw from discard pile → curse card drawn → instant loss.
 <strong>Diagnosis</strong>: No sustainable food/recycle loop, no hand
 discipline, no notes, exploration without intent.</p>
 <p>Synthesis from: <a
@@ -54,18 +54,35 @@ Meeple Strategy Tips</a>.</p>
 <hr />
 <h2 id="the-core-mechanic">The Core Mechanic</h2>
 <p>Your <strong>action deck is your life.</strong> Every action draws
-cards. Curse cards triggered during play go to the <strong>discard
-pile</strong> — harmless while they sit there.</p>
-<p><strong>The cliff</strong>: When the action deck empties, you
-reshuffle the discard pile to form a new deck. From that moment on,
-<strong>drawing a curse card during an action ends the game
-immediately</strong>. (Exception per official FAQ: when only 3 cards
-remain in the action deck, a revealed curse card has no effect — small
-but real buffer at the very end.)</p>
-<p>Two intertwined problems: 1. <strong>Don’t let the deck
-empty.</strong> Recycle cards from discard back via eating. 2.
-<strong>Keep discard’s curse-card density low.</strong> Every curse card
-in discard is a future bullet in the gun.</p>
+cards. The entire game reduces to a single rule: <strong>don’t let the
+action deck reach zero.</strong></p>
+<p><strong>The death condition</strong> is narrower than it might seem.
+Two things have to be true at the same time:</p>
+<ol type="1">
+<li>The action deck is <strong>empty right now</strong> (not “has been
+empty before” — actually zero cards)</li>
+<li>You’re being forced to draw cards (during an action’s Cost
+step)</li>
+</ol>
+<p>When both conditions hold, you shuffle the discard pile and draw
+randomly from it. <strong>If you draw a curse card from that pile, you
+lose immediately.</strong></p>
+<p><strong>Curse cards in the discard are dormant</strong> as long as
+the action deck has any cards in it. You can look through the discard
+freely. Curse cards only become lethal in the moment the action deck has
+bottomed out and you’re being forced to draw from discard.</p>
+<p><strong>Curse cards drawn during normal play</strong> (while the
+action deck still has cards) just trigger their printed effect (fail the
+check, cause a state, etc.) and go to discard. Annoying but not
+lethal.</p>
+<p><strong>The single rule</strong>: keep the action deck above zero.
+Eating moves cards from the discard pile back into the action deck. Eat
+enough to refill faster than you draw → action deck never hits zero →
+you can play indefinitely. Stop eating → deck empties → first forced
+discard-draw is potentially game-ending.</p>
+<p>(Edge case from the official FAQ: when only 3 cards remain in the
+action deck, a revealed curse card has no effect — a small buffer at the
+very end.)</p>
 <hr />
 <h2 id="the-7-steps-of-an-action-memorize-this">The 7 Steps of an Action
 — Memorize This</h2>
@@ -479,35 +496,56 @@ data-cites="CheddarLimbo">@CheddarLimbo</span>: <em>“Every time we
 thought something was unfair or random, upon closer examination we found
 that there were clues we’d missed that made sense.”</em></p>
 <hr />
-<h2 id="watching-the-two-numbers">Watching the Two Numbers</h2>
-<p>Note-taker calls these every 15-20 min, or before any check ≥6
-cards:</p>
+<h2 id="watching-the-action-deck">Watching the Action Deck</h2>
+<p>The action deck count is the <strong>single most important number at
+the table</strong>. Note-taker calls it every 15-20 min, or before any
+check ≥6 cards.</p>
 <table>
 <colgroup>
-<col style="width: 19%" />
-<col style="width: 36%" />
-<col style="width: 43%" />
+<col style="width: 44%" />
+<col style="width: 30%" />
+<col style="width: 24%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th>Metric</th>
-<th>Why it matters</th>
-<th>Action threshold</th>
+<th>Action deck remaining</th>
+<th>What it means</th>
+<th>What to do</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><strong>Action deck remaining</strong></td>
-<td>Time until reshuffle cliff</td>
-<td>&lt;30% → eat to recycle</td>
+<td>Healthy (&gt;50%)</td>
+<td>Safe to take risks, explore freely</td>
+<td>Continue normal play</td>
 </tr>
 <tr class="even">
-<td><strong>Curse cards in discard</strong></td>
-<td>Lethality of next reshuffle</td>
-<td>&gt;5 → eat aggressively, slow down high-cost actions</td>
+<td>Thinning (~30%)</td>
+<td>Death window approaching if not addressed</td>
+<td>Plan a hunt → cook → eat cycle within next few actions</td>
+</tr>
+<tr class="odd">
+<td>Critical (&lt;15%)</td>
+<td>One bad check could empty it</td>
+<td>Stop everything else, eat now if you have food, route to a hunting
+spot if you don’t</td>
+</tr>
+<tr class="even">
+<td>Empty</td>
+<td>Death cliff — every Cost-step draw could end the game</td>
+<td>Save immediately if you can; eat or hunt is the only path back</td>
 </tr>
 </tbody>
 </table>
+<p><strong>Curse cards in discard</strong> is a <em>secondary</em>
+metric. It only matters as the action deck approaches empty — at that
+moment, more curse cards in the discard means a higher probability that
+the first forced draw ends the run. While the action deck is healthy,
+the discard’s curse-card count is academic.</p>
+<p><strong>State counts per character</strong> is the other secondary
+metric — see the State Cards section. State accumulation forces extra
+discards from the action deck as new states are gained, indirectly
+accelerating the death cliff.</p>
 <hr />
 <h2 id="rest-mechanics">Rest — Mechanics</h2>
 <p>Rest is narrow and context-specific. From designer Stephan Beal on
@@ -628,8 +666,9 @@ them) - <strong>Hidden numbers</strong> spotted in terrain artwork -
 <strong>Save points visited</strong> (backtracking reference) -
 <strong>Items crafted + recipe source</strong> -
 <strong>NPCs/encounters</strong> and what they wanted</p>
-<p>Every 15-20 min: announce “deck check, discard check” and read the
-two numbers.</p>
+<p>Every 15-20 min: announce “deck check” and read the action deck count
+out loud, plus state counts per character. If the deck is below 30%,
+also call the curse-card count in discard.</p>
 <hr />
 <h2 id="curse-agnostic-puzzle-solving-principles">Curse-Agnostic
 Puzzle-Solving Principles</h2>
