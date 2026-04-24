@@ -63,12 +63,19 @@ body::before {
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 h1, h2, h3, h4, h5, h6 {
   margin-top: 0;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   font-weight: 500;
   color: var(--heading-color);
   background-color: var(--heading-bg);
   text-transform: uppercase;
   letter-spacing: 0.02em;
+}
+
+/* Section headings after HR — tighten spacing */
+main h3, main h4, main h5, main h6 {
+  margin-top: 1.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.25rem;
 }
 
 h1 {
@@ -82,6 +89,8 @@ h1 {
 h2 {
   font-family: var(--font-heading);
   font-size: 3.6rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
   line-height: 1.25;
 }
 
@@ -162,14 +171,17 @@ blockquote > p {
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 a {
   color: var(--accent-primary, #0000EE);
-  text-decoration: none;
-  border-bottom: 1px solid var(--accent-primary, #0000EE);
-  transition: border-color 0.2s ease, color 0.2s ease;
+  text-decoration: underline;
+  text-decoration-color: var(--accent-primary, #0000EE);
+  text-underline-offset: 2px;
+  border-bottom: none;
+  transition: text-decoration-color 0.2s ease, color 0.2s ease;
 }
 
 a:hover {
   color: var(--link-hover, #551A8B);
-  border-bottom-color: var(--link-hover, #551A8B);
+  text-decoration-color: var(--link-hover, #551A8B);
+  border-bottom: none;
 }
 
 a:focus-visible {
@@ -471,12 +483,12 @@ td {
 
 th:first-child,
 td:first-child {
-  padding-left: 0;
+  padding-left: 12px;
 }
 
 th:last-child,
 td:last-child {
-  padding-right: 0;
+  padding-right: 12px;
 }
 
 th {
@@ -515,8 +527,8 @@ form {
 /* HR - Cosmic Divider
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 hr {
-  margin-top: 3rem;
-  margin-bottom: 3.5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
   border-width: 0;
   border-top: none;
   height: 20px;

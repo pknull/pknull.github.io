@@ -8,7 +8,7 @@
   --text-primary: #333333;
   --text-muted: #666666;
   --text-body: #444444;
-  --accent-primary: #a28351;
+  --accent-primary: #7f673f;
   --accent-highlight: #c9a86c;
   --border-color: #aab5c0;
   --code-bg: #dce2e8;
@@ -17,7 +17,7 @@
   --blockquote-bg: rgba(162, 131, 81, 0.08);
   --header-table-bg: #182e4f;
   --icon-filter: brightness(0) invert(15%) sepia(30%) saturate(500%) hue-rotate(190deg);
-  --focus-color: #a28351;
+  --focus-color: #7f673f;
   --link-hover: #182e4f;
 
   /* Fonts - editorial elegance */
@@ -66,13 +66,13 @@ h3, h4, h5, h6 {
 
 /* Links - tan underline, editorial style */
 a {
-  border-bottom: 1px solid var(--accent-primary);
+  text-decoration-color: var(--accent-primary);
   transition: all 0.2s ease;
 }
 
 a:hover {
   color: var(--heading-color);
-  border-bottom-color: var(--heading-color);
+  text-decoration-color: var(--heading-color);
 }
 
 /* HR - simple elegant line */

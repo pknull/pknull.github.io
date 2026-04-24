@@ -15,7 +15,7 @@ p {
   --text-primary: #3f3d3a;
   --text-muted: #5a5652;
   --text-body: #3f3d3a;
-  --accent-primary: #e5452c;
+  --accent-primary: #d8260a;
   --accent-highlight: #f7644d;
   --border-color: #c9c0ad;
   --code-bg: #f0e8d8;
@@ -24,7 +24,7 @@ p {
   --blockquote-bg: rgba(201, 192, 173, 0.3);
   --header-table-bg: #e8dfcc;
   --icon-filter: brightness(0) invert(15%) sepia(10%) saturate(300%) hue-rotate(15deg);
-  --focus-color: #e5452c;
+  --focus-color: #d8260a;
   --link-hover: #3f3d3a;
 
   /* Fonts - modern clean sans */
@@ -75,7 +75,7 @@ h3::after {
 
 /* Links - dotted underline like abbreviations */
 a {
-  border-bottom-style: dotted;
+  text-decoration-style: dotted;
 }
 
 /* Decorative HR - Apothecary style ornamental divider */

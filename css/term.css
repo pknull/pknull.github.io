@@ -57,8 +57,7 @@ body {
 
 /* Links - underline only, bright on hover */
 a {
-  border-bottom-style: solid;
-  border-bottom-width: 1px;
+  text-decoration-style: solid;
 }
 
 a:hover {

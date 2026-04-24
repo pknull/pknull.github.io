@@ -22,7 +22,7 @@
   --text-body: #4b413d;
 
   /* Accents - Aged Wine and Tarnished Bronze */
-  --accent-primary: #6b3a42;
+  --accent-primary: #96787d;
   --accent-highlight: #7a6545;
 
   --border-color: #3a3632;
@@ -37,7 +37,7 @@
   /* Sepia-cold icons */
   --icon-filter: brightness(0) sepia(30%) saturate(150%) hue-rotate(340deg) brightness(30%);
 
-  --focus-color: #6b3a42;
+  --focus-color: #96787d;
   --link-hover: #7a6545;
 
   /* Fonts - Victorian Apothecary Typography */

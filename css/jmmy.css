@@ -8,7 +8,7 @@
   --text-primary: #0f2a36;
   --text-muted: #2a4a5a;
   --text-body: #1a3a4a;
-  --accent-primary: #2babe1;
+  --accent-primary: #1978a0;
   --accent-highlight: #30e0ad;
   --border-color: #2babe1;
   --code-bg: #d6e8f5;
@@ -40,7 +40,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Links - solid underline */
 a {
-  border-bottom-style: solid;
+  text-decoration-style: solid;
 }
 
 /* HR - circuit board divider */

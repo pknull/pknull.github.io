@@ -8,7 +8,7 @@
   --text-primary: #454545;
   --text-muted: #777777;
   --text-body: #555555;
-  --accent-primary: #D9189F;
+  --accent-primary: #d11498;
   --accent-highlight: #FC7AD5;
   --border-color: #bdbdbd;
   --code-bg: #ebebeb;
@@ -17,7 +17,7 @@
   --blockquote-bg: rgba(217, 24, 159, 0.08);
   --header-table-bg: #454545;
   --icon-filter: brightness(0) invert(30%) sepia(10%) saturate(200%) hue-rotate(0deg);
-  --focus-color: #D9189F;
+  --focus-color: #d11498;
   --link-hover: #FC7AD5;
 
   /* Fonts - clean sans with Japanese-inspired headers */
@@ -41,8 +41,8 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Links - solid magenta underline */
 a {
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
+  text-decoration-style: solid;
+  text-decoration-thickness: 2px;
 }
 
 /* HR - cherry blossom petal divider */

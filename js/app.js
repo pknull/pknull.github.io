@@ -124,6 +124,9 @@
     document.head.appendChild(link);
   }
 
+  var mermaidLoaded = false;
+  var loadMermaid = null; // set in DOMContentLoaded
+
   function applyTheme(theme) {
     var config = THEME_CONFIG[theme] || THEME_CONFIG.comp;
     var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -141,6 +144,25 @@
       linkstyle.disabled = false;
     }
     setHighlightTheme(resolvedIsDark);
+
+    // Update mermaid theme — replace elements entirely so mermaid sees fresh nodes
+    if (mermaidLoaded && window.mermaid) {
+      mermaid.initialize({ startOnLoad: false, theme: resolvedIsDark ? 'dark' : 'default' });
+      var diagrams = document.querySelectorAll('.mermaid');
+      if (diagrams.length) {
+        diagrams.forEach(function(el) {
+          var src = el.getAttribute('data-mermaid-source');
+          if (src) {
+            var fresh = document.createElement('div');
+            fresh.className = 'mermaid';
+            fresh.setAttribute('data-mermaid-source', src);
+            fresh.textContent = src;
+            el.replaceWith(fresh);
+          }
+        });
+        mermaid.run({ nodes: document.querySelectorAll('.mermaid') });
+      }
+    }
 
     themeToggle.textContent = config.label;
   }
@@ -220,8 +242,8 @@
   var pages = {
     blog: './blog.md',
     meta: './meta.md',
-    link: './link.md',
     asha: './asha.md',
+    thallus: './thallus.md',
     test: './test.md'
   };
 
@@ -421,6 +443,22 @@
       setLazyImages(mainEl);
       contentLoaded = true;
       updateActiveNav(route.page);
+      // Render mermaid diagrams BEFORE hljs (so hljs doesn't try to highlight them)
+      var mermaidBlocks = mainEl.querySelectorAll('code.language-mermaid');
+      if (mermaidBlocks.length) {
+        mermaidBlocks.forEach(function(block) {
+          var pre = block.parentElement;
+          var div = document.createElement('div');
+          div.className = 'mermaid';
+          div.setAttribute('data-mermaid-source', block.textContent);
+          div.textContent = block.textContent;
+          pre.replaceWith(div);
+        });
+        loadMermaid(function() {
+          mermaid.run({ nodes: mainEl.querySelectorAll('.mermaid') });
+        });
+      }
+
       if (window.hljs) hljs.highlightAll();
       addCodeCopyButtons();
 
@@ -790,6 +828,22 @@
 
   document.addEventListener('DOMContentLoaded', function() {
     insertPreconnects();
+
+    // Lazy-load mermaid only when pages contain mermaid code blocks
+    loadMermaid = function(callback) {
+      if (mermaidLoaded) { callback(); return; }
+      var script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+      script.onload = function() {
+        mermaidLoaded = true;
+        var config = THEME_CONFIG[currentTheme] || THEME_CONFIG.comp;
+        var isDark = config.isDark === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : !!config.isDark;
+        mermaid.initialize({ startOnLoad: false, theme: isDark ? 'dark' : 'default' });
+        callback();
+      };
+      document.head.appendChild(script);
+    };
+
     // Configure marked to increment heading levels by 1
     marked.use({
       walkTokens: function(token) {

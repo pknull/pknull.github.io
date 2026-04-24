@@ -8,7 +8,7 @@
   --text-primary: #0d2c40;
   --text-muted: #3a5163;
   --text-body: #1a3a52;
-  --accent-primary: #f15a30;
+  --accent-primary: #ce3106;
   --accent-highlight: #c879b2;
   --border-color: #c879b2;
   --code-bg: #ebe4d6;
@@ -65,7 +65,7 @@ h3::after {
 
 /* Links - solid underline */
 a {
-  border-bottom-style: solid;
+  text-decoration-style: solid;
 }
 
 /* HR - geometric star divider */
