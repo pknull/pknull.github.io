@@ -34,11 +34,11 @@ Five components, each with one nature and one role:
 
 | Component | Nature | Role |
 |-----------|--------|------|
-| **Egregore** | Pipe | Carries signed messages. Gossip replication between peers. |
-| **Servitor** | Hands | Headless executor. Picks up tasks from the feed, reasons with LLMs, calls tools. |
-| **Familiar** | Mind | User-facing companion. REPL, Discord, or daemon. Plans and publishes on your behalf. |
-| **Scry** | Eyes | Desktop admin console. Built with [Tauri](https://tauri.app/). |
-| **thallus-core** | Skeleton | Shared library: identity, [MCP](https://modelcontextprotocol.io/) client pool, LLM provider abstraction. |
+| **[Egregore](https://github.com/pknull/egregore)** | Pipe | Carries signed messages. Gossip replication between peers. |
+| **[Servitor](https://github.com/pknull/servitor)** | Hands | Headless executor. Picks up tasks from the feed, reasons with LLMs, calls tools. |
+| **[Familiar](https://github.com/pknull/familiar)** | Mind | User-facing companion. REPL, Discord, or daemon. Plans and publishes on your behalf. |
+| **[Scry](https://github.com/pknull/scry)** | Eyes | Desktop admin console. Built with [Tauri](https://tauri.app/). |
+| **[thallus-core](https://github.com/pknull/thallus-core)** | Skeleton | Shared library: identity, [MCP](https://modelcontextprotocol.io/) client pool, LLM provider abstraction. |
 
 ```mermaid
 graph TD
