@@ -621,24 +621,42 @@ tbody tr:hover{ background: var(--stripe); }
   padding: var(--s-6) var(--s-5);
   border-top: 1px solid var(--rule);
   display: grid;
-  grid-template-columns: 1fr 1fr 2fr;
+  grid-template-columns: auto auto auto minmax(0, 1fr);
   gap: var(--s-6);
   align-items: start;
 }
-@media (max-width: 720px){
+@media (max-width: 900px){
   .nb-ft{ grid-template-columns: 1fr 1fr; }
   .ft-col-wide{ grid-column: 1 / -1; }
+}
+@media (max-width: 480px){
+  .nb-ft{ grid-template-columns: 1fr; gap: var(--s-5); }
+  .ft-col-wide{ grid-column: auto; }
 }
 .ft-col{ display: flex; flex-direction: column; gap: 6px; font-size: .9rem; }
 .ft-hd{ margin-bottom: 4px; font-family: var(--f-mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-3); }
 .ft-col a{ color: var(--ink-2); border: 0; }
 .ft-col a:hover{ color: var(--accent); }
 
+.ft-colophon{
+  font-size: .85rem;
+  color: var(--ink-2);
+  margin: 0 0 var(--s-3);
+  max-width: 60ch;
+  line-height: 1.55;
+}
+.ft-license{
+  font-family: var(--f-mono);
+  font-size: .72rem;
+  color: var(--ink-3);
+  margin: 0;
+  line-height: 1.5;
+}
 .ft-formula{
   font-family: var(--f-mono);
   font-size: .72rem;
   color: var(--ink-3);
-  opacity: .7;
+  opacity: .85;
 }
 
 .validation-badges{
