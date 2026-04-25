@@ -136,7 +136,7 @@
     "slug": "minecraft",
     "title": "Minecraft datapacks",
     "kind": "coding",
-    "state": "active",
+    "state": "inactive",
     "lede": "Two datapacks for Minecraft 1.21: quality-of-life crafting recipes, and a hunter-vs-hunted PvP minigame.",
     "links": [
       {
