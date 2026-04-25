@@ -216,7 +216,7 @@ tbody tr:hover{ background: var(--stripe); }
   border-bottom: 1px solid var(--rule);
 }
 .brand{
-  display: flex; align-items: baseline; gap: 8px;
+  display: flex; align-items: center; gap: 10px;
   font-family: var(--f-sans);
   font-weight: 700;
   font-size: 1rem;
@@ -229,13 +229,10 @@ tbody tr:hover{ background: var(--stripe); }
   color: var(--accent);
   display: inline-flex;
   align-items: center;
-  width: 1.4em;
-  height: 1.4em;
-  line-height: 1;
+  flex-shrink: 0;
+  line-height: 0;
 }
 .brand-glyph svg{
-  width: 100%;
-  height: 100%;
   display: block;
 }
 .brand-domain{ letter-spacing: 0; text-transform: lowercase; color: var(--ink-3); }
