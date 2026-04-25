@@ -19,7 +19,7 @@
   {
     "slug": "thallus",
     "title": "Thallus",
-    "status": "writing",
+    "status": "active",
     "lede": "Decentralized AI agent infrastructure. Local-first, cryptographically signed, no central authority.",
     "etymology": {
       "word": "thallus",
@@ -48,5 +48,17 @@
       }
     ],
     "body": "thallus.md"
+  },
+  {
+    "slug": "hush",
+    "title": "The Hush",
+    "status": "writing",
+    "lede": "A cosmic horror novel in long-form revision. Reality stays mundane; the protagonist's experience of it does not.",
+    "etymology": {
+      "word": "Hush",
+      "gloss": "the Matriarch's sedative current — a quiet that wants you not to struggle"
+    },
+    "links": [],
+    "body": "hush.md"
   }
 ]
