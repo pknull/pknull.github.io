@@ -1,6 +1,14 @@
 /* shell.css — pknull.ai notebook shell
    palette + base + layout + lists + cards + post + journal integration */
 
+@font-face{
+  font-family: "JetBrainsMono Nerd Font";
+  src: url("../fonts/JetBrainsMonoNerdFontMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ── Palette + tokens ────────────────────────────────────────── */
 :root{
   /* gruvbox LIGHT palette — warm retro (default) */
@@ -29,7 +37,7 @@
 
   --f-sans:  "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-serif: "Source Serif 4", ui-serif, Georgia, "Times New Roman", serif;
-  --f-mono:  "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --f-mono:  "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
   --measure: 720px;
   --wide:    1100px;
