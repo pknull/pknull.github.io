@@ -479,6 +479,7 @@ tbody tr:hover{ background: var(--stripe); }
 }
 .proj-name > span:first-child{ flex: 1 1 auto; min-width: 0; }
 .proj-name .proj-pill{ flex: 0 0 auto; margin-top: 3px; }
+.proj-name .proj-pills{ margin-top: 3px; }
 .proj-blurb{ font-size: .98rem; margin-bottom: 4px; max-width: 58ch; color: var(--ink-2); }
 
 .proj-pill{
@@ -491,9 +492,23 @@ tbody tr:hover{ background: var(--stripe); }
   font-weight: 500;
   display: inline-block;
 }
-.pill-active { background: #79740E; color: #FBF1C7; }
-.pill-writing{ background: #FABD2F; color: #3C3836; }
-.pill-archive{ background: var(--paper-3); color: var(--ink-3); border: 1px solid var(--rule); }
+.proj-pills{
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 0 0 auto;
+}
+
+/* kind — what the project is */
+.pill-coding { background: #076678; color: #FBF1C7; }   /* gruvbox blue / paper */
+.pill-writing{ background: #FABD2F; color: #3C3836; }   /* gruvbox yellow / dark fg */
+
+/* state — where it stands */
+.pill-active   { background: #79740E; color: #FBF1C7; }                                           /* gruvbox green / paper */
+.pill-inactive { background: transparent; color: var(--ink-3); border: 1px solid var(--rule); }
+.pill-archived { background: var(--paper-3); color: var(--ink-3); border: 1px solid var(--rule); }
+/* legacy alias */
+.pill-archive  { background: var(--paper-3); color: var(--ink-3); border: 1px solid var(--rule); }
 
 .proj-card{
   padding: var(--s-5) 0;
@@ -509,6 +524,7 @@ tbody tr:hover{ background: var(--stripe); }
 .proj-card-name{ font-size: 1.45rem; margin: 0; line-height: 1.15; }
 .proj-card-name-link:hover .proj-card-name{ color: var(--accent); }
 .proj-card-hd .proj-pill{ flex: 0 0 auto; margin-top: 8px; }
+.proj-card-hd .proj-pills{ margin-top: 8px; }
 .proj-card-lede{
   font-size: 1.05rem;
   color: var(--ink-2);

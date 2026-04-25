@@ -730,11 +730,28 @@
     return '#/projects/' + slug;
   }
 
-  function pillFor(status) {
-    var cls = status === 'active' ? 'pill-active'
-      : status === 'writing' ? 'pill-writing'
-      : 'pill-archive';
-    return '<span class="proj-pill ' + cls + '">' + escapeHtml(status || 'archive') + '</span>';
+  function pillsFor(p) {
+    // Two-axis: kind (coding/writing) + state (active/inactive/archived).
+    // Falls back to legacy single `status` field if kind/state aren't set.
+    var kind = p.kind;
+    var state = p.state;
+    if (!kind && !state && p.status) {
+      // Legacy migration: a status of 'writing' maps to kind=writing/state=active;
+      // 'archive'/'archived' maps to kind=coding/state=archived; otherwise kind=coding.
+      if (p.status === 'writing') { kind = 'writing'; state = 'active'; }
+      else if (p.status === 'archive' || p.status === 'archived') { kind = 'coding'; state = 'archived'; }
+      else { kind = 'coding'; state = p.status; }
+    }
+    kind = kind || 'coding';
+    state = state || 'active';
+    var kindCls = kind === 'writing' ? 'pill-writing' : 'pill-coding';
+    var stateCls = state === 'archived' ? 'pill-archived'
+                 : state === 'inactive' ? 'pill-inactive'
+                 : 'pill-active';
+    return '<div class="proj-pills">' +
+      '<span class="proj-pill ' + kindCls + '">' + escapeHtml(kind) + '</span>' +
+      '<span class="proj-pill ' + stateCls + '">' + escapeHtml(state) + '</span>' +
+    '</div>';
   }
 
   function renderHome() {
@@ -758,7 +775,7 @@
         var projectsHtml = projects.length
           ? '<ul class="proj-list">' + projects.map(function(p) {
               return '<li class="proj-row"><a class="proj-row-a" href="' + projectLink(p.slug) + '">' +
-                '<div class="proj-name"><span>' + escapeHtml(p.title) + '</span>' + pillFor(p.status) + '</div>' +
+                '<div class="proj-name"><span>' + escapeHtml(p.title) + '</span>' + pillsFor(p) + '</div>' +
                 (p.lede ? '<p class="proj-blurb">' + escapeHtml(p.lede) + '</p>' : '') +
               '</a></li>';
             }).join('') + '</ul>'
@@ -941,7 +958,7 @@
               '<a class="proj-card-name-link" href="' + projectLink(p.slug) + '">' +
                 '<h2 class="proj-card-name">' + escapeHtml(p.title) + '</h2>' +
               '</a>' +
-              pillFor(p.status) +
+              pillsFor(p) +
             '</header>' +
             (p.lede ? '<p class="proj-card-lede">' + escapeHtml(p.lede) + '</p>' : '') +
             (p.etymology ?
@@ -997,7 +1014,7 @@
             '<div class="proj-card-name-link" style="border:0">' +
               '<h1 class="proj-card-name">' + escapeHtml(p.title) + '</h1>' +
             '</div>' +
-            pillFor(p.status) +
+            pillsFor(p) +
           '</header>' +
           (p.lede ? '<p class="proj-card-lede">' + escapeHtml(p.lede) + '</p>' : '') +
           (p.etymology ?

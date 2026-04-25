@@ -2,7 +2,8 @@
   {
     "slug": "asha",
     "title": "Asha",
-    "status": "active",
+    "kind": "coding",
+    "state": "active",
     "lede": "A cognitive scaffold for Claude Code. Persistent identity, session memory, and domain-specific plugins for development, creative writing, research, and automation.",
     "etymology": {
       "word": "Asha",
@@ -19,7 +20,8 @@
   {
     "slug": "thallus",
     "title": "Thallus",
-    "status": "active",
+    "kind": "coding",
+    "state": "active",
     "lede": "Decentralized AI agent infrastructure. Local-first, cryptographically signed, no central authority.",
     "etymology": {
       "word": "thallus",
@@ -52,7 +54,8 @@
   {
     "slug": "hush",
     "title": "The Hush",
-    "status": "writing",
+    "kind": "writing",
+    "state": "active",
     "lede": "A cosmic horror novel in long-form revision. Reality stays mundane; the protagonist's experience of it does not.",
     "etymology": {
       "word": "Hush",
@@ -64,7 +67,8 @@
   {
     "slug": "botcore",
     "title": "botcore",
-    "status": "active",
+    "kind": "coding",
+    "state": "active",
     "lede": "Python bot framework with Claude SDK integration. Discord sessions, command registry, conversation state across messages.",
     "links": [
       {
@@ -77,7 +81,8 @@
   {
     "slug": "termart",
     "title": "termart",
-    "status": "active",
+    "kind": "coding",
+    "state": "active",
     "lede": "Generative art for the terminal. Bonsai trees, animated visualizations, ratatui in Rust.",
     "links": [
       {
@@ -90,7 +95,8 @@
   {
     "slug": "cc-helpers",
     "title": "Claude Code helpers",
-    "status": "active",
+    "kind": "coding",
+    "state": "active",
     "lede": "Two small tools for managing Claude Code sessions: a TUI session manager and a virtual-office visualizer.",
     "links": [
       {
@@ -107,7 +113,8 @@
   {
     "slug": "rpg-tools",
     "title": "RPG dice tools",
-    "status": "active",
+    "kind": "coding",
+    "state": "inactive",
     "lede": "Three small Python libraries for tabletop RPG bots: dice expressions, weighted random selection, card draws.",
     "links": [
       {
@@ -128,7 +135,8 @@
   {
     "slug": "minecraft",
     "title": "Minecraft datapacks",
-    "status": "active",
+    "kind": "coding",
+    "state": "active",
     "lede": "Two datapacks for Minecraft 1.21: quality-of-life crafting recipes, and a hunter-vs-hunted PvP minigame.",
     "links": [
       {
@@ -145,8 +153,9 @@
   {
     "slug": "mplay",
     "title": "mplay",
-    "status": "archive",
-    "lede": "TUI MPRIS music client. Rust + ratatui. Archived.",
+    "kind": "coding",
+    "state": "archived",
+    "lede": "TUI MPRIS music client. Rust + ratatui.",
     "links": [
       {
         "label": "github",
