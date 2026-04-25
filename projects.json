@@ -1,0 +1,52 @@
+[
+  {
+    "slug": "asha",
+    "title": "Asha",
+    "status": "active",
+    "lede": "A cognitive scaffold for Claude Code. Persistent identity, session memory, and domain-specific plugins for development, creative writing, research, and automation.",
+    "etymology": {
+      "word": "Asha",
+      "gloss": "Sanskrit — truth, reality, hope"
+    },
+    "links": [
+      {
+        "label": "github",
+        "href": "https://github.com/pknull/asha"
+      }
+    ],
+    "body": "asha.md"
+  },
+  {
+    "slug": "thallus",
+    "title": "Thallus",
+    "status": "writing",
+    "lede": "Decentralized AI agent infrastructure. Local-first, cryptographically signed, no central authority.",
+    "etymology": {
+      "word": "thallus",
+      "gloss": "biology — the undifferentiated vegetative body of lichens and fungi"
+    },
+    "links": [
+      {
+        "label": "egregore",
+        "href": "https://github.com/pknull/egregore"
+      },
+      {
+        "label": "servitor",
+        "href": "https://github.com/pknull/servitor"
+      },
+      {
+        "label": "familiar",
+        "href": "https://github.com/pknull/familiar"
+      },
+      {
+        "label": "scry",
+        "href": "https://github.com/pknull/scry"
+      },
+      {
+        "label": "thallus-core",
+        "href": "https://github.com/pknull/thallus-core"
+      }
+    ],
+    "body": "thallus.md"
+  }
+]
