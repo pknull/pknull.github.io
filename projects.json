@@ -60,5 +60,99 @@
     },
     "links": [],
     "body": "hush.md"
+  },
+  {
+    "slug": "botcore",
+    "title": "botcore",
+    "status": "active",
+    "lede": "Python bot framework with Claude SDK integration. Discord sessions, command registry, conversation state across messages.",
+    "links": [
+      {
+        "label": "github",
+        "href": "https://github.com/pknull/pk.botcore"
+      }
+    ],
+    "body": "botcore.md"
+  },
+  {
+    "slug": "termart",
+    "title": "termart",
+    "status": "active",
+    "lede": "Generative art for the terminal. Bonsai trees, animated visualizations, ratatui in Rust.",
+    "links": [
+      {
+        "label": "github",
+        "href": "https://github.com/pknull/termart"
+      }
+    ],
+    "body": "termart.md"
+  },
+  {
+    "slug": "cc-helpers",
+    "title": "Claude Code helpers",
+    "status": "active",
+    "lede": "Two small tools for managing Claude Code sessions: a TUI session manager and a virtual-office visualizer.",
+    "links": [
+      {
+        "label": "ccsessionctl",
+        "href": "https://github.com/pknull/ccsessionctl"
+      },
+      {
+        "label": "ccworkspace",
+        "href": "https://github.com/pknull/ccworkspace"
+      }
+    ],
+    "body": "cc-helpers.md"
+  },
+  {
+    "slug": "rpg-tools",
+    "title": "RPG dice tools",
+    "status": "active",
+    "lede": "Three small Python libraries for tabletop RPG bots: dice expressions, weighted random selection, card draws.",
+    "links": [
+      {
+        "label": "rpg-dice",
+        "href": "https://github.com/pknull/rpg-dice"
+      },
+      {
+        "label": "rpg-flip",
+        "href": "https://github.com/pknull/rpg-flip"
+      },
+      {
+        "label": "rpg-card",
+        "href": "https://github.com/pknull/rpg-card"
+      }
+    ],
+    "body": "rpg-tools.md"
+  },
+  {
+    "slug": "minecraft",
+    "title": "Minecraft datapacks",
+    "status": "active",
+    "lede": "Two datapacks for Minecraft 1.21: quality-of-life crafting recipes, and a hunter-vs-hunted PvP minigame.",
+    "links": [
+      {
+        "label": "PKPack",
+        "href": "https://github.com/pknull/PKPack"
+      },
+      {
+        "label": "HideAndGoKill",
+        "href": "https://github.com/pknull/HideAndGoKill"
+      }
+    ],
+    "body": "minecraft.md"
+  },
+  {
+    "slug": "mplay",
+    "title": "mplay",
+    "status": "archive",
+    "lede": "TUI MPRIS music client. Rust + ratatui. Archived.",
+    "links": [
+      {
+        "label": "github",
+        "href": "https://github.com/pknull/mplay"
+      }
+    ],
+    "body": "mplay.md"
   }
 ]
