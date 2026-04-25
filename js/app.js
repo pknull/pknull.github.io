@@ -794,7 +794,7 @@
           '</section>' +
           '<div class="home-split">' +
             '<section>' +
-              '<div class="col-hd"><h2>Recent</h2><a href="#/blog">All posts →</a></div>' +
+              '<div class="col-hd"><h2>Recent</h2><a href="#/blog">All →</a></div>' +
               postsHtml +
             '</section>' +
             '<section>' +
