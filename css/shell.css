@@ -657,14 +657,16 @@ tbody tr:hover{ background: var(--stripe); }
   margin-top: var(--s-3);
 }
 .footer-icons img{
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   opacity: .35;
   animation: sigil-pulse 4s ease-in-out infinite;
+  /* invert hardcoded-black sigils to ink in dark mode so they stay visible */
 }
 .footer-icons img:nth-child(2){ animation-delay: 1.3s; }
 .footer-icons img:nth-child(3){ animation-delay: 2.6s; }
-.footer-icons img:nth-child(4){ width: 14px; height: 14px; animation-delay: 3.9s; }
+.footer-icons img:nth-child(4){ animation-delay: 3.9s; }
+:root[data-mode="dark"] .footer-icons img{ filter: invert(1); }
 @keyframes sigil-pulse{
   0%, 100%{ opacity: .3; }
   50%{ opacity: .55; }
