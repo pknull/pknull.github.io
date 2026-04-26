@@ -683,7 +683,6 @@ tbody tr:hover{ background: var(--stripe); }
   gap: 12px;
   align-items: center;
   justify-items: center;
-  margin-top: var(--s-3);
 }
 .footer-icons img{
   width: 32px;
