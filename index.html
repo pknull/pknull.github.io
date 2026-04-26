@@ -82,6 +82,24 @@
 <a href="#main" class="skip-link">Skip to main content</a>
 
 <div class="shell">
+  <div class="now-strip" role="region" aria-label="Currently">
+    <div class="now-strip-inner">
+      <span class="now-item">
+        <span class="live-dot" aria-hidden="true"></span>
+        <span class="now-key">NOW</span>
+        <span class="now-val" id="now-val-now">…</span>
+      </span>
+      <span class="now-item">
+        <span class="now-key">READING</span>
+        <span class="now-val" id="now-val-reading">…</span>
+      </span>
+      <span class="now-item">
+        <span class="now-key">BUILDING</span>
+        <span class="now-val" id="now-val-building">…</span>
+      </span>
+    </div>
+  </div>
+
   <header class="nb-hd">
     <a href="#/" class="brand" aria-label="PKNULL home">
       <span class="brand-glyph" aria-hidden="true">
@@ -116,8 +134,6 @@
       <a href="#/meta" data-route="meta">Meta</a>
     </nav>
     <div class="nb-meta">
-      <span class="live-dot" aria-hidden="true"></span>
-      <span class="caps small dim">notebook</span>
       <button id="mode-toggle" class="mode-toggle" type="button" aria-label="Cycle color mode">AUTO</button>
     </div>
   </header>

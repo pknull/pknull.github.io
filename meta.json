@@ -1,4 +1,39 @@
 {
+  "now": {
+    "location": "Eugene, OR",
+    "coords": [
+      44.05,
+      -123.09
+    ],
+    "timezone": "America/Los_Angeles",
+    "reading": "The Master and Margarita",
+    "building": {
+      "label": "Thallus",
+      "href": "#/projects/thallus"
+    }
+  },
+  "standing": [
+    {
+      "key": "type",
+      "val": "ENTP-T · Maverick"
+    },
+    {
+      "key": "aps",
+      "val": "VFLE"
+    },
+    {
+      "key": "ennea",
+      "val": "7 (8, 5)"
+    },
+    {
+      "key": "sign",
+      "val": "Aquarius, 7°"
+    },
+    {
+      "key": "creed",
+      "val": "seek coherence over control"
+    }
+  ],
   "title": "PK (Louis)",
   "kicker": "/meta",
   "portrait": "./images/meta_headshot.webp",

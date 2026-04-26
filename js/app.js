@@ -364,6 +364,37 @@
     });
   }
 
+  // Open off-site links in a new tab. Internal targets (#/route, anchors,
+  // same-host URLs, javascript:) are left alone so SPA routing still works.
+  function markExternalLinks(scope) {
+    var root = scope || document;
+    var here = window.location.hostname;
+    root.querySelectorAll('a[href]').forEach(function(a) {
+      var href = a.getAttribute('href');
+      if (!href) return;
+      if (a.hasAttribute('target')) return; // respect explicit choices
+      var lower = href.toLowerCase();
+      if (lower[0] === '#' || lower[0] === '/' || lower.indexOf('javascript:') === 0) return;
+      var external = false;
+      if (lower.indexOf('mailto:') === 0 || lower.indexOf('tel:') === 0 || lower.indexOf('sms:') === 0) {
+        external = true;
+      } else if (/^https?:\/\//i.test(href)) {
+        try {
+          external = new URL(href).hostname !== here;
+        } catch (e) {
+          external = true;
+        }
+      }
+      if (external) {
+        a.target = '_blank';
+        var rel = (a.getAttribute('rel') || '').split(/\s+/).filter(Boolean);
+        if (rel.indexOf('noopener') === -1) rel.push('noopener');
+        if (rel.indexOf('noreferrer') === -1) rel.push('noreferrer');
+        a.setAttribute('rel', rel.join(' '));
+      }
+    });
+  }
+
   // ─────────────────────────────────────────────────────────────
   // Mermaid (lazy)
   // ─────────────────────────────────────────────────────────────
@@ -660,56 +691,118 @@
     setMainKind('home');
     Promise.all([
       fetchPosts().catch(function(){ return []; }),
-      fetchJson('./projects.json').catch(function(){ return []; })
+      fetchJson('./projects.json').catch(function(){ return []; }),
+      fetchJson('./meta.json').catch(function(){ return {}; })
     ])
       .then(function(arr) {
         var posts = arr[0].map(normalizePost);
-        var projects = arr[1];
-        var recent = posts.slice(0, 5);
+        var projects = arr[1].slice(0, 4);
+        var meta = arr[2] || {};
+        var feat = posts.slice(0, 3);
+        var rest = posts.slice(3, 8);
+        var standing = (meta.standing || []).slice(0, 5);
 
-        var postsHtml = recent.length
-          ? '<ol class="post-list tight">' + recent.map(function(e) {
+        var featHtml = feat.length
+          ? '<ol class="post-feat-list">' + feat.map(function(e) {
+              var imgHtml = e.img
+                ? '<img src="' + escapeHtml(e.img) + '" alt="" loading="lazy">'
+                : '<span class="ph-date">' + escapeHtml(e.displayDate) + '</span>';
+              return '<li class="post-feat"><a class="post-feat-link" href="' + postLink(e.slug) + '">' +
+                '<div class="post-feat-img">' + imgHtml + '</div>' +
+                '<div class="post-feat-body">' +
+                  '<div class="post-feat-meta">' +
+                    '<span class="post-feat-meta-date">' + escapeHtml(e.displayDate) + '</span>' +
+                  '</div>' +
+                  '<p class="post-feat-blurb">' + escapeHtml(e.blurb || '(entry)') + '</p>' +
+                '</div>' +
+              '</a></li>';
+            }).join('') + '</ol>'
+          : '<p class="empty">No posts yet.</p>';
+
+        var restHtml = rest.length
+          ? '<ol class="post-list tight">' + rest.map(function(e) {
               return '<li><a href="' + postLink(e.slug) + '">' +
                 '<span class="pl-date">' + escapeHtml(e.displayDate) + '</span>' +
                 '<span class="pl-title">' + escapeHtml(e.blurb || '(entry)') + '</span>' +
                 '<span class="pl-tag" aria-hidden="true">→</span>' +
               '</a></li>';
             }).join('') + '</ol>'
-          : '<p class="empty">No posts yet.</p>';
+          : '';
 
         var projectsHtml = projects.length
-          ? '<ul class="proj-list">' + projects.map(function(p) {
-              return '<li class="proj-row"><a class="proj-row-a" href="' + projectLink(p.slug) + '">' +
-                '<div class="proj-name"><span>' + escapeHtml(p.title) + '</span>' + pillsFor(p) + '</div>' +
-                (p.lede ? '<p class="proj-blurb">' + escapeHtml(p.lede) + '</p>' : '') +
-              '</a></li>';
-            }).join('') + '</ul>'
+          ? '<ol class="proj-list">' + projects.map(function(p) {
+              var kind = p.kind || 'coding';
+              var state = p.state || 'active';
+              var etym = p.etymology;
+              var etymHtml = etym && etym.word
+                ? '<div class="proj-card-etym">' +
+                    '<span class="proj-card-etym-word">' + escapeHtml(etym.word) + '</span>' +
+                    (etym.gloss ? ' — ' + escapeHtml(etym.gloss) : '') +
+                  '</div>'
+                : '';
+              return '<li class="proj-card state-' + escapeHtml(state) + ' kind-' + escapeHtml(kind) + '">' +
+                '<a class="proj-link" href="' + projectLink(p.slug) + '">' +
+                  '<div class="proj-card-head">' +
+                    '<h3 class="proj-card-name"><span class="proj-dot" aria-hidden="true"></span>' + escapeHtml(p.title) + '</h3>' +
+                    '<span class="proj-card-meta">' + escapeHtml(kind) + ' · ' + escapeHtml(state) + '</span>' +
+                  '</div>' +
+                  (p.lede ? '<p class="proj-card-lede">' + escapeHtml(p.lede) + '</p>' : '') +
+                  etymHtml +
+                '</a></li>';
+            }).join('') + '</ol>'
           : '<p class="empty">No projects yet.</p>';
 
+        var standingHtml = standing.length
+          ? '<aside class="hero-aside" aria-label="Standing">' +
+              '<div class="aside-hd">Standing</div>' +
+              '<dl class="aside-list">' + standing.map(function(s) {
+                return '<div class="aside-row"><dt>' + escapeHtml(s.key) + '</dt><dd>' + escapeHtml(s.val) + '</dd></div>';
+              }).join('') + '</dl>' +
+            '</aside>'
+          : '';
+
         mainEl.innerHTML =
-          '<section class="hero">' +
-            '<p class="hero-kicker dim">notebook · year 01</p>' +
-            '<h1 class="hero-title">Field notes from the long edge of the network.</h1>' +
-            '<p class="hero-lede">Daily fragments, occasional essays, and the projects that grow out of them. Operated by hand, archived in plaintext, comments via GitHub.</p>' +
-            '<div class="hero-meta">' +
-              '<span class="caps">PK · Eugene, OR</span>' +
-              '<span aria-hidden="true">·</span>' +
-              '<a href="' + postLink(recent[0] ? recent[0].slug : '') + '" class="caps">Latest entry →</a>' +
+          '<section class="hero" aria-labelledby="hero-title">' +
+            '<div class="hero-body">' +
+              '<div class="hero-kicker">est. 2025 · a notebook by louis g.</div>' +
+              '<h1 class="hero-title" id="hero-title">' +
+                'Engineer, worldbuilder, late-night ' +
+                '<em>nightcap</em> blogger. Writing things down before I forget them.' +
+              '</h1>' +
+              '<p class="hero-lede">' +
+                'Three decades in software, mostly systems and security. ' +
+                'Currently in Eugene, building <a href="#/projects/asha">Asha</a> ' +
+                'and a cosmic horror novel called <a href="#/projects/hush">The Hush</a>. ' +
+                'Updated whenever the day quiets down.' +
+              '</p>' +
+              '<div class="hero-actions">' +
+                '<a href="#/blog" class="btn-pri">Read the journal →</a>' +
+                '<a href="#/projects" class="btn-sec">See the workshop</a>' +
+              '</div>' +
             '</div>' +
+            standingHtml +
           '</section>' +
           '<div class="home-split">' +
-            '<section>' +
-              '<div class="col-hd"><h2>Recent</h2><a href="#/blog">All →</a></div>' +
-              postsHtml +
+            '<section class="col-recent" aria-labelledby="recent-h2">' +
+              '<div class="col-hd">' +
+                '<h2 id="recent-h2"><em>Recent entries</em></h2>' +
+                '<a href="#/blog">view all ' + posts.length + ' →</a>' +
+              '</div>' +
+              featHtml +
+              restHtml +
             '</section>' +
-            '<section>' +
-              '<div class="col-hd"><h2>Projects</h2><a href="#/projects">All →</a></div>' +
+            '<section class="col-shop" aria-labelledby="shop-h2">' +
+              '<div class="col-hd">' +
+                '<h2 id="shop-h2"><em>In the workshop</em></h2>' +
+                '<a href="#/projects">all projects →</a>' +
+              '</div>' +
               projectsHtml +
             '</section>' +
           '</div>';
         hideGiscus();
         updateActiveNav('home');
         setLazyImages(mainEl);
+        markExternalLinks(mainEl);
       })
       .catch(function(err) {
         showError(err.message === 'not-found' ? 'Page not found.' : 'Failed to load home.');
@@ -761,6 +854,7 @@
         hideGiscus();
         updateActiveNav('blog');
         setLazyImages(mainEl);
+        markExternalLinks(mainEl);
       })
       .catch(function(err) {
         showError(err.message === 'not-found' ? 'Page not found.' : 'Failed to load blog.');
@@ -836,6 +930,7 @@
 
   function finishPostRender(term) {
     setLazyImages(mainEl);
+    markExternalLinks(mainEl);
     processMermaidBlocks(mainEl);
     if (window.hljs) hljs.highlightAll();
     addCodeCopyButtons();
@@ -928,6 +1023,7 @@
           '</article>';
 
         setLazyImages(mainEl);
+        markExternalLinks(mainEl);
         processMermaidBlocks(mainEl);
         if (window.hljs) hljs.highlightAll();
         addCodeCopyButtons();
@@ -991,6 +1087,7 @@
           '</div>';
 
         setLazyImages(mainEl);
+        markExternalLinks(mainEl);
         hideGiscus();
         updateActiveNav('meta');
         window.scrollTo(0, 0);
@@ -1049,8 +1146,143 @@
       });
     }
 
+    initNowStrip();
+    markExternalLinks(document); // static chrome (footer, now-strip)
     dispatch();
     window.addEventListener('hashchange', dispatch);
   });
+
+  // ─────────────────────────────────────────────────────────────
+  // Now-strip (top status bar): NOW location + weather + last-entry age,
+  // READING title, BUILDING project link. Pulls from meta.json
+  // and posts.json. Silently no-ops if either is missing.
+  // ─────────────────────────────────────────────────────────────
+  function daysAgo(iso) {
+    var then = new Date(iso + 'T00:00:00');
+    if (isNaN(then.getTime())) return null;
+    var ms = Date.now() - then.getTime();
+    var d = Math.floor(ms / 86400000);
+    if (d <= 0) return 'today';
+    if (d === 1) return 'yesterday';
+    return d + 'd ago';
+  }
+
+  // WMO weather code → short label. Reference:
+  // https://open-meteo.com/en/docs (search "WMO Weather interpretation codes")
+  var WMO_LABELS = {
+    0: 'clear', 1: 'clear', 2: 'partly cloudy', 3: 'overcast',
+    45: 'fog', 48: 'fog',
+    51: 'drizzle', 53: 'drizzle', 55: 'drizzle',
+    56: 'freezing drizzle', 57: 'freezing drizzle',
+    61: 'rain', 63: 'rain', 65: 'rain',
+    66: 'freezing rain', 67: 'freezing rain',
+    71: 'snow', 73: 'snow', 75: 'snow', 77: 'snow',
+    80: 'showers', 81: 'showers', 82: 'showers',
+    85: 'snow showers', 86: 'snow showers',
+    95: 'thunder', 96: 'thunder', 99: 'thunder'
+  };
+
+  function fetchWeather(coords, tz) {
+    if (!coords || coords.length !== 2) return Promise.resolve(null);
+    var CACHE_KEY = 'pk-weather-cache';
+    var TTL_MS = 30 * 60 * 1000; // 30 min — Open-Meteo updates hourly anyway
+    try {
+      var raw = localStorage.getItem(CACHE_KEY);
+      if (raw) {
+        var hit = JSON.parse(raw);
+        var fresh = hit && (Date.now() - hit.t) < TTL_MS;
+        var sameLoc = hit && hit.lat === coords[0] && hit.lon === coords[1];
+        if (fresh && sameLoc) return Promise.resolve(hit.v);
+      }
+    } catch (e) {}
+    var url = 'https://api.open-meteo.com/v1/forecast' +
+      '?latitude=' + encodeURIComponent(coords[0]) +
+      '&longitude=' + encodeURIComponent(coords[1]) +
+      '&current=temperature_2m,weather_code' +
+      '&temperature_unit=fahrenheit' +
+      (tz ? '&timezone=' + encodeURIComponent(tz) : '');
+    return fetch(url, { cache: 'default' })
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(j) {
+        if (!j || !j.current) return null;
+        var v = {
+          temp: Math.round(j.current.temperature_2m),
+          code: j.current.weather_code,
+          label: WMO_LABELS[j.current.weather_code] || ''
+        };
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify({
+            t: Date.now(), lat: coords[0], lon: coords[1], v: v
+          }));
+        } catch (e) {}
+        return v;
+      })
+      .catch(function() { return null; });
+  }
+
+  function initNowStrip() {
+    var nowEl = document.getElementById('now-val-now');
+    var readingEl = document.getElementById('now-val-reading');
+    var buildingEl = document.getElementById('now-val-building');
+    if (!nowEl && !readingEl && !buildingEl) return;
+
+    Promise.all([
+      fetchJson('./meta.json').catch(function(){ return {}; }),
+      fetchPosts().catch(function(){ return []; }),
+      fetchJson('./reading.json').catch(function(){ return null; })
+    ]).then(function(arr) {
+      var meta = arr[0] || {};
+      var posts = arr[1] || [];
+      var reading = arr[2];
+      var now = meta.now || {};
+
+      if (readingEl) {
+        // Prefer dynamic reading.json (synced from Goodreads by GH Action),
+        // fall back to static meta.json#now.reading.
+        var title = (reading && reading.title) || now.reading || '';
+        var url = reading && reading.url;
+        if (title) {
+          readingEl.innerHTML = '';
+          var em = document.createElement('em');
+          em.textContent = title;
+          if (url) {
+            var aLink = document.createElement('a');
+            aLink.href = url;
+            aLink.target = '_blank';
+            aLink.rel = 'noopener noreferrer';
+            aLink.appendChild(em);
+            readingEl.appendChild(aLink);
+          } else {
+            readingEl.appendChild(em);
+          }
+        }
+      }
+      if (buildingEl && now.building && now.building.label) {
+        var a = document.createElement('a');
+        a.href = now.building.href || '#';
+        a.textContent = now.building.label;
+        buildingEl.innerHTML = '';
+        buildingEl.appendChild(a);
+      }
+
+      if (!nowEl) return;
+      var loc = now.location || '';
+      var age = posts.length ? daysAgo(posts[0].date) : null;
+
+      function paint(weather) {
+        var bits = [];
+        if (loc) bits.push(loc);
+        if (weather && typeof weather.temp === 'number') {
+          bits.push(weather.temp + '°F' + (weather.label ? ' ' + weather.label : ''));
+        }
+        if (age) bits.push('last entry ' + age);
+        nowEl.textContent = bits.join(' · ');
+      }
+
+      // Paint immediately with whatever we have, then upgrade when weather lands.
+      paint(null);
+      fetchWeather(now.coords, now.timezone).then(paint);
+    });
+  }
 
 })();

@@ -66,6 +66,17 @@ def compute_blurb(body):
     return ''
 
 
+def first_image(body):
+    """First inline image src, or None. Strips the leading './' if present."""
+    m = re.search(r'!\[[^\]]*\]\(([^)\s]+)', body)
+    if not m:
+        return None
+    src = m.group(1).strip()
+    if src.startswith('./'):
+        src = src[2:]
+    return src
+
+
 def write_if_changed(path, new_content):
     if path.exists() and path.read_text() == new_content:
         print(f'  · {path.name} unchanged')
@@ -90,12 +101,16 @@ def build_posts():
         meta, body = split_frontmatter(path.read_text())
         meta = meta or {}
         body = body.strip()
-        posts.append({
+        entry = {
             'slug': slug,
             'date': slug,
             'displayDate': f'{yyyy}.{mm}.{dd}',
             'blurb': meta.get('blurb') or compute_blurb(body),
-        })
+        }
+        img = meta.get('img') or first_image(body)
+        if img:
+            entry['img'] = img
+        posts.append(entry)
     posts.sort(key=lambda p: p['date'], reverse=True)
     write_if_changed(POSTS_JSON, json.dumps(posts, indent=2, ensure_ascii=False) + '\n')
 
