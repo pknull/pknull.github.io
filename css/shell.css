@@ -678,9 +678,11 @@ tbody tr:hover{ background: var(--stripe); }
 .validation-badges a:hover img{ opacity: 1; }
 
 .footer-icons{
-  display: flex;
-  gap: var(--s-4);
+  display: grid;
+  grid-template-columns: repeat(2, 32px);
+  gap: 12px;
   align-items: center;
+  justify-items: center;
   margin-top: var(--s-3);
 }
 .footer-icons img{
@@ -849,20 +851,6 @@ pre.expanded .code-toolbar{ right: var(--s-5); }
   font-family: var(--f-sans);
 }
 .giscus-section .giscus{ min-height: 150px; }
-.giscus-placeholder{
-  text-align: center;
-  padding: var(--s-5);
-  border: 1px dashed var(--rule);
-  border-radius: 3px;
-  margin-bottom: var(--s-4);
-}
-.giscus-placeholder .consent-note{
-  font-family: var(--f-mono);
-  font-size: .78rem;
-  color: var(--ink-3);
-  margin: var(--s-3) 0 0;
-}
-.giscus-placeholder[hidden]{ display: none; }
 
 /* ── Skip link / sr-only / error ─────────────────────────────── */
 .skip-link{

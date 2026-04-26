@@ -420,18 +420,11 @@
   // Giscus
   // ─────────────────────────────────────────────────────────────
   var giscusContainer = document.getElementById('giscus-container');
-  var giscusPlaceholder = document.getElementById('giscus-placeholder');
-  var loadCommentsBtn = document.getElementById('load-comments-btn');
   var giscusLoaded = false;
   var lastGiscusTerm = null;
-  var pendingGiscusTerm = null;
 
   function getGiscusTheme() {
     return isDarkResolved() ? 'dark' : 'light';
-  }
-
-  function hasCommentsConsent() {
-    return localStorage.getItem('comments_consent') === 'granted';
   }
 
   function actuallyLoadGiscus(term) {
@@ -458,45 +451,18 @@
     script.async = true;
 
     giscusDiv.appendChild(script);
-    giscusPlaceholder.hidden = true;
     giscusLoaded = true;
     lastGiscusTerm = term;
   }
 
-  function loadGiscus(term, options) {
-    options = options || {};
-    var forceReload = !!options.forceReload;
-    var autoLoad = !!options.autoLoad;
-
+  function loadGiscus(term) {
     if (!term) term = 'blog';
-    pendingGiscusTerm = term;
-
-    if (giscusLoaded && lastGiscusTerm === term && !forceReload) {
+    if (giscusLoaded && lastGiscusTerm === term) {
       giscusContainer.hidden = false;
       return;
     }
-
-    if (!hasCommentsConsent()) {
-      giscusContainer.hidden = false;
-      giscusPlaceholder.hidden = false;
-      return;
-    }
-
-    if (autoLoad) {
-      actuallyLoadGiscus(term);
-      return;
-    }
-
-    giscusContainer.hidden = false;
-    if (!giscusLoaded || lastGiscusTerm !== term) {
-      giscusPlaceholder.hidden = false;
-    }
+    actuallyLoadGiscus(term);
   }
-
-  loadCommentsBtn.onclick = function() {
-    localStorage.setItem('comments_consent', 'granted');
-    if (pendingGiscusTerm) actuallyLoadGiscus(pendingGiscusTerm);
-  };
 
   function hideGiscus() {
     giscusContainer.hidden = true;
@@ -874,9 +840,7 @@
     addCodeCopyButtons();
     updateActiveNav('post');
 
-    var shouldAutoLoad = window._autoLoadComments || false;
-    window._autoLoadComments = false;
-    loadGiscus(term, { autoLoad: shouldAutoLoad });
+    loadGiscus(term);
 
     window.scrollTo(0, 0);
   }
