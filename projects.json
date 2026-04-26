@@ -5,17 +5,17 @@
     "kind": "coding",
     "state": "active",
     "lede": "A cognitive scaffold for Claude Code. Persistent identity, session memory, and domain-specific plugins for development, creative writing, research, and automation.",
-    "etymology": {
-      "word": "Asha",
-      "gloss": "Sanskrit — truth, reality, hope"
-    },
     "links": [
       {
         "label": "github",
         "href": "https://github.com/pknull/asha"
       }
     ],
-    "body": "asha.md"
+    "body": "projects/asha.md",
+    "etymology": {
+      "word": "Asha",
+      "gloss": "Sanskrit — truth, reality, hope"
+    }
   },
   {
     "slug": "thallus",
@@ -23,10 +23,6 @@
     "kind": "coding",
     "state": "active",
     "lede": "Decentralized AI agent infrastructure. Local-first, cryptographically signed, no central authority.",
-    "etymology": {
-      "word": "thallus",
-      "gloss": "biology — the undifferentiated vegetative body of lichens and fungi"
-    },
     "links": [
       {
         "label": "egregore",
@@ -49,7 +45,11 @@
         "href": "https://github.com/pknull/thallus-core"
       }
     ],
-    "body": "thallus.md"
+    "body": "projects/thallus.md",
+    "etymology": {
+      "word": "thallus",
+      "gloss": "biology — the undifferentiated vegetative body of lichens and fungi"
+    }
   },
   {
     "slug": "hush",
@@ -57,12 +57,12 @@
     "kind": "writing",
     "state": "active",
     "lede": "A cosmic horror novel in long-form revision. Reality stays mundane; the protagonist's experience of it does not.",
+    "links": [],
+    "body": "projects/hush.md",
     "etymology": {
       "word": "Hush",
       "gloss": "the Matriarch's sedative current — a quiet that wants you not to struggle"
-    },
-    "links": [],
-    "body": "hush.md"
+    }
   },
   {
     "slug": "botcore",
@@ -76,7 +76,7 @@
         "href": "https://github.com/pknull/pk.botcore"
       }
     ],
-    "body": "botcore.md"
+    "body": "projects/botcore.md"
   },
   {
     "slug": "termart",
@@ -90,7 +90,7 @@
         "href": "https://github.com/pknull/termart"
       }
     ],
-    "body": "termart.md"
+    "body": "projects/termart.md"
   },
   {
     "slug": "cc-helpers",
@@ -108,7 +108,7 @@
         "href": "https://github.com/pknull/ccworkspace"
       }
     ],
-    "body": "cc-helpers.md"
+    "body": "projects/cc-helpers.md"
   },
   {
     "slug": "rpg-tools",
@@ -130,7 +130,7 @@
         "href": "https://github.com/pknull/rpg-card"
       }
     ],
-    "body": "rpg-tools.md"
+    "body": "projects/rpg-tools.md"
   },
   {
     "slug": "minecraft",
@@ -148,7 +148,7 @@
         "href": "https://github.com/pknull/HideAndGoKill"
       }
     ],
-    "body": "minecraft.md"
+    "body": "projects/minecraft.md"
   },
   {
     "slug": "mplay",
@@ -162,6 +162,6 @@
         "href": "https://github.com/pknull/mplay"
       }
     ],
-    "body": "mplay.md"
+    "body": "projects/mplay.md"
   }
 ]

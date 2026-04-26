@@ -17,7 +17,7 @@
   --paper-3:      #EBDBB2;
   --ink:          #3C3836;
   --ink-2:        #504945;
-  --ink-3:        #7C6F64;
+  --ink-3:        #665C54; /* gruvbox fg3 — was fg4 (#7C6F64) but failed WCAG AA on paper */
   --accent:       #9D0006;
   --accent-soft:  #CC241D;
   --mark:         #FABD2F;
@@ -54,8 +54,8 @@
   --paper-3:      #3C3836;
   --ink:          #EBDBB2;
   --ink-2:        #D5C4A1;
-  --ink-3:        #A89984;
-  --accent:       #FB4934;
+  --ink-3:        #BDAE93; /* bumped from #A89984 for WCAG AA on paper / paper-3 */
+  --accent:       #FF6453; /* lifted from #FB4934 for WCAG AA contrast on paper */
   --accent-soft:  #FE8019;
   --mark:         #FABD2F;
   --rule:         #504945;
@@ -155,8 +155,11 @@ blockquote > p:last-child{ margin-bottom: 0; }
 
 img{ max-width: 100%; height: auto; }
 
-::selection{ background: var(--mark); color: var(--ink); }
-::-moz-selection{ background: var(--mark); color: var(--ink); }
+/* Selection: gruvbox yellow background + always-dark text so it stays
+   legible in both light and dark modes (the highlight color is the same
+   saturated yellow regardless of theme). */
+::selection{ background: var(--mark); color: #3C3836; }
+::-moz-selection{ background: var(--mark); color: #3C3836; }
 
 ::-webkit-scrollbar{ width: 8px; height: 8px; }
 ::-webkit-scrollbar-track{ background: var(--paper-2); }
@@ -515,7 +518,7 @@ tbody tr:hover{ background: var(--stripe); }
 .pill-writing{ background: #FABD2F; color: #3C3836; }   /* gruvbox yellow / dark fg */
 
 /* state — where it stands */
-.pill-active   { background: #79740E; color: #FBF1C7; }                                           /* gruvbox green / paper */
+.pill-active   { background: #5C5408; color: #FBF1C7; }                                           /* darker gruvbox green for AA contrast on paper fg */
 .pill-inactive { background: transparent; color: var(--ink-3); border: 1px solid var(--rule); }
 .pill-archived { background: var(--paper-3); color: var(--ink-3); border: 1px solid var(--rule); }
 /* legacy alias */
@@ -718,7 +721,6 @@ tbody tr:hover{ background: var(--stripe); }
   font-family: var(--f-mono);
   font-size: .72rem;
   color: var(--ink-3);
-  opacity: .85;
 }
 
 .validation-badges{

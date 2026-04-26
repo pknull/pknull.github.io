@@ -1,4 +1,13 @@
-# mplay
+---
+title: "mplay"
+kind: coding
+state: archived
+order: 9
+lede: "TUI MPRIS music client. Rust + ratatui."
+links:
+  - label: "github"
+    href: "https://github.com/pknull/mplay"
+---
 
 A TUI MPRIS music client. Browse playlists, control playback, see what's playing — all in the terminal. Rust + ratatui, talking D-Bus to whatever MPRIS-compatible player you have running.
 

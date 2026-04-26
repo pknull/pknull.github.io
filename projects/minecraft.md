@@ -1,4 +1,15 @@
-# Minecraft datapacks
+---
+title: "Minecraft datapacks"
+kind: coding
+state: inactive
+order: 8
+lede: "Two datapacks for Minecraft 1.21: quality-of-life crafting recipes, and a hunter-vs-hunted PvP minigame."
+links:
+  - label: "PKPack"
+    href: "https://github.com/pknull/PKPack"
+  - label: "HideAndGoKill"
+    href: "https://github.com/pknull/HideAndGoKill"
+---
 
 Two datapacks for Minecraft 1.21 servers.
 

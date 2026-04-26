@@ -1,4 +1,13 @@
-# botcore
+---
+title: "botcore"
+kind: coding
+state: active
+order: 4
+lede: "Python bot framework with Claude SDK integration. Discord sessions, command registry, conversation state across messages."
+links:
+  - label: "github"
+    href: "https://github.com/pknull/pk.botcore"
+---
 
 A Python framework for building bots backed by Claude. Discord-first via discord.py, with a session model that carries conversation state across messages and a command registry that exposes tool functions directly to the model.
 

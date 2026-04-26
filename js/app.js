@@ -898,14 +898,9 @@
         var p = pair[0];
         var md = pair[1];
 
-        // Strip the project's H1 + opening matter (lede + etymology paragraph) up to the first
-        // `---` horizontal rule, since lede + etymology are already rendered in the project header.
-        // Both asha.md and thallus.md follow this convention.
-        var bodyMd = md.replace(/^#\s+[^\n]+\n+/, '');
-        var hrIdx = bodyMd.search(/^---\s*$/m);
-        if (hrIdx >= 0) {
-          bodyMd = bodyMd.slice(hrIdx).replace(/^---\s*\n+/, '');
-        }
+        // Strip YAML frontmatter — metadata lives in projects.json now;
+        // body files are just prose.
+        var bodyMd = md.replace(/^---\s*\n[\s\S]*?\n---\s*\n+/, '');
 
         var headerHtml =
           '<header class="proj-card-hd">' +

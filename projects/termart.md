@@ -1,4 +1,13 @@
-# termart
+---
+title: "termart"
+kind: coding
+state: active
+order: 5
+lede: "Generative art for the terminal. Bonsai trees, animated visualizations, ratatui in Rust."
+links:
+  - label: "github"
+    href: "https://github.com/pknull/termart"
+---
 
 Generative art that lives in your terminal. The first piece is a bonsai tree: it sprouts from a seed, branches according to noise functions tempered by a few horticultural rules, leafs out, and eventually drops its leaves. Each one is different.
 

@@ -1,4 +1,17 @@
-# RPG dice tools
+---
+title: "RPG dice tools"
+kind: coding
+state: inactive
+order: 7
+lede: "Three small Python libraries for tabletop RPG bots: dice expressions, weighted random selection, card draws."
+links:
+  - label: "rpg-dice"
+    href: "https://github.com/pknull/rpg-dice"
+  - label: "rpg-flip"
+    href: "https://github.com/pknull/rpg-flip"
+  - label: "rpg-card"
+    href: "https://github.com/pknull/rpg-card"
+---
 
 Three small Python libraries that came out of building chat bots for tabletop games.
 

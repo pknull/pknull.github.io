@@ -1,4 +1,4 @@
-name: Build posts index
+name: Build indexes
 
 on:
   workflow_dispatch:
@@ -6,7 +6,8 @@ on:
     branches: [main]
     paths:
       - 'posts/**'
-      - 'bin/build-posts.py'
+      - 'projects/**'
+      - 'bin/build-index.py'
       - '.github/workflows/build-index.yml'
 
 # Only one rebuild at a time; coalesce rapid pushes
@@ -28,17 +29,20 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Rebuild posts.json from posts/*.md
-        run: python3 bin/build-posts.py
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Rebuild posts.json + projects.json
+        run: python3 bin/build-index.py
 
       - name: Commit and push if changed
         run: |
-          if git diff --quiet posts.json; then
-            echo "posts.json already up to date — nothing to commit"
+          if git diff --quiet posts.json projects.json; then
+            echo "indexes already up to date — nothing to commit"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add posts.json
-          git commit -m "ci: rebuild posts.json [skip ci]"
+          git add posts.json projects.json
+          git commit -m "ci: rebuild index files [skip ci]"
           git push

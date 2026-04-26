@@ -1,9 +1,15 @@
-# Asha
-
-A cognitive scaffold for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Persistent identity, session memory, and domain-specific plugins for development, creative writing, research, and automation.
-
-The name comes from Sanskrit: truth, reality, hope.
-
+---
+title: "Asha"
+kind: coding
+state: active
+order: 1
+lede: "A cognitive scaffold for Claude Code. Persistent identity, session memory, and domain-specific plugins for development, creative writing, research, and automation."
+etymology:
+  word: "Asha"
+  gloss: "Sanskrit — truth, reality, hope"
+links:
+  - label: "github"
+    href: "https://github.com/pknull/asha"
 ---
 
 ## Origin

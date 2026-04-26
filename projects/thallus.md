@@ -1,9 +1,23 @@
-# Thallus
-
-Decentralized AI agent infrastructure. Local-first, cryptographically signed, no central authority.
-
-The name comes from biology: a [thallus](https://en.wikipedia.org/wiki/Thallus) is the undifferentiated vegetative body of organisms like lichens and fungi. No central hierarchy. Growth happens everywhere. Damage to one part doesn't kill the whole.
-
+---
+title: "Thallus"
+kind: coding
+state: active
+order: 2
+lede: "Decentralized AI agent infrastructure. Local-first, cryptographically signed, no central authority."
+etymology:
+  word: "thallus"
+  gloss: "biology — the undifferentiated vegetative body of lichens and fungi"
+links:
+  - label: "egregore"
+    href: "https://github.com/pknull/egregore"
+  - label: "servitor"
+    href: "https://github.com/pknull/servitor"
+  - label: "familiar"
+    href: "https://github.com/pknull/familiar"
+  - label: "scry"
+    href: "https://github.com/pknull/scry"
+  - label: "thallus-core"
+    href: "https://github.com/pknull/thallus-core"
 ---
 
 ## What It Is

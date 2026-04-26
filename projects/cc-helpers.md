@@ -1,4 +1,15 @@
-# Claude Code helpers
+---
+title: "Claude Code helpers"
+kind: coding
+state: active
+order: 6
+lede: "Two small tools for managing Claude Code sessions: a TUI session manager and a virtual-office visualizer."
+links:
+  - label: "ccsessionctl"
+    href: "https://github.com/pknull/ccsessionctl"
+  - label: "ccworkspace"
+    href: "https://github.com/pknull/ccworkspace"
+---
 
 Two small tools for working with Claude Code at the command line.
 
