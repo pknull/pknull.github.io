@@ -61,7 +61,7 @@
     "body": "projects/hush.md",
     "etymology": {
       "word": "Hush",
-      "gloss": "the Matriarch's sedative current — a quiet that wants you not to struggle"
+      "gloss": "Middle English husht — imitative. The word is the noise."
     }
   },
   {
@@ -76,7 +76,11 @@
         "href": "https://github.com/pknull/pk.botcore"
       }
     ],
-    "body": "projects/botcore.md"
+    "body": "projects/botcore.md",
+    "etymology": {
+      "word": "bot + core",
+      "gloss": "robot (← Czech robota: forced labor, R.U.R., 1920) + Latin cor: heart"
+    }
   },
   {
     "slug": "termart",
@@ -90,7 +94,11 @@
         "href": "https://github.com/pknull/termart"
       }
     ],
-    "body": "projects/termart.md"
+    "body": "projects/termart.md",
+    "etymology": {
+      "word": "term + art",
+      "gloss": "Latin terminus — boundary. The edge of the screen as canvas."
+    }
   },
   {
     "slug": "cc-helpers",
@@ -108,7 +116,11 @@
         "href": "https://github.com/pknull/ccworkspace"
       }
     ],
-    "body": "projects/cc-helpers.md"
+    "body": "projects/cc-helpers.md",
+    "etymology": {
+      "word": "cc",
+      "gloss": "Claude Code, of course. The 'helpers' is doing a lot of work."
+    }
   },
   {
     "slug": "rpg-tools",
@@ -130,7 +142,11 @@
         "href": "https://github.com/pknull/rpg-card"
       }
     ],
-    "body": "projects/rpg-tools.md"
+    "body": "projects/rpg-tools.md",
+    "etymology": {
+      "word": "RPG",
+      "gloss": "role-playing game; the abbreviation crystallized around D&D in the mid-1970s"
+    }
   },
   {
     "slug": "minecraft",
@@ -148,7 +164,11 @@
         "href": "https://github.com/pknull/HideAndGoKill"
       }
     ],
-    "body": "projects/minecraft.md"
+    "body": "projects/minecraft.md",
+    "etymology": {
+      "word": "mine + craft",
+      "gloss": "Old English cræft — skill, strength, cunning. Burrow plus know-how."
+    }
   },
   {
     "slug": "mplay",
@@ -162,6 +182,10 @@
         "href": "https://github.com/pknull/mplay"
       }
     ],
-    "body": "projects/mplay.md"
+    "body": "projects/mplay.md",
+    "etymology": {
+      "word": "m + play",
+      "gloss": "the m is for MPRIS (Media Player Remote Interfacing Specification, 2006); now lowercase humility"
+    }
   }
 ]

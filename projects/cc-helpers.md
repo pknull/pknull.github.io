@@ -4,6 +4,9 @@ kind: coding
 state: active
 order: 6
 lede: "Two small tools for managing Claude Code sessions: a TUI session manager and a virtual-office visualizer."
+etymology:
+  word: "cc"
+  gloss: "Claude Code, of course. The 'helpers' is doing a lot of work."
 links:
   - label: "ccsessionctl"
     href: "https://github.com/pknull/ccsessionctl"

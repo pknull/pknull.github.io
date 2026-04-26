@@ -4,6 +4,9 @@ kind: coding
 state: archived
 order: 9
 lede: "TUI MPRIS music client. Rust + ratatui."
+etymology:
+  word: "m + play"
+  gloss: "the m is for MPRIS (Media Player Remote Interfacing Specification, 2006); now lowercase humility"
 links:
   - label: "github"
     href: "https://github.com/pknull/mplay"

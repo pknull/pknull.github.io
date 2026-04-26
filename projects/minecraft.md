@@ -4,6 +4,9 @@ kind: coding
 state: inactive
 order: 8
 lede: "Two datapacks for Minecraft 1.21: quality-of-life crafting recipes, and a hunter-vs-hunted PvP minigame."
+etymology:
+  word: "mine + craft"
+  gloss: "Old English cræft — skill, strength, cunning. Burrow plus know-how."
 links:
   - label: "PKPack"
     href: "https://github.com/pknull/PKPack"

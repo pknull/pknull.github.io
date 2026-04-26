@@ -4,6 +4,9 @@ kind: coding
 state: active
 order: 4
 lede: "Python bot framework with Claude SDK integration. Discord sessions, command registry, conversation state across messages."
+etymology:
+  word: "bot + core"
+  gloss: "robot (← Czech robota: forced labor, R.U.R., 1920) + Latin cor: heart"
 links:
   - label: "github"
     href: "https://github.com/pknull/pk.botcore"

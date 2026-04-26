@@ -4,6 +4,9 @@ kind: coding
 state: inactive
 order: 7
 lede: "Three small Python libraries for tabletop RPG bots: dice expressions, weighted random selection, card draws."
+etymology:
+  word: "RPG"
+  gloss: "role-playing game; the abbreviation crystallized around D&D in the mid-1970s"
 links:
   - label: "rpg-dice"
     href: "https://github.com/pknull/rpg-dice"
