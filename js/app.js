@@ -754,7 +754,7 @@
           '<header class="page-hd">' +
             '<p class="hd-kicker dim"><a href="#/">← home</a></p>' +
             '<h1>Blog</h1>' +
-            '<p class="page-lede">Daily entries, oldest at the bottom. ' + posts.length + ' total.</p>' +
+            '<p class="page-lede">Notebook entries, newest first.</p>' +
           '</header>' +
           (posts.length ? groupHtml : '<p class="empty">No entries yet.</p>');
 
