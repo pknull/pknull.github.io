@@ -5,7 +5,7 @@ state: active
 order: 5
 lede: "Generative art for the terminal. Bonsai trees, animated visualizations, ratatui in Rust."
 etymology:
-  word: "term + art"
+  word: "terminal + art"
   gloss: "Latin terminus — boundary. The edge of the screen as canvas."
 links:
   - label: "github"
