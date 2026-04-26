@@ -424,7 +424,8 @@
   var lastGiscusTerm = null;
 
   function getGiscusTheme() {
-    return isDarkResolved() ? 'dark' : 'light';
+    // Use giscus's built-in gruvbox themes — visually matches the site palette
+    return isDarkResolved() ? 'gruvbox_dark' : 'gruvbox_light';
   }
 
   function actuallyLoadGiscus(term) {

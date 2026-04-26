@@ -524,6 +524,7 @@ tbody tr:hover{ background: var(--stripe); }
 .proj-card{
   padding: var(--s-5) 0;
   border-top: 1px solid var(--rule);
+  position: relative; /* anchor for stretched title link */
 }
 .proj-card:last-child{ border-bottom: 1px solid var(--rule); }
 .proj-card-hd{
@@ -532,8 +533,15 @@ tbody tr:hover{ background: var(--stripe); }
   margin-bottom: 8px;
 }
 .proj-card-name-link{ border: 0; border-bottom: 0 !important; flex: 1 1 auto; min-width: 0; }
-.proj-card-name{ font-size: 1.45rem; margin: 0; line-height: 1.15; }
-.proj-card-name-link:hover .proj-card-name{ color: var(--accent); }
+.proj-card-name{ font-size: 1.45rem; margin: 0; line-height: 1.15; transition: color .12s ease; }
+/* Stretch the title link across the whole card so the entire area is clickable */
+.proj-card-name-link::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.proj-card:hover .proj-card-name{ color: var(--accent); }
 .proj-card-hd .proj-pill{ flex: 0 0 auto; margin-top: 8px; }
 .proj-card-hd .proj-pills{ margin-top: 8px; }
 .proj-card-lede{
@@ -544,7 +552,10 @@ tbody tr:hover{ background: var(--stripe); }
 }
 .proj-etym{ margin-bottom: var(--s-3); color: var(--ink-3); font-size: .92rem; }
 .proj-etym .mono{ color: var(--accent); }
+.proj-etym a{ position: relative; z-index: 2; }
 .proj-card-meta{ display: flex; gap: 14px; flex-wrap: wrap; align-items: center; font-family: var(--f-mono); font-size: .82rem; }
+/* Inline links inside the card (github/component repos, Read →) sit above the stretched overlay */
+.proj-card-meta a{ position: relative; z-index: 2; }
 
 /* ── Post (single entry) ─────────────────────────────────────── */
 .post-hd{
