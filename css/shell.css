@@ -669,8 +669,9 @@ tbody tr:hover{ background: var(--stripe); }
 
 .validation-badges{
   display: flex;
+  flex-direction: column;
   gap: 6px;
-  flex-wrap: wrap;
+  align-items: flex-start;
 }
 .validation-badges a{ border: 0; }
 .validation-badges img{ opacity: .55; transition: opacity .2s ease; }
