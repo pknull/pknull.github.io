@@ -944,17 +944,57 @@
 
   function renderMeta() {
     setMainKind('post');
-    fetchText('./meta.md')
-      .then(function(md) {
+    fetchJson('./meta.json')
+      .then(function(meta) {
+        // Bio paragraphs may contain inline markdown (links, emphasis); run them
+        // through marked.parseInline so links resolve.
+        var bioHtml = (meta.bio || []).map(function(p) {
+          return '<p>' + DOMPurify.sanitize(window.marked ? marked.parseInline(p) : escapeHtml(p)) + '</p>';
+        }).join('');
+
+        var classifyHtml = (meta.classification || []).map(function(c) {
+          var valueText = c.mono
+            ? '<span class="mono">' + escapeHtml(c.value) + '</span>'
+            : escapeHtml(c.value);
+          var value = c.href
+            ? '<a href="' + escapeHtml(c.href) + '">' + valueText + '</a>'
+            : valueText;
+          return '<li><strong>' + escapeHtml(c.label) + '</strong> — ' + value + '</li>';
+        }).join('');
+
+        var linksHtml = '';
+        if (meta.links) {
+          var groups = Object.keys(meta.links);
+          linksHtml = '<div class="link-grid">' + groups.map(function(g) {
+            var items = (meta.links[g] || []).map(function(l) {
+              return '<li><a href="' + escapeHtml(l.href) + '">' + escapeHtml(l.label) + '</a></li>';
+            }).join('');
+            return '<div class="link-col">' +
+              '<div class="col-hd mono caps dim">' + escapeHtml(g) + '</div>' +
+              '<ul class="plain">' + items + '</ul>' +
+            '</div>';
+          }).join('') + '</div>';
+        }
+
+        var portraitHtml = meta.portrait
+          ? '<div class="meta-portrait"><img src="' + escapeHtml(meta.portrait) + '" alt=""></div>'
+          : '';
+
         mainEl.innerHTML =
-          '<p class="back-link"><a href="#/">← home</a></p>' +
-          '<article class="post">' +
-            '<div class="post-body">' + DOMPurify.sanitize(renderMarkdown(md)) + '</div>' +
-          '</article>';
+          '<header class="page-hd">' +
+            (meta.kicker ? '<div class="hd-kicker mono caps dim">' + escapeHtml(meta.kicker) + '</div>' : '') +
+            '<h1>' + escapeHtml(meta.title || 'Meta') + '</h1>' +
+          '</header>' +
+          '<div class="post-body">' +
+            '<div class="meta-hd">' +
+              portraitHtml +
+              '<div>' + bioHtml + '</div>' +
+            '</div>' +
+            (classifyHtml ? '<h2>Classification</h2><ul>' + classifyHtml + '</ul>' : '') +
+            (linksHtml ? '<h2>Links</h2>' + linksHtml : '') +
+          '</div>';
+
         setLazyImages(mainEl);
-        processMermaidBlocks(mainEl);
-        if (window.hljs) hljs.highlightAll();
-        addCodeCopyButtons();
         hideGiscus();
         updateActiveNav('meta');
         window.scrollTo(0, 0);

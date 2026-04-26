@@ -621,6 +621,43 @@ tbody tr:hover{ background: var(--stripe); }
 .img-ph.wide{ aspect-ratio: 21 / 9; }
 .figure figcaption{ margin-top: 8px; text-align: center; color: var(--ink-3); font-size: .9rem; }
 
+/* ── Meta page ───────────────────────────────────────────────── */
+.meta-hd{
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: var(--s-5);
+  margin-bottom: var(--s-5);
+  align-items: start;
+}
+.meta-portrait img{
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}
+@media (max-width: 640px){
+  .meta-hd{ grid-template-columns: 1fr; }
+  .meta-portrait{ max-width: 200px; }
+}
+.link-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--s-5);
+  margin-top: var(--s-4);
+}
+.link-col .col-hd{
+  display: block;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-3);
+}
+.link-col ul.plain{ list-style: none; padding: 0; margin: 0; }
+.link-col ul.plain li{ margin-bottom: 2px; }
+
 /* ── Footer ──────────────────────────────────────────────────── */
 .nb-ft{
   max-width: var(--wide);

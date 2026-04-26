@@ -1,0 +1,131 @@
+{
+  "title": "PK (Louis)",
+  "kicker": "/meta",
+  "portrait": "./images/meta_headshot.webp",
+  "bio": [
+    "Engineer with [nearly three decades](https://www.linkedin.com/in/louisg) in software, systems architecture, and security. Based in [Eugene, Oregon](https://maps.google.com/?q=Eugene,+Oregon), originally from [Phoenix, Arizona](https://maps.google.com/?q=Phoenix,+Arizona). [Aquarius](https://www.astrology.com/zodiac-signs/aquarius) (7°, first decan).",
+    "Studies martial arts at [Leung Martial Arts](https://leungmartialarts.com/), previously at [9 Dragons Kung Fu](https://9dragonskungfu.com/).",
+    "Interest in worldbuilding led to a cosmic weird west setting that I run a [BRUGE](https://www.chaosium.com/basic-roleplaying/) campaign from. Also doing light writing on a book and game from this world."
+  ],
+  "classification": [
+    {
+      "label": "MBTI",
+      "value": "ENTP-T",
+      "mono": true,
+      "href": "https://www.16personalities.com/entp-personality"
+    },
+    {
+      "label": "Attitudinal Psyche",
+      "value": "VFLE",
+      "mono": true,
+      "href": "https://www.attitudinalpsyche.com/personality-profiles/vfle/"
+    },
+    {
+      "label": "Enneagram",
+      "value": "7 (8, 5)",
+      "mono": true,
+      "href": "https://www.enneagraminstitute.com/type-7"
+    },
+    {
+      "label": "Predictive Index",
+      "value": "Maverick",
+      "mono": true,
+      "href": "https://www.predictiveindex.com/reference-profile/maverick/"
+    },
+    {
+      "label": "Philosophy",
+      "value": "Immanent Process Hermeticism. Seek coherence over control."
+    },
+    {
+      "label": "Certification",
+      "value": "Private Pilot",
+      "href": "https://www.faa.gov/pilots/become"
+    }
+  ],
+  "links": {
+    "work": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/pknull"
+      },
+      {
+        "label": "LinkedIn",
+        "href": "https://www.linkedin.com/in/louisg"
+      },
+      {
+        "label": "Keybase",
+        "href": "https://keybase.io/pknull"
+      }
+    ],
+    "social": [
+      {
+        "label": "Bluesky",
+        "href": "https://bsky.app/profile/pknullifier.bsky.social"
+      },
+      {
+        "label": "X",
+        "href": "https://x.com/pknull"
+      },
+      {
+        "label": "Threads",
+        "href": "https://www.threads.com/@pk00101"
+      },
+      {
+        "label": "Instagram",
+        "href": "https://www.instagram.com/pk00101/"
+      },
+      {
+        "label": "Facebook",
+        "href": "https://www.facebook.com/pknull"
+      },
+      {
+        "label": "Reddit",
+        "href": "https://www.reddit.com/user/pknull/"
+      },
+      {
+        "label": "Discord",
+        "href": "https://discord.com/users/187488812471943168"
+      }
+    ],
+    "tracking": [
+      {
+        "label": "Goodreads",
+        "href": "https://www.goodreads.com/user/show/9735460-louis"
+      },
+      {
+        "label": "Letterboxd",
+        "href": "https://letterboxd.com/pknull/"
+      },
+      {
+        "label": "Last.fm",
+        "href": "https://www.last.fm/user/pknull"
+      }
+    ],
+    "games": [
+      {
+        "label": "Steam",
+        "href": "https://steamcommunity.com/id/pknull"
+      },
+      {
+        "label": "PSN",
+        "href": "https://psnprofiles.com/PKnull"
+      },
+      {
+        "label": "Xbox",
+        "href": "https://account.xbox.com/profile?gamertag=ErmaGerd99999"
+      },
+      {
+        "label": "Epic",
+        "href": "https://store.epicgames.com/en-US/u/4689731fab3e40c9bc362e6bbc98606b"
+      },
+      {
+        "label": "Riot",
+        "href": "https://www.op.gg/summoners/na/PKnull-NA1"
+      },
+      {
+        "label": "Twitch",
+        "href": "https://twitch.tv/pknull"
+      }
+    ]
+  }
+}
