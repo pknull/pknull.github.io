@@ -1,0 +1,43 @@
+name: Build posts index
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'posts/**'
+      - 'bin/build-posts.py'
+      - '.github/workflows/build-index.yml'
+
+# Only one rebuild at a time; coalesce rapid pushes
+concurrency:
+  group: build-index
+  cancel-in-progress: false
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Rebuild posts.json from posts/*.md
+        run: python3 bin/build-posts.py
+
+      - name: Commit and push if changed
+        run: |
+          if git diff --quiet posts.json; then
+            echo "posts.json already up to date — nothing to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add posts.json
+          git commit -m "ci: rebuild posts.json [skip ci]"
+          git push
