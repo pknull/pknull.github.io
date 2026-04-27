@@ -1,5 +1,5 @@
 ---
-title: "Claude Code helpers"
+title: "CC-Helpers"
 kind: coding
 state: active
 order: 6
