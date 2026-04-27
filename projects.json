@@ -102,7 +102,7 @@
   },
   {
     "slug": "cc-helpers",
-    "title": "CC-Helpers",
+    "title": "Claude Code helpers",
     "kind": "coding",
     "state": "active",
     "lede": "Two small tools for managing Claude Code sessions: a TUI session manager and a virtual-office visualizer.",
