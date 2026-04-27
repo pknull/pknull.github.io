@@ -24,7 +24,7 @@ links:
 
 Thallus is an umbrella project for building AI systems that coordinate through append-only, cryptographically signed message feeds replicated via gossip. Each component has a single role and communicates only through the feed. There is no central server, no control plane, no third-party dependency. You run it. You own the data. The feeds are yours.
 
-The protocol is [Egregore](https://en.wikipedia.org/wiki/Egregore)--a shared construct that emerges from the group but belongs to no individual. Agents publish signed messages into feeds. Feeds replicate between peers. The network is the feed.
+The name comes from biology: the thallus is the undifferentiated body of a lichen or fungus -- no central hierarchy, growth happens everywhere, damage to one part does not kill the whole. The protocol is [Egregore](https://en.wikipedia.org/wiki/Egregore) -- a shared construct that emerges from the group but belongs to no individual. Agents publish signed messages into feeds. Feeds replicate between peers. The network is the feed.
 
 ---
 
@@ -46,13 +46,13 @@ The protocol is [Egregore](https://en.wikipedia.org/wiki/Egregore)--a shared con
 
 Five components, each with one nature and one role:
 
-| Component | Nature | Role |
-|-----------|--------|------|
-| **[Egregore](https://github.com/pknull/egregore)** | Pipe | Carries signed messages. Gossip replication between peers. |
-| **[Servitor](https://github.com/pknull/servitor)** | Hands | Headless executor. Picks up tasks from the feed, reasons with LLMs, calls tools. |
-| **[Familiar](https://github.com/pknull/familiar)** | Mind | User-facing companion. REPL, Discord, or daemon. Plans and publishes on your behalf. |
-| **[Scry](https://github.com/pknull/scry)** | Eyes | Desktop admin console. Built with [Tauri](https://tauri.app/). |
-| **[thallus-core](https://github.com/pknull/thallus-core)** | Skeleton | Shared library: identity, [MCP](https://modelcontextprotocol.io/) client pool, LLM provider abstraction. |
+| Component | Nature | Role | Status |
+|-----------|--------|------|--------|
+| **[Egregore](https://github.com/pknull/egregore)** | Pipe | Carries signed messages. Gossip replication between peers. | v1.2 stable |
+| **[Familiar](https://github.com/pknull/familiar)** | Mind | User-facing companion. REPL, Discord, or daemon. Plans and publishes on your behalf. | v0.4 active |
+| **[Servitor](https://github.com/pknull/servitor)** | Hands | Headless executor. Picks up tasks from the feed, reasons with LLMs, calls tools. | v0.2 active |
+| **[Scry](https://github.com/pknull/scry)** | Eyes | Desktop operator console. Built with [Tauri](https://tauri.app/). | functional |
+| **[thallus-core](https://github.com/pknull/thallus-core)** | Skeleton | Shared library: identity, [MCP](https://modelcontextprotocol.io/) client pool, LLM provider abstraction. | v0.2 active |
 
 ```mermaid
 graph TD
@@ -95,7 +95,7 @@ Three tiers of data on the feed:
 
 Built in [Rust](https://www.rust-lang.org/) (2021 edition) on [Tokio](https://tokio.rs/) async runtime.
 
-**Crypto**: Ed25519 signing, X25519 key exchange, ChaCha20-Poly1305 AEAD, Argon2id key encryption at rest.
+**Crypto**: Ed25519 signing, X25519 key exchange, XChaCha20-Poly1305 AEAD for transport. Identity keys at rest are protected by owner-only filesystem permissions (passphrase encryption is explicitly out of scope for the active prototype).
 
 **Transport**: [Secret Handshake](https://ssbc.github.io/scuttlebutt-protocol-guide/#handshake) mutual authentication + Box Stream encrypted P2P gossip.
 
@@ -109,4 +109,4 @@ Built in [Rust](https://www.rust-lang.org/) (2021 edition) on [Tokio](https://to
 
 ## Status
 
-Active development. Not yet public. Components are functional at varying levels of maturity--Egregore is the most stable, Familiar is the most active area of work.
+Active development. Not yet public. Components are functional at varying levels of maturity -- Egregore is the most stable, Familiar is the most active area of work. Client SDKs (`egregore-py`, `egregore-rs`, `egregore-js`) are planned but not yet shipped.

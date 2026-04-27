@@ -31,6 +31,7 @@ Asha operates on a two-layer architecture:
 | `soul.md` | Who Asha is -- identity, values, nature |
 | `voice.md` | How Asha expresses -- tone, patterns, constraints |
 | `keeper.md` | Who you are -- preferences, calibration signals |
+| `operation.md` | Operational rules loaded on every session, persona or not |
 | `learnings.md` | Discovered patterns with confidence tracking |
 
 **Project Layer** (`Memory/` -- per-project, git-committed):
@@ -57,19 +58,23 @@ Learnings rise in confidence on confirmation and decay on contradiction. When a 
 
 ## Plugins
 
-Seven domain plugins, each focused on a specific workflow:
+Eleven domain plugins, each focused on a specific workflow:
 
 | Domain | Plugin | Agents | Purpose |
 |--------|--------|--------|---------|
-| **Core** | `asha` | 4 | Session coordination, memory, identity |
-| **Research** | `panel-system` | 3+ | Multi-perspective expert panels, consensus tracking |
-| **Development** | `code` | 15 | Code review, TDD, orchestration, 6 language specialists |
+| **Core** | `asha` | 1 | Identity bootstrap, session lifecycle |
+| **Session** | `session` | 3 | Event capture, synthesis, memory persistence |
+| **Research** | `panel-system` | 5 | Multi-perspective expert panels, consensus tracking |
+| **Development** | `code` | 15 | Code review, TDD, orchestration, language specialists |
+| **DevOps** | `devops` | -- | Docker patterns, database migrations |
+| **Security** | `security` | -- | OWASP checklist, defensive coding patterns |
 | **Creative** | `write` | 16 | Fiction writing, prose craft, perplexity detection |
 | **Image** | `image` | 1 | Stable Diffusion prompts, ComfyUI workflows |
+| **Prompt** | `prompt` | 1 | External-tool prompt engineering and anti-patterns |
 | **Automation** | `scheduler` | 1 | Cron-style scheduled task execution |
 | **Formatting** | `output-styles` | -- | Switchable response styles |
 
-35+ specialized agents across the repo. Each agent has a defined role, ownership declarations, and tools scoped to its domain.
+44+ specialized agents across the repo, plus skill bundles for language- and domain-specific patterns. Each agent has a defined role, ownership declarations, and tools scoped to its domain.
 
 ---
 
