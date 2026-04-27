@@ -15,23 +15,27 @@
   "standing": [
     {
       "key": "type",
-      "val": "ENTP-T · Maverick"
+      "val": "[ENTP-T](https://www.16personalities.com/entp-personality) · [Maverick](https://www.predictiveindex.com/reference-profile/maverick/)"
     },
     {
       "key": "aps",
-      "val": "VFLE"
+      "val": "[VFLE](https://www.attitudinalpsyche.com/personality-profiles/vfle/)"
     },
     {
       "key": "ennea",
-      "val": "7 (8, 5)"
+      "val": "[7 (8, 5)](https://www.enneagraminstitute.com/type-7)"
     },
     {
       "key": "sign",
-      "val": "Aquarius, 7°"
+      "val": "[Aquarius](https://www.astrology.com/zodiac-signs/aquarius), 7°"
     },
     {
       "key": "creed",
       "val": "seek coherence over control"
+    },
+    {
+      "key": "cert",
+      "val": "[Private Pilot](https://www.faa.gov/pilots/become)"
     }
   ],
   "title": "PK (Louis)",

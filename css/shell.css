@@ -868,25 +868,35 @@ tbody tr:hover{ background: var(--stripe); }
 .img-ph.wide{ aspect-ratio: 21 / 9; }
 .figure figcaption{ margin-top: 8px; text-align: center; color: var(--ink-3); font-size: .9rem; }
 
-/* ── Meta page ───────────────────────────────────────────────── */
-.meta-hd{
+/* ── Home: About block (under recent entries) ───────────────── */
+.home-about{
+  margin-top: var(--s-7);
+}
+.about-body{
   display: grid;
-  grid-template-columns: 180px 1fr;
+  grid-template-columns: 140px 1fr;
   gap: var(--s-5);
-  margin-bottom: var(--s-5);
   align-items: start;
 }
-.meta-portrait img{
+.about-portrait img{
   width: 100%;
   height: auto;
   display: block;
   border: 1px solid var(--rule);
   border-radius: 2px;
 }
+.about-bio p{ margin: 0 0 .75em; }
+.about-bio p:last-child{ margin-bottom: 0; }
 @media (max-width: 640px){
-  .meta-hd{ grid-template-columns: 1fr; }
-  .meta-portrait{ max-width: 200px; }
+  .about-body{ grid-template-columns: 1fr; }
+  .about-portrait{ max-width: 180px; }
 }
+
+/* ── Home: Elsewhere (link grid below the split) ────────────── */
+.home-links{
+  margin-top: var(--s-7);
+}
+
 .link-grid{
   display: grid;
   grid-template-columns: repeat(4, 1fr);

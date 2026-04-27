@@ -510,17 +510,16 @@
   // Routing
   // ─────────────────────────────────────────────────────────────
   // New scheme:
-  //   #/                         → home
+  //   #/                         → home (also where #/meta and #meta resolve)
   //   #/blog                     → blog list
   //   #/post/<isoDate>           → single post
   //   #/projects                 → projects index
   //   #/projects/<slug>          → single project
-  //   #/meta                     → meta page
   //
   // Backward compat redirects (legacy hashes):
   //   #blog                      → #/blog
   //   #blog:<isoDate>            → #/post/<isoDate>
-  //   #meta                      → #/meta
+  //   #meta                      → #/   (meta merged into home)
   //   #asha                      → #/projects/asha
   //   #thallus                   → #/projects/thallus
   //   #test                      → #/post/test  (ad-hoc giscus test page)
@@ -544,7 +543,7 @@
 
     if (key === 'blog' && arg) newHash = '#/post/' + arg;
     else if (key === 'blog')   newHash = '#/blog';
-    else if (key === 'meta')   newHash = '#/meta';
+    else if (key === 'meta')   newHash = '#/';
     else if (key === 'test')   newHash = '#/post/test';
     else if (LEGACY_PROJECTS[key]) newHash = '#/projects/' + key;
 
@@ -567,12 +566,11 @@
     if (head === 'blog')     return { name: 'blog' };
     if (head === 'projects') return { name: segments[1] ? 'project' : 'projects', slug: segments[1] || null };
     if (head === 'post')     return { name: 'post', slug: segments[1] || null };
-    if (head === 'meta')     return { name: 'meta' };
     return { name: 'home' };
   }
 
   function updateActiveNav(routeName) {
-    var navMap = { home: 'home', blog: 'blog', post: 'blog', projects: 'projects', project: 'projects', meta: 'meta' };
+    var navMap = { home: 'home', blog: 'blog', post: 'blog', projects: 'projects', project: 'projects' };
     var active = navMap[routeName] || 'home';
     document.querySelectorAll('.nb-nav a').forEach(function(link) {
       var r = link.getAttribute('data-route');
@@ -696,11 +694,11 @@
     ])
       .then(function(arr) {
         var posts = arr[0].map(normalizePost);
-        var projects = arr[1].slice(0, 4);
+        var projects = arr[1].slice(0, 6);
         var meta = arr[2] || {};
         var feat = posts.slice(0, 3);
         var rest = posts.slice(3, 8);
-        var standing = (meta.standing || []).slice(0, 5);
+        var standing = (meta.standing || []).slice(0, 6);
 
         var featHtml = feat.length
           ? '<ol class="post-feat-list">' + feat.map(function(e) {
@@ -756,10 +754,47 @@
           ? '<aside class="hero-aside" aria-label="Standing">' +
               '<div class="aside-hd">Standing</div>' +
               '<dl class="aside-list">' + standing.map(function(s) {
-                return '<div class="aside-row"><dt>' + escapeHtml(s.key) + '</dt><dd>' + escapeHtml(s.val) + '</dd></div>';
+                var valHtml = window.marked
+                  ? DOMPurify.sanitize(marked.parseInline(s.val || ''))
+                  : escapeHtml(s.val || '');
+                return '<div class="aside-row"><dt>' + escapeHtml(s.key) + '</dt><dd>' + valHtml + '</dd></div>';
               }).join('') + '</dl>' +
             '</aside>'
           : '';
+
+        var bioHtml = (meta.bio || []).map(function(p) {
+          return '<p>' + DOMPurify.sanitize(window.marked ? marked.parseInline(p) : escapeHtml(p)) + '</p>';
+        }).join('');
+        var aboutHtml = (meta.portrait || bioHtml)
+          ? '<aside class="home-about" aria-labelledby="about-h2">' +
+              '<div class="col-hd"><h2 id="about-h2"><em>About</em></h2></div>' +
+              '<div class="about-body">' +
+                (meta.portrait
+                  ? '<div class="about-portrait"><img src="' + escapeHtml(meta.portrait) + '" alt=""></div>'
+                  : '') +
+                '<div class="about-bio">' + bioHtml + '</div>' +
+              '</div>' +
+            '</aside>'
+          : '';
+
+        var linksHtml = '';
+        if (meta.links) {
+          var groups = Object.keys(meta.links);
+          var groupsHtml = groups.map(function(g) {
+            var items = (meta.links[g] || []).map(function(l) {
+              return '<li><a href="' + escapeHtml(l.href) + '">' + escapeHtml(l.label) + '</a></li>';
+            }).join('');
+            return '<div class="link-col">' +
+              '<div class="col-hd mono caps dim">' + escapeHtml(g) + '</div>' +
+              '<ul class="plain">' + items + '</ul>' +
+            '</div>';
+          }).join('');
+          linksHtml =
+            '<section class="home-links" aria-labelledby="elsewhere-h2">' +
+              '<div class="col-hd"><h2 id="elsewhere-h2"><em>Elsewhere</em></h2></div>' +
+              '<div class="link-grid">' + groupsHtml + '</div>' +
+            '</section>';
+        }
 
         mainEl.innerHTML =
           '<section class="hero" aria-labelledby="hero-title">' +
@@ -790,6 +825,7 @@
               '</div>' +
               featHtml +
               restHtml +
+              aboutHtml +
             '</section>' +
             '<section class="col-shop" aria-labelledby="shop-h2">' +
               '<div class="col-hd">' +
@@ -798,7 +834,8 @@
               '</div>' +
               projectsHtml +
             '</section>' +
-          '</div>';
+          '</div>' +
+          linksHtml;
         hideGiscus();
         updateActiveNav('home');
         setLazyImages(mainEl);
@@ -1034,67 +1071,6 @@
       .catch(function() { showError('Failed to load project.'); });
   }
 
-  function renderMeta() {
-    setMainKind('post');
-    fetchJson('./meta.json')
-      .then(function(meta) {
-        // Bio paragraphs may contain inline markdown (links, emphasis); run them
-        // through marked.parseInline so links resolve.
-        var bioHtml = (meta.bio || []).map(function(p) {
-          return '<p>' + DOMPurify.sanitize(window.marked ? marked.parseInline(p) : escapeHtml(p)) + '</p>';
-        }).join('');
-
-        var classifyHtml = (meta.classification || []).map(function(c) {
-          var valueText = c.mono
-            ? '<span class="mono">' + escapeHtml(c.value) + '</span>'
-            : escapeHtml(c.value);
-          var value = c.href
-            ? '<a href="' + escapeHtml(c.href) + '">' + valueText + '</a>'
-            : valueText;
-          return '<li><strong>' + escapeHtml(c.label) + '</strong> — ' + value + '</li>';
-        }).join('');
-
-        var linksHtml = '';
-        if (meta.links) {
-          var groups = Object.keys(meta.links);
-          linksHtml = '<div class="link-grid">' + groups.map(function(g) {
-            var items = (meta.links[g] || []).map(function(l) {
-              return '<li><a href="' + escapeHtml(l.href) + '">' + escapeHtml(l.label) + '</a></li>';
-            }).join('');
-            return '<div class="link-col">' +
-              '<div class="col-hd mono caps dim">' + escapeHtml(g) + '</div>' +
-              '<ul class="plain">' + items + '</ul>' +
-            '</div>';
-          }).join('') + '</div>';
-        }
-
-        var portraitHtml = meta.portrait
-          ? '<div class="meta-portrait"><img src="' + escapeHtml(meta.portrait) + '" alt=""></div>'
-          : '';
-
-        mainEl.innerHTML =
-          '<header class="page-hd">' +
-            (meta.kicker ? '<div class="hd-kicker mono caps dim">' + escapeHtml(meta.kicker) + '</div>' : '') +
-            '<h1>' + escapeHtml(meta.title || 'Meta') + '</h1>' +
-          '</header>' +
-          '<div class="post-body">' +
-            '<div class="meta-hd">' +
-              portraitHtml +
-              '<div>' + bioHtml + '</div>' +
-            '</div>' +
-            (classifyHtml ? '<h2>Classification</h2><ul>' + classifyHtml + '</ul>' : '') +
-            (linksHtml ? '<h2>Links</h2>' + linksHtml : '') +
-          '</div>';
-
-        setLazyImages(mainEl);
-        markExternalLinks(mainEl);
-        hideGiscus();
-        updateActiveNav('meta');
-        window.scrollTo(0, 0);
-      })
-      .catch(function() { showError('Failed to load meta.'); });
-  }
-
   // ─────────────────────────────────────────────────────────────
   // Route dispatch
   // ─────────────────────────────────────────────────────────────
@@ -1107,7 +1083,6 @@
       case 'post':     return route.slug ? renderPost(route.slug) : renderBlog();
       case 'projects': return renderProjects();
       case 'project':  return route.slug ? renderProject(route.slug) : renderProjects();
-      case 'meta':     return renderMeta();
       default:         return renderHome();
     }
   }
