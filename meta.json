@@ -7,6 +7,10 @@
     ],
     "timezone": "America/Los_Angeles",
     "reading": "The Master and Margarita",
+    "gaming": {
+      "label": "Pragmata",
+      "href": "https://store.steampowered.com/app/3357650/PRAGMATA/"
+    },
     "building": {
       "label": "Thallus",
       "href": "#/projects/thallus"

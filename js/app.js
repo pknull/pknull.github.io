@@ -1198,8 +1198,9 @@
   function initNowStrip() {
     var nowEl = document.getElementById('now-val-now');
     var readingEl = document.getElementById('now-val-reading');
+    var gamingEl = document.getElementById('now-val-gaming');
     var buildingEl = document.getElementById('now-val-building');
-    if (!nowEl && !readingEl && !buildingEl) return;
+    if (!nowEl && !readingEl && !gamingEl && !buildingEl) return;
 
     Promise.all([
       fetchJson('./meta.json').catch(function(){ return {}; }),
@@ -1231,6 +1232,18 @@
             readingEl.appendChild(em);
           }
         }
+      }
+      if (gamingEl && now.gaming && now.gaming.label) {
+        var ag = document.createElement('a');
+        var ghref = now.gaming.href || '#';
+        ag.href = ghref;
+        if (ghref.charAt(0) !== '#') {
+          ag.target = '_blank';
+          ag.rel = 'noopener noreferrer';
+        }
+        ag.textContent = now.gaming.label;
+        gamingEl.innerHTML = '';
+        gamingEl.appendChild(ag);
       }
       if (buildingEl && now.building && now.building.label) {
         var a = document.createElement('a');
