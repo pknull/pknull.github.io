@@ -1,5 +1,5 @@
 ---
-title: "Minecraft datapacks"
+title: "MC Datapacks"
 kind: coding
 state: inactive
 order: 8

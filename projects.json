@@ -124,7 +124,7 @@
   },
   {
     "slug": "rpg-tools",
-    "title": "RPG dice tools",
+    "title": "RPG Tools",
     "kind": "coding",
     "state": "inactive",
     "lede": "Three small Python libraries for tabletop RPG bots: dice expressions, weighted random selection, card draws.",
@@ -150,7 +150,7 @@
   },
   {
     "slug": "minecraft",
-    "title": "Minecraft datapacks",
+    "title": "MC Datapacks",
     "kind": "coding",
     "state": "inactive",
     "lede": "Two datapacks for Minecraft 1.21: quality-of-life crafting recipes, and a hunter-vs-hunted PvP minigame.",

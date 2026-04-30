@@ -1,5 +1,5 @@
 ---
-title: "RPG dice tools"
+title: "RPG Tools"
 kind: coding
 state: inactive
 order: 7
