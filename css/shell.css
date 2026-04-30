@@ -577,9 +577,7 @@ tbody tr:hover{ background: var(--stripe); }
 .proj-card .proj-link:hover{ color: var(--ink); border: 0; }
 .proj-card .proj-link:hover .proj-card-name{ color: var(--accent); }
 .proj-card-head{
-  display: flex; align-items: baseline; justify-content: space-between;
-  gap: var(--s-3);
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 .proj-card-name{
   font-family: var(--f-mono);
@@ -602,15 +600,16 @@ tbody tr:hover{ background: var(--stripe); }
 .proj-card.state-active .proj-dot{ background: var(--gb-green); box-shadow: 0 0 0 3px rgba(121,116,14,.18); }
 .proj-card.state-inactive .proj-dot{ background: var(--ink-3); }
 .proj-card.state-archived .proj-dot{ background: var(--ink-3); opacity: .5; }
-.proj-card-meta{
+.proj-card-state{
   font-family: var(--f-mono);
   font-size: 10.5px;
   text-transform: uppercase;
   letter-spacing: .12em;
   color: var(--ink-3);
+  margin-bottom: 10px;
 }
-.proj-card.kind-writing .proj-card-meta{ color: #B57614; }
-.proj-card.kind-coding .proj-card-meta{ color: var(--gb-blue); }
+.proj-card.kind-writing .proj-card-state{ color: #B57614; }
+.proj-card.kind-coding .proj-card-state{ color: var(--gb-blue); }
 .proj-card-lede{
   font-size: 1rem;
   color: var(--ink-2);
@@ -772,6 +771,7 @@ tbody tr:hover{ background: var(--stripe); }
   margin-bottom: 8px;
 }
 .proj-card-name-link{ border: 0; border-bottom: 0 !important; flex: 1 1 auto; min-width: 0; }
+.proj-card-name-static{ border: 0; flex: 1 1 auto; min-width: 0; }
 .proj-card-name{ font-size: 1.45rem; margin: 0; line-height: 1.15; transition: color .12s ease; }
 /* Stretch the title link across the whole card so the entire area is clickable */
 .proj-card-name-link::before{
@@ -783,6 +783,7 @@ tbody tr:hover{ background: var(--stripe); }
 .proj-card:hover .proj-card-name{ color: var(--accent); }
 .proj-card-hd .proj-pill{ flex: 0 0 auto; margin-top: 8px; }
 .proj-card-hd .proj-pills{ margin-top: 8px; }
+.proj-card--detail{ border-top: 0; padding-top: 0; }
 .proj-card-lede{
   font-size: 1.05rem;
   color: var(--ink-2);

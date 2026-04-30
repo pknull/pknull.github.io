@@ -475,6 +475,10 @@
     return isDarkResolved() ? 'gruvbox_dark' : 'gruvbox_light';
   }
 
+  function getGiscusFrame() {
+    return giscusContainer && giscusContainer.querySelector('iframe.giscus-frame');
+  }
+
   function actuallyLoadGiscus(term) {
     giscusContainer.hidden = false;
     var giscusDiv = giscusContainer.querySelector('.giscus');
@@ -518,7 +522,15 @@
 
   function updateGiscusTheme() {
     if (giscusLoaded && !giscusContainer.hidden && lastGiscusTerm) {
-      actuallyLoadGiscus(lastGiscusTerm);
+      var frame = getGiscusFrame();
+      if (!frame || !frame.contentWindow) return;
+      frame.contentWindow.postMessage({
+        giscus: {
+          setConfig: {
+            theme: getGiscusTheme()
+          }
+        }
+      }, '*');
     }
   }
 
@@ -616,11 +628,17 @@
     return new URL(url, window.location.href).href;
   }
 
+  function canonicalUrl(hash) {
+    if (!hash || hash === '#/' || hash === '#') return SITE_ROOT;
+    if (hash.charAt(0) !== '#') hash = '#' + hash;
+    return SITE_ROOT + hash;
+  }
+
   function setPageMeta(opts) {
     opts = opts || {};
     var title = opts.title ? opts.title + ' · ' + SITE_NAME : SITE_NAME;
     var description = opts.description || SITE_DESCRIPTION;
-    var canonical = opts.canonical || window.location.href;
+    var canonical = opts.canonical || canonicalUrl(window.location.hash || '#/');
     var image = opts.image ? absoluteUrl(opts.image) : DEFAULT_OG_IMAGE;
 
     document.title = title;
@@ -675,19 +693,45 @@
   // Renderers
   // ─────────────────────────────────────────────────────────────
   var mainEl = document.getElementById('main');
+  var activeRenderToken = 0;
 
   function setMainKind(kind) {
     mainEl.className = 'main' + (kind === 'post' ? ' main--post' : '');
+  }
+
+  function beginRender() {
+    activeRenderToken += 1;
+    return activeRenderToken;
+  }
+
+  function isActiveRender(token) {
+    return token === activeRenderToken;
+  }
+
+  function focusMain() {
+    if (!mainEl || !mainEl.focus) return;
+    try {
+      mainEl.focus({ preventScroll: true });
+    } catch (e) {
+      mainEl.focus();
+    }
   }
 
   function showError(message) {
     mainEl.innerHTML =
       '<div class="error-state" role="alert">' +
       '<p>' + escapeHtml(message) + '</p>' +
-      '<p><a href="#/">Return home</a> or <a href="javascript:location.reload()">try again</a></p>' +
+      '<p><a href="#/">Return home</a> or <button type="button" class="error-retry">try again</button></p>' +
       '</div>';
+    var retryBtn = mainEl.querySelector('.error-retry');
+    if (retryBtn) {
+      retryBtn.addEventListener('click', function() {
+        window.location.reload();
+      });
+    }
     setPageMeta({ title: 'Error', description: message });
     showToast(message, 'error');
+    focusMain();
   }
 
   function postLink(iso) {
@@ -736,7 +780,110 @@
     return p;
   }
 
-  function renderHome() {
+  function renderFeaturedPosts(posts) {
+    if (!posts.length) return '<p class="empty">No posts yet.</p>';
+    return '<ol class="post-feat-list">' + posts.map(function(e) {
+      var imgHtml = e.img
+        ? '<img src="' + escapeHtml(e.img) + '" alt="" loading="lazy">'
+        : '<span class="ph-date">' + escapeHtml(e.displayDate) + '</span>';
+      return '<li class="post-feat"><a class="post-feat-link" href="' + postLink(e.slug) + '">' +
+        '<div class="post-feat-img">' + imgHtml + '</div>' +
+        '<div class="post-feat-body">' +
+          '<div class="post-feat-meta">' +
+            '<span class="post-feat-meta-date">' + escapeHtml(e.displayDate) + '</span>' +
+          '</div>' +
+          '<p class="post-feat-blurb">' + escapeHtml(e.blurb || '(entry)') + '</p>' +
+        '</div>' +
+      '</a></li>';
+    }).join('') + '</ol>';
+  }
+
+  function renderRecentPostList(posts) {
+    if (!posts.length) return '';
+    return '<ol class="post-list tight">' + posts.map(function(e) {
+      return '<li><a href="' + postLink(e.slug) + '">' +
+        '<span class="pl-date">' + escapeHtml(e.displayDate) + '</span>' +
+        '<span class="pl-title">' + escapeHtml(e.blurb || '(entry)') + '</span>' +
+        '<span class="pl-tag" aria-hidden="true">→</span>' +
+      '</a></li>';
+    }).join('') + '</ol>';
+  }
+
+  function renderHomeProjectCard(p) {
+    var kind = p.kind || 'coding';
+    var state = p.state || 'active';
+    var etym = p.etymology;
+    var etymHtml = etym && etym.word
+      ? '<div class="proj-card-etym">' +
+          '<span class="proj-card-etym-word">' + escapeHtml(etym.word) + '</span>' +
+          (etym.gloss ? ' — ' + escapeHtml(etym.gloss) : '') +
+        '</div>'
+      : '';
+    return '<li class="proj-card state-' + escapeHtml(state) + ' kind-' + escapeHtml(kind) + '">' +
+      '<a class="proj-link" href="' + projectLink(p.slug) + '">' +
+        '<div class="proj-card-head">' +
+          '<h3 class="proj-card-name"><span class="proj-dot" aria-hidden="true"></span>' + escapeHtml(p.title) + '</h3>' +
+        '</div>' +
+        '<div class="proj-card-state">' + escapeHtml(kind) + ' · ' + escapeHtml(state) + '</div>' +
+        (p.lede ? '<p class="proj-card-lede">' + escapeHtml(p.lede) + '</p>' : '') +
+        etymHtml +
+      '</a></li>';
+  }
+
+  function renderHomeProjects(projects) {
+    if (!projects.length) return '<p class="empty">No projects yet.</p>';
+    return '<ol class="proj-list">' + projects.map(renderHomeProjectCard).join('') + '</ol>';
+  }
+
+  function renderStanding(standing) {
+    if (!standing.length) return '';
+    return '<aside class="hero-aside" aria-label="Standing">' +
+      '<div class="aside-hd">Standing</div>' +
+      '<dl class="aside-list">' + standing.map(function(s) {
+        var valHtml = window.marked
+          ? DOMPurify.sanitize(marked.parseInline(s.val || ''))
+          : escapeHtml(s.val || '');
+        return '<div class="aside-row"><dt>' + escapeHtml(s.key) + '</dt><dd>' + valHtml + '</dd></div>';
+      }).join('') + '</dl>' +
+    '</aside>';
+  }
+
+  function renderAbout(meta) {
+    var bioHtml = (meta.bio || []).map(function(p) {
+      return '<p>' + DOMPurify.sanitize(window.marked ? marked.parseInline(p) : escapeHtml(p)) + '</p>';
+    }).join('');
+    if (!meta.portrait && !bioHtml) return '';
+    return '<aside class="home-about" aria-labelledby="about-h2">' +
+      '<div class="col-hd"><h2 id="about-h2"><em>About</em></h2></div>' +
+      '<div class="about-body">' +
+        (meta.portrait
+          ? '<div class="about-portrait"><img src="' + escapeHtml(meta.portrait) + '" alt=""></div>'
+          : '') +
+        '<div class="about-bio">' + bioHtml + '</div>' +
+      '</div>' +
+    '</aside>';
+  }
+
+  function renderLinkGroups(links) {
+    if (!links) return '';
+    var groups = Object.keys(links);
+    if (!groups.length) return '';
+    var groupsHtml = groups.map(function(g) {
+      var items = (links[g] || []).map(function(l) {
+        return '<li><a href="' + escapeHtml(l.href) + '">' + escapeHtml(l.label) + '</a></li>';
+      }).join('');
+      return '<div class="link-col">' +
+        '<div class="col-hd mono caps dim">' + escapeHtml(g) + '</div>' +
+        '<ul class="plain">' + items + '</ul>' +
+      '</div>';
+    }).join('');
+    return '<section class="home-links" aria-labelledby="elsewhere-h2">' +
+      '<div class="col-hd"><h2 id="elsewhere-h2"><em>Elsewhere</em></h2></div>' +
+      '<div class="link-grid">' + groupsHtml + '</div>' +
+    '</section>';
+  }
+
+  function renderHome(renderToken) {
     setMainKind('home');
     Promise.all([
       fetchPosts().catch(function(){ return []; }),
@@ -744,108 +891,19 @@
       fetchJson('./meta.json').catch(function(){ return {}; })
     ])
       .then(function(arr) {
+        if (!isActiveRender(renderToken)) return;
         var posts = arr[0].map(normalizePost);
         var projects = arr[1].slice(0, 4);
         var meta = arr[2] || {};
         var feat = posts.slice(0, 3);
         var rest = posts.slice(3, 8);
         var standing = (meta.standing || []).slice(0, 6);
-
-        var featHtml = feat.length
-          ? '<ol class="post-feat-list">' + feat.map(function(e) {
-              var imgHtml = e.img
-                ? '<img src="' + escapeHtml(e.img) + '" alt="" loading="lazy">'
-                : '<span class="ph-date">' + escapeHtml(e.displayDate) + '</span>';
-              return '<li class="post-feat"><a class="post-feat-link" href="' + postLink(e.slug) + '">' +
-                '<div class="post-feat-img">' + imgHtml + '</div>' +
-                '<div class="post-feat-body">' +
-                  '<div class="post-feat-meta">' +
-                    '<span class="post-feat-meta-date">' + escapeHtml(e.displayDate) + '</span>' +
-                  '</div>' +
-                  '<p class="post-feat-blurb">' + escapeHtml(e.blurb || '(entry)') + '</p>' +
-                '</div>' +
-              '</a></li>';
-            }).join('') + '</ol>'
-          : '<p class="empty">No posts yet.</p>';
-
-        var restHtml = rest.length
-          ? '<ol class="post-list tight">' + rest.map(function(e) {
-              return '<li><a href="' + postLink(e.slug) + '">' +
-                '<span class="pl-date">' + escapeHtml(e.displayDate) + '</span>' +
-                '<span class="pl-title">' + escapeHtml(e.blurb || '(entry)') + '</span>' +
-                '<span class="pl-tag" aria-hidden="true">→</span>' +
-              '</a></li>';
-            }).join('') + '</ol>'
-          : '';
-
-        var projectsHtml = projects.length
-          ? '<ol class="proj-list">' + projects.map(function(p) {
-              var kind = p.kind || 'coding';
-              var state = p.state || 'active';
-              var etym = p.etymology;
-              var etymHtml = etym && etym.word
-                ? '<div class="proj-card-etym">' +
-                    '<span class="proj-card-etym-word">' + escapeHtml(etym.word) + '</span>' +
-                    (etym.gloss ? ' — ' + escapeHtml(etym.gloss) : '') +
-                  '</div>'
-                : '';
-              return '<li class="proj-card state-' + escapeHtml(state) + ' kind-' + escapeHtml(kind) + '">' +
-                '<a class="proj-link" href="' + projectLink(p.slug) + '">' +
-                  '<div class="proj-card-head">' +
-                    '<h3 class="proj-card-name"><span class="proj-dot" aria-hidden="true"></span>' + escapeHtml(p.title) + '</h3>' +
-                    '<span class="proj-card-meta">' + escapeHtml(kind) + ' · ' + escapeHtml(state) + '</span>' +
-                  '</div>' +
-                  (p.lede ? '<p class="proj-card-lede">' + escapeHtml(p.lede) + '</p>' : '') +
-                  etymHtml +
-                '</a></li>';
-            }).join('') + '</ol>'
-          : '<p class="empty">No projects yet.</p>';
-
-        var standingHtml = standing.length
-          ? '<aside class="hero-aside" aria-label="Standing">' +
-              '<div class="aside-hd">Standing</div>' +
-              '<dl class="aside-list">' + standing.map(function(s) {
-                var valHtml = window.marked
-                  ? DOMPurify.sanitize(marked.parseInline(s.val || ''))
-                  : escapeHtml(s.val || '');
-                return '<div class="aside-row"><dt>' + escapeHtml(s.key) + '</dt><dd>' + valHtml + '</dd></div>';
-              }).join('') + '</dl>' +
-            '</aside>'
-          : '';
-
-        var bioHtml = (meta.bio || []).map(function(p) {
-          return '<p>' + DOMPurify.sanitize(window.marked ? marked.parseInline(p) : escapeHtml(p)) + '</p>';
-        }).join('');
-        var aboutHtml = (meta.portrait || bioHtml)
-          ? '<aside class="home-about" aria-labelledby="about-h2">' +
-              '<div class="col-hd"><h2 id="about-h2"><em>About</em></h2></div>' +
-              '<div class="about-body">' +
-                (meta.portrait
-                  ? '<div class="about-portrait"><img src="' + escapeHtml(meta.portrait) + '" alt=""></div>'
-                  : '') +
-                '<div class="about-bio">' + bioHtml + '</div>' +
-              '</div>' +
-            '</aside>'
-          : '';
-
-        var linksHtml = '';
-        if (meta.links) {
-          var groups = Object.keys(meta.links);
-          var groupsHtml = groups.map(function(g) {
-            var items = (meta.links[g] || []).map(function(l) {
-              return '<li><a href="' + escapeHtml(l.href) + '">' + escapeHtml(l.label) + '</a></li>';
-            }).join('');
-            return '<div class="link-col">' +
-              '<div class="col-hd mono caps dim">' + escapeHtml(g) + '</div>' +
-              '<ul class="plain">' + items + '</ul>' +
-            '</div>';
-          }).join('');
-          linksHtml =
-            '<section class="home-links" aria-labelledby="elsewhere-h2">' +
-              '<div class="col-hd"><h2 id="elsewhere-h2"><em>Elsewhere</em></h2></div>' +
-              '<div class="link-grid">' + groupsHtml + '</div>' +
-            '</section>';
-        }
+        var featHtml = renderFeaturedPosts(feat);
+        var restHtml = renderRecentPostList(rest);
+        var projectsHtml = renderHomeProjects(projects);
+        var standingHtml = renderStanding(standing);
+        var aboutHtml = renderAbout(meta);
+        var linksHtml = renderLinkGroups(meta.links);
 
         mainEl.innerHTML =
           '<section class="hero" aria-labelledby="hero-title">' +
@@ -889,21 +947,25 @@
           linksHtml;
         hideGiscus();
         setPageMeta({
-          description: 'Engineer, worldbuilder, late-night blogger. Personal writing, projects, and workshop notes.'
+          description: 'Engineer, worldbuilder, late-night blogger. Personal writing, projects, and workshop notes.',
+          canonical: canonicalUrl('#/')
         });
         updateActiveNav('home');
         setLazyImages(mainEl);
         markExternalLinks(mainEl);
+        focusMain();
       })
       .catch(function(err) {
+        if (!isActiveRender(renderToken)) return;
         showError(err.message === 'not-found' ? 'Page not found.' : 'Failed to load home.');
       });
   }
 
-  function renderBlog() {
+  function renderBlog(renderToken) {
     setMainKind('blog');
     fetchPosts()
       .then(function(rawPosts) {
+        if (!isActiveRender(renderToken)) return;
         var posts = rawPosts.map(normalizePost);
 
         // Group by month (YYYY.MM)
@@ -945,24 +1007,28 @@
         hideGiscus();
         setPageMeta({
           title: 'Blog',
-          description: 'Notebook entries, newest first.'
+          description: 'Notebook entries, newest first.',
+          canonical: canonicalUrl('#/blog')
         });
         updateActiveNav('blog');
         setLazyImages(mainEl);
         markExternalLinks(mainEl);
+        focusMain();
       })
       .catch(function(err) {
+        if (!isActiveRender(renderToken)) return;
         showError(err.message === 'not-found' ? 'Page not found.' : 'Failed to load blog.');
       });
   }
 
-  function renderPost(slug) {
+  function renderPost(slug, renderToken) {
     setMainKind('post');
 
     // Special: test page (legacy giscus test)
     if (slug === 'test') {
       fetchText('./test.md')
         .then(function(md) {
+          if (!isActiveRender(renderToken)) return;
           mainEl.innerHTML =
             '<p class="back-link"><a href="#/blog">← All entries</a></p>' +
             '<article class="post">' +
@@ -973,11 +1039,15 @@
             '</article>';
           setPageMeta({
             title: 'Test page',
-            description: 'Scratch page for local rendering checks.'
+            description: 'Scratch page for local rendering checks.',
+            canonical: canonicalUrl('#/post/test')
           });
           finishPostRender('test');
         })
-        .catch(function() { showError('Test page failed to load.'); });
+        .catch(function() {
+          if (!isActiveRender(renderToken)) return;
+          showError('Test page failed to load.');
+        });
       return;
     }
 
@@ -986,6 +1056,7 @@
       fetchPosts().catch(function(){ return []; })
     ])
       .then(function(arr) {
+        if (!isActiveRender(renderToken)) return;
         var bodyMd = arr[0];
         var posts = arr[1].map(normalizePost);
         var displayDate = toDisplayDate(slug);
@@ -1023,12 +1094,14 @@
         setPageMeta({
           title: displayDate,
           description: (match && match.blurb) || ('Notebook entry from ' + displayDate + '.'),
-          image: match && match.img
+          image: match && match.img,
+          canonical: canonicalUrl(postLink(slug))
         });
         addReadTimeForPost();
         finishPostRender(slug);
       })
       .catch(function(err) {
+        if (!isActiveRender(renderToken)) return;
         showError(err.message === 'not-found' ? 'Entry not found.' : 'Failed to load entry.');
       });
   }
@@ -1045,12 +1118,14 @@
     loadGiscus(term);
 
     window.scrollTo(0, 0);
+    focusMain();
   }
 
-  function renderProjects() {
+  function renderProjects(renderToken) {
     setMainKind('projects');
     fetchJson('./projects.json')
       .then(function(projects) {
+        if (!isActiveRender(renderToken)) return;
         var cards = projects.map(function(p) {
           return '<article class="proj-card">' +
             '<header class="proj-card-hd">' +
@@ -1083,22 +1158,29 @@
         hideGiscus();
         setPageMeta({
           title: 'Projects',
-          description: 'Long-running threads, experiments, and project notes.'
+          description: 'Long-running threads, experiments, and project notes.',
+          canonical: canonicalUrl('#/projects')
         });
         updateActiveNav('projects');
+        focusMain();
       })
-      .catch(function() { showError('Failed to load projects.'); });
+      .catch(function() {
+        if (!isActiveRender(renderToken)) return;
+        showError('Failed to load projects.');
+      });
   }
 
-  function renderProject(slug) {
+  function renderProject(slug, renderToken) {
     setMainKind('post');
     fetchJson('./projects.json')
       .then(function(projects) {
+        if (!isActiveRender(renderToken)) return null;
         var match = projects.filter(function(p) { return p.slug === slug; })[0];
         if (!match) { showError('Project not found.'); return null; }
         return fetchText('./' + match.body).then(function(md) { return [match, md]; });
       })
       .then(function(pair) {
+        if (!isActiveRender(renderToken)) return;
         if (!pair) return;
         var p = pair[0];
         var md = pair[1];
@@ -1109,7 +1191,7 @@
 
         var headerHtml =
           '<header class="proj-card-hd">' +
-            '<div class="proj-card-name-link" style="border:0">' +
+            '<div class="proj-card-name-static">' +
               '<h1 class="proj-card-name">' + escapeHtml(p.title) + '</h1>' +
             '</div>' +
             pillsFor(p) +
@@ -1127,14 +1209,15 @@
 
         mainEl.innerHTML =
           '<p class="back-link"><a href="#/projects">← All projects</a></p>' +
-          '<article class="proj-card" style="border-top:0;padding-top:0">' +
+          '<article class="proj-card proj-card--detail">' +
             headerHtml +
             '<div class="post-body">' + DOMPurify.sanitize(renderMarkdown(bodyMd)) + '</div>' +
           '</article>';
 
         setPageMeta({
           title: p.title,
-          description: p.lede || ('Project notes for ' + p.title + '.')
+          description: p.lede || ('Project notes for ' + p.title + '.'),
+          canonical: canonicalUrl(projectLink(slug))
         });
         setLazyImages(mainEl);
         markExternalLinks(mainEl);
@@ -1145,8 +1228,12 @@
         hideGiscus();
         updateActiveNav('project');
         window.scrollTo(0, 0);
+        focusMain();
       })
-      .catch(function() { showError('Failed to load project.'); });
+      .catch(function() {
+        if (!isActiveRender(renderToken)) return;
+        showError('Failed to load project.');
+      });
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -1156,14 +1243,15 @@
     if (legacyRedirect()) return; // browser will fire hashchange after the replace
     var route = parseHash();
     if (route.name === 'anchor') return;
+    var renderToken = beginRender();
     window.scrollTo(0, 0);
     switch (route.name) {
-      case 'home':     return renderHome();
-      case 'blog':     return renderBlog();
-      case 'post':     return route.slug ? renderPost(route.slug) : renderBlog();
-      case 'projects': return renderProjects();
-      case 'project':  return route.slug ? renderProject(route.slug) : renderProjects();
-      default:         return renderHome();
+      case 'home':     return renderHome(renderToken);
+      case 'blog':     return renderBlog(renderToken);
+      case 'post':     return route.slug ? renderPost(route.slug, renderToken) : renderBlog(renderToken);
+      case 'projects': return renderProjects(renderToken);
+      case 'project':  return route.slug ? renderProject(route.slug, renderToken) : renderProjects(renderToken);
+      default:         return renderHome(renderToken);
     }
   }
 
