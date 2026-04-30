@@ -39,6 +39,8 @@ TEMPLATE_NAME = "base.html"
 POSTS_JSON = ROOT / "posts.json"
 PROJECTS_JSON = ROOT / "projects.json"
 SITEMAP_XML = ROOT / "sitemap.xml"
+FEED_XML = ROOT / "feed.xml"
+IMAGE_VARIANTS_JSON = ROOT / "images" / "_variants.json"
 INDEX_HTML = ROOT / "index.html"
 BLOG_INDEX = ROOT / "blog" / "index.html"
 POST_ROUTE_DIR = ROOT / "post"
@@ -48,6 +50,9 @@ SITE_NAME = "PKNULL.AI"
 SITE_DESCRIPTION = "PK's Personal Site"
 SITE_ROOT = "https://pknull.ai/"
 DEFAULT_OG_IMAGE = "https://pknull.ai/images/favicon.svg"
+AUTHOR_NAME = "Louis Grenzebach"
+AUTHOR_URL = "https://pknull.ai/"
+PICTURE_DEFAULT_SIZES = "(max-width: 720px) 100vw, 720px"
 
 POST_SLUG_PATTERN = re.compile(r"^(\d{4})-(\d{2})-(\d{2})$")
 FRONTMATTER_PATTERN = re.compile(r"\A---\s*\n(.*?)\n---\s*\n", re.DOTALL)
@@ -224,6 +229,64 @@ def add_lazy_loading(rendered_html: str) -> str:
     return IMG_LOADING_PATTERN.sub('<img loading="lazy" ', rendered_html)
 
 
+def load_image_manifest():
+    if not IMAGE_VARIANTS_JSON.exists():
+        return {}
+    return json.loads(IMAGE_VARIANTS_JSON.read_text())
+
+
+IMAGE_MANIFEST = load_image_manifest()
+
+
+def picture_for(src: str, alt: str = "", *, sizes: str = PICTURE_DEFAULT_SIZES, lazy: bool = True) -> str:
+    """Render <picture> markup for src if responsive variants exist; else <img>."""
+    info = IMAGE_MANIFEST.get(src)
+    if not info or not info.get("variants"):
+        attrs = [f'src="{html.escape(src, quote=True)}"', f'alt="{html.escape(alt, quote=True)}"']
+        if lazy:
+            attrs.append('loading="lazy"')
+        return f"<img {' '.join(attrs)}>"
+
+    variants = sorted(info["variants"], key=lambda v: v["width"])
+    srcset = ", ".join(f'{html.escape(v["url"], quote=True)} {v["width"]}w' for v in variants)
+    fallback = next((v for v in variants if v["width"] >= 960), variants[-1])
+    fallback_w = fallback["width"]
+    fallback_h = fallback["height"]
+    fallback_url = html.escape(fallback["url"], quote=True)
+    img_attrs = [
+        f'src="{fallback_url}"',
+        f'alt="{html.escape(alt, quote=True)}"',
+        f'width="{fallback_w}"',
+        f'height="{fallback_h}"',
+    ]
+    if lazy:
+        img_attrs.append('loading="lazy"')
+    img_attrs.append('decoding="async"')
+    return (
+        f'<picture><source type="image/webp" srcset="{srcset}" sizes="{html.escape(sizes, quote=True)}">'
+        f'<img {" ".join(img_attrs)}></picture>'
+    )
+
+
+IMG_TAG_PATTERN = re.compile(r"<img\b[^>]*\bsrc=\"([^\"]+)\"[^>]*>", re.IGNORECASE)
+IMG_ALT_PATTERN = re.compile(r"\balt=\"([^\"]*)\"", re.IGNORECASE)
+
+
+def pictureize_html(rendered_html: str) -> str:
+    """Replace <img> tags whose src has variants with <picture> markup."""
+
+    def repl(match: re.Match[str]) -> str:
+        src = match.group(0)
+        url = match.group(1)
+        if url not in IMAGE_MANIFEST:
+            return src
+        alt_match = IMG_ALT_PATTERN.search(src)
+        alt = alt_match.group(1) if alt_match else ""
+        return picture_for(url, html.unescape(alt))
+
+    return IMG_TAG_PATTERN.sub(repl, rendered_html)
+
+
 def make_markdown_renderer():
     return markdown.Markdown(extensions=["extra", "sane_lists", "md_in_html"])
 
@@ -235,6 +298,7 @@ def render_markdown(markdown_text: str) -> str:
     rendered = rewrite_html_urls(rendered)
     rendered = wrap_tables(rendered)
     rendered = add_lazy_loading(rendered)
+    rendered = pictureize_html(rendered)
     return rendered
 
 
@@ -265,8 +329,10 @@ def iter_build_id_sources():
         ROOT / "bin" / "build-index.py",
         ROOT / "js" / "app.js",
         ROOT / "css" / "shell.css",
+        ROOT / "css" / "_fonts.css",
         ROOT / "meta.json",
         ROOT / "reading.json",
+        IMAGE_VARIANTS_JSON,
         TEMPLATES_DIR / TEMPLATE_NAME,
     ]
     for path in fixed:
@@ -389,7 +455,7 @@ def render_featured_posts(posts):
     items = []
     for post in posts:
         img_html = (
-            f'<img src="{html.escape(post["img"], quote=True)}" alt="" loading="lazy">'
+            picture_for(post["img"], "", sizes="(max-width: 720px) 100vw, 480px")
             if post.get("img")
             else f'<span class="ph-date">{html.escape(post["displayDate"])}</span>'
         )
@@ -502,7 +568,7 @@ def render_about(meta):
         "</div></aside>"
     ).format(
         portrait=(
-            f'<div class="about-portrait"><img src="{html.escape(portrait, quote=True)}" alt="" loading="lazy"></div>'
+            f'<div class="about-portrait">{picture_for(portrait, "", sizes="(max-width: 720px) 50vw, 220px")}</div>'
             if portrait
             else ""
         ),
@@ -777,6 +843,7 @@ def page_context(
     canonical=SITE_ROOT,
     og_image=DEFAULT_OG_IMAGE,
     giscus_term="",
+    json_ld="",
 ):
     full_title = f"{title} · {SITE_NAME}" if title else SITE_NAME
     return {
@@ -792,6 +859,7 @@ def page_context(
         "main_html": main_html,
         "giscus_term": giscus_term,
         "validator_url": validator_url_for(canonical),
+        "json_ld": json_ld,
     }
 
 
@@ -813,6 +881,113 @@ def build_sitemap(posts, projects):
     entries = "".join(f"  <url>\n    <loc>{html.escape(url)}</loc>\n  </url>\n" for url in urls)
     sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + entries + "</urlset>\n"
     write_if_changed(SITEMAP_XML, sitemap)
+
+
+def build_feed(posts):
+    feed_url = absolute_url("/feed.xml")
+    home_url = absolute_url(home_path())
+    if posts:
+        updated = f"{posts[0]['date']}T00:00:00Z"
+    else:
+        updated = "1970-01-01T00:00:00Z"
+    entries = []
+    for post in posts:
+        body_html = render_markdown(post["body_md"])
+        entries.append(
+            "  <entry>\n"
+            f"    <title>{html.escape(post['displayDate'])}</title>\n"
+            f"    <link href=\"{html.escape(post['canonical'])}\"/>\n"
+            f"    <id>{html.escape(post['canonical'])}</id>\n"
+            f"    <updated>{post['date']}T00:00:00Z</updated>\n"
+            f"    <published>{post['date']}T00:00:00Z</published>\n"
+            f"    <author><name>{html.escape(AUTHOR_NAME)}</name></author>\n"
+            f"    <summary>{html.escape(post['blurb'] or '')}</summary>\n"
+            f"    <content type=\"html\">{html.escape(body_html)}</content>\n"
+            "  </entry>\n"
+        )
+    feed = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<feed xmlns="http://www.w3.org/2005/Atom">\n'
+        f"  <title>{html.escape(SITE_NAME)}</title>\n"
+        f"  <subtitle>{html.escape(SITE_DESCRIPTION)}</subtitle>\n"
+        f"  <link href=\"{html.escape(home_url)}\"/>\n"
+        f"  <link rel=\"self\" type=\"application/atom+xml\" href=\"{html.escape(feed_url)}\"/>\n"
+        f"  <id>{html.escape(home_url)}</id>\n"
+        f"  <updated>{updated}</updated>\n"
+        f"  <author><name>{html.escape(AUTHOR_NAME)}</name><uri>{html.escape(AUTHOR_URL)}</uri></author>\n"
+        f"  <rights>© pk · CC BY 4.0</rights>\n"
+        + "".join(entries)
+        + "</feed>\n"
+    )
+    write_if_changed(FEED_XML, feed)
+
+
+def jsonld_breadcrumbs(items):
+    return {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": idx + 1, "name": name, "item": absolute_url(path)}
+            for idx, (name, path) in enumerate(items)
+        ],
+    }
+
+
+def jsonld_article(post):
+    payload = {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": post["displayDate"],
+        "datePublished": post["date"],
+        "dateModified": post["date"],
+        "author": {"@type": "Person", "name": AUTHOR_NAME, "url": AUTHOR_URL},
+        "mainEntityOfPage": {"@type": "WebPage", "@id": post["canonical"]},
+        "url": post["canonical"],
+        "wordCount": post["word_count"],
+        "description": post["blurb"] or f'Notebook entry from {post["displayDate"]}.',
+    }
+    if post.get("img"):
+        payload["image"] = absolute_url(post["img"])
+    return payload
+
+
+def jsonld_project(project):
+    payload = {
+        "@context": "https://schema.org",
+        "@type": "CreativeWork",
+        "name": project["title"],
+        "url": project["canonical"],
+        "author": {"@type": "Person", "name": AUTHOR_NAME, "url": AUTHOR_URL},
+        "creativeWorkStatus": project["state"],
+    }
+    if project.get("lede"):
+        payload["description"] = project["lede"]
+    return payload
+
+
+def jsonld_website():
+    return {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": SITE_NAME,
+        "url": SITE_ROOT,
+        "author": {"@type": "Person", "name": AUTHOR_NAME, "url": AUTHOR_URL},
+    }
+
+
+def render_jsonld(*payloads):
+    if not payloads:
+        return ""
+    blocks = []
+    for payload in payloads:
+        if not payload:
+            continue
+        blocks.append(
+            '<script type="application/ld+json">'
+            + json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+            + "</script>"
+        )
+    return "\n".join(blocks)
 
 
 def main():
@@ -842,6 +1017,7 @@ def main():
             main_class="main",
             description="Engineer, worldbuilder, late-night blogger. Personal writing, projects, and workshop notes.",
             canonical=absolute_url(home_path()),
+            json_ld=render_jsonld(jsonld_website()),
         ),
     )
     write_page(
@@ -856,6 +1032,9 @@ def main():
             title="Blog",
             description="Notebook entries, newest first.",
             canonical=absolute_url(blog_path()),
+            json_ld=render_jsonld(
+                jsonld_breadcrumbs([("Home", home_path()), ("Blog", blog_path())])
+            ),
         ),
     )
     for post in posts:
@@ -873,6 +1052,14 @@ def main():
                 canonical=post["canonical"],
                 og_image=absolute_url(post["img"]) if post.get("img") else DEFAULT_OG_IMAGE,
                 giscus_term=post["slug"],
+                json_ld=render_jsonld(
+                    jsonld_article(post),
+                    jsonld_breadcrumbs([
+                        ("Home", home_path()),
+                        ("Blog", blog_path()),
+                        (post["displayDate"], post["path"]),
+                    ]),
+                ),
             ),
         )
     write_page(
@@ -887,6 +1074,9 @@ def main():
             title="Projects",
             description="Long-running threads, experiments, and project notes.",
             canonical=absolute_url(projects_path()),
+            json_ld=render_jsonld(
+                jsonld_breadcrumbs([("Home", home_path()), ("Projects", projects_path())])
+            ),
         ),
     )
     for project in projects:
@@ -902,6 +1092,14 @@ def main():
                 title=project["title"],
                 description=project["lede"] or f'Project notes for {project["title"]}.',
                 canonical=project["canonical"],
+                json_ld=render_jsonld(
+                    jsonld_project(project),
+                    jsonld_breadcrumbs([
+                        ("Home", home_path()),
+                        ("Projects", projects_path()),
+                        (project["title"], project["path"]),
+                    ]),
+                ),
             ),
         )
     write_page(
@@ -920,6 +1118,8 @@ def main():
     )
     print("sitemap:")
     build_sitemap(posts, projects)
+    print("feed:")
+    build_feed(posts)
     return 0
 
 

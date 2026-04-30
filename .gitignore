@@ -1,4 +1,6 @@
 logs/
+__pycache__/
+.idea/
 
 # Asha Memory (local symlinks)
 /Memory/

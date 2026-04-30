@@ -6,7 +6,7 @@
   <meta name="description" content="Today I worked out some sequence diagrams in PUML for some ways of handling old auth issues like deeplinks via SSO and passkey management. Neither of which is exciting to talk about. I also made…">
   <meta name="author" content="PKnull">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="build-id" content="5700d3b3a758">
+  <meta name="build-id" content="792673a10186">
 
   <script>
     (function(){
@@ -90,17 +90,22 @@
   <meta name="twitter:description" content="Today I worked out some sequence diagrams in PUML for some ways of handling old auth issues like deeplinks via SSO and passkey management. Neither of which is exciting to talk about. I also made…">
 
   <link rel="canonical" href="https://pknull.ai/post/2025-12-01/">
+  <link rel="alternate" type="application/atom+xml" title="2025.12.01 · PKNULL.AI" href="/feed.xml">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/google/source-serif-4-400-normal-latin.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/google/ibm-plex-sans-400-normal-latin.woff2" crossorigin>
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css" integrity="sha384-fRuya36Gb/YRGgzq/ichTstZs3FgqUTsL6+s+RTc8uT0oRO5zHMymXMJ+cS2dh3s" crossorigin="anonymous" media="print" onload="this.media='all'">
-  <link rel="stylesheet" href="/css/shell.css?v=5700d3b3a758">
+  <link rel="stylesheet" href="/css/_fonts.css?v=792673a10186">
+  <link rel="stylesheet" href="/css/shell.css?v=792673a10186">
   <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
-  <link id="hljs-theme" rel="stylesheet" href="/css/hljs-light.css?v=5700d3b3a758" disabled>
+  <link id="hljs-theme" rel="stylesheet" href="/css/hljs-light.css?v=792673a10186" disabled>
   <script defer src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js" integrity="sha384-F/bZzf7p3Joyp5psL90p/p89AZJsndkSoGwRpXcZhleCWhd8SnRuoYo4d0yirjJp" crossorigin="anonymous"></script>
+  <noscript><style>.now-strip,.consent-banner,#giscus-container{display:none!important}</style></noscript>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"2025.12.01","datePublished":"2025-12-01","dateModified":"2025-12-01","author":{"@type":"Person","name":"Louis Grenzebach","url":"https://pknull.ai/"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://pknull.ai/post/2025-12-01/"},"url":"https://pknull.ai/post/2025-12-01/","wordCount":195,"description":"Today I worked out some sequence diagrams in PUML for some ways of handling old auth issues like deeplinks via SSO and passkey management. Neither of which is exciting to talk about. I also made…","image":"https://pknull.ai/images/2025-12-01_incense.webp"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://pknull.ai/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://pknull.ai/blog/"},{"@type":"ListItem","position":3,"name":"2025.12.01","item":"https://pknull.ai/post/2025-12-01/"}]}</script>
 </head>
 <body>
 
@@ -169,7 +174,7 @@
   <main id="main" class="main main--post" tabindex="-1" data-page-kind="post">
     <p class="back-link"><a href="/blog/">← All entries</a></p><article class="post"><header class="post-hd"><h1>2025.12.01</h1><div class="post-meta"><span class="mono">notebook entry</span><span class="mono dim">1 min read</span></div></header><div class="post-body"><p>Today I worked out some sequence diagrams in <a href="https://plantuml.com/">PUML</a> for some ways of handling old auth issues like deeplinks via SSO and <a href="https://fidoalliance.org/passkeys/">passkey</a> management. Neither of which is exciting to talk about. I also made a <a href="https://www.reddit.com/r/ClaudeAI/comments/1pc02hq/how_do_you_manage_agentclaudemd_bloat/">reddit post</a>. I was thinking today about how I've had a reddit account for 9 years. Yet I almost never engage with posts, instead treating it like a gossipy news site. This is my third post; the other two are a keybase verification, and sharing a <a href="https://dygma.com/">Dygma</a> keyboard layout. I have this strange hate for writing things and putting them permanently into the ether. I feel like in 5 years I'll come back on these <a href="https://www.reddit.com/r/DygmaLab/comments/1231dg4/reducing_finger_travel_with_40_layers/">old posts</a> like I do old code and be instantly embarrassed. Can't wait to see how I'm feeling about this blog after a year.</p>
 <p>Oh, and if you hate LLMs because you thought they were using <a href="https://generative-ai-newsroom.com/the-often-overlooked-water-footprint-of-ai-models-46991e3094b6">too much water</a>, well, here's something <a href="https://futurism.com/artificial-intelligence/amazon-data-center-oregon">even worse</a>. Don't worry <a href="https://andymasley.substack.com/p/the-ai-water-issue-is-fake">not everyone believes</a> we're wasting all the water. I think this is going to be another one of those, you're killing the planet type scenarios, where what we're actually doing is just making the planet unlivable for us. </p>
-<p><img loading="lazy"  alt="A slow burn." src="/images/2025-12-01_incense.webp" /></p></div><nav class="post-nav"><a href="/post/2025-11-30/">← 2025.11.30</a><a href="/post/2025-12-02/">2025.12.02 →</a></nav></article>
+<p><picture><source type="image/webp" srcset="/images/2025-12-01_incense-480.webp 480w, /images/2025-12-01_incense-960.webp 960w, /images/2025-12-01_incense-1440.webp 1440w" sizes="(max-width: 720px) 100vw, 720px"><img src="/images/2025-12-01_incense-960.webp" alt="A slow burn." width="960" height="540" loading="lazy" decoding="async"></picture></p></div><nav class="post-nav"><a href="/post/2025-11-30/">← 2025.11.30</a><a href="/post/2025-12-02/">2025.12.02 →</a></nav></article>
   </main>
 
   <section id="giscus-container" class="giscus-section" data-term="2025-12-01">
@@ -218,7 +223,7 @@
   </div>
 </div>
 
-<script defer src="/js/app.js?v=5700d3b3a758"></script>
+<script defer src="/js/app.js?v=792673a10186"></script>
 
 </body>
 </html>
