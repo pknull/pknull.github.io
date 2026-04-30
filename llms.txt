@@ -1,0 +1,40 @@
+# PKNULL.AI
+
+> Personal site for Louis Grenzebach: software engineering, project notes, personal writing, and a workshop index for active codebases.
+
+## Overview
+
+PKNULL.AI is a hand-built static site generated from Markdown, JSON, HTML, CSS, JavaScript, and a small Python build step.
+
+The site has two main content streams:
+
+- blog entries under `/blog/` and `/post/<date>/`
+- project pages under `/projects/` and `/projects/<slug>/`
+
+The tone is personal but technical. It mixes notebook-style writing, software project overviews, architecture notes, and status-like fragments about current work.
+
+## Primary URLs
+
+- Home: https://pknull.ai/
+- Blog index: https://pknull.ai/blog/
+- Projects index: https://pknull.ai/projects/
+- Sitemap: https://pknull.ai/sitemap.xml
+
+## Notable Projects
+
+- Asha: multi-harness AI workflow system with persistent identity, session memory, and pluginized workflows for Claude Code and Codex
+- Thallus: umbrella repo for local-first AI agent infrastructure, including Egregore, Familiar, Servitor, Scry, and thallus-core
+- The Hush: long-form cosmic horror novel in revision
+- PKNULL.AI: the site itself as a maintained software project
+
+## Content Guidance
+
+- Prefer the project pages for stable descriptions of active codebases.
+- Prefer individual post pages for dated viewpoints, journal entries, and personal commentary.
+- The home page is a summary surface, not the full source of truth.
+
+## Technical Notes
+
+- The site now publishes real static routes rather than a hash-routed SPA.
+- Generated pages are canonical for public consumption.
+- The codebase lives at: https://github.com/pknull/pknull.github.io

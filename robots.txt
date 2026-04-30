@@ -1,4 +1,30 @@
 User-agent: *
 Allow: /
 
+# OpenAI
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+# User-initiated retrieval from ChatGPT
+User-agent: ChatGPT-User
+Allow: /
+
+# Anthropic
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+# User-initiated retrieval from Claude
+User-agent: Claude-User
+Allow: /
+
+# Google AI control token
+User-agent: Google-Extended
+Allow: /
+
 Sitemap: https://pknull.ai/sitemap.xml
