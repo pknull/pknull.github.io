@@ -404,8 +404,9 @@
       if (external) {
         a.target = '_blank';
         var rel = (a.getAttribute('rel') || '').split(/\s+/).filter(Boolean);
+        var preserveReferrer = a.hasAttribute('data-preserve-referrer');
         if (rel.indexOf('noopener') === -1) rel.push('noopener');
-        if (rel.indexOf('noreferrer') === -1) rel.push('noreferrer');
+        if (!preserveReferrer && rel.indexOf('noreferrer') === -1) rel.push('noreferrer');
         a.setAttribute('rel', rel.join(' '));
       }
     });
