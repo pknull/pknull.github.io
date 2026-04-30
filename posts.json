@@ -4,48 +4,48 @@
     "date": "2026-04-29",
     "displayDate": "2026.04.29",
     "blurb": "Last week I was in a training where they paired us up to write code with an LLM, which was a frustrating waste of a day in nearly every dimension except one: it made it really obvious that…",
-    "img": "images/2026-04-29_tulip.jpg"
+    "img": "/images/2026-04-29_tulip.jpg"
   },
   {
     "slug": "2025-12-03",
     "date": "2025-12-03",
     "displayDate": "2025.12.03",
     "blurb": "I feel like I'm doing these at the wrong time of day currently. Like a nightcap of sorts. Probably doesn't matter as these words are falling to an audience of none. Today I was toying with the…",
-    "img": "images/2025-12-04-dice.jpg"
+    "img": "/images/2025-12-04-dice.jpg"
   },
   {
     "slug": "2025-12-02",
     "date": "2025-12-02",
     "displayDate": "2025.12.02",
     "blurb": "Every technology gets the same flurries of woe and worry before it's even truly born. Plato had Socrates warning that writing would rot our memory—people trusting \"external marks\" instead of…",
-    "img": "images/2025-12-02_flaminglips.jpg"
+    "img": "/images/2025-12-02_flaminglips.jpg"
   },
   {
     "slug": "2025-12-01",
     "date": "2025-12-01",
     "displayDate": "2025.12.01",
     "blurb": "Today I worked out some sequence diagrams in PUML for some ways of handling old auth issues like deeplinks via SSO and passkey management. Neither of which is exciting to talk about. I also made…",
-    "img": "images/2025-12-01_incense.webp"
+    "img": "/images/2025-12-01_incense.webp"
   },
   {
     "slug": "2025-11-30",
     "date": "2025-11-30",
     "displayDate": "2025.11.30",
     "blurb": "I spent most of today playing with this site, mostly cleaning up some CSS inconsistencies and playing with getting a comment system going. The fact that it's run like a git repo made the entire…",
-    "img": "images/2025-11-30_csszengarden.webp"
+    "img": "/images/2025-11-30_csszengarden.webp"
   },
   {
     "slug": "2025-11-29",
     "date": "2025-11-29",
     "displayDate": "2025.11.29",
     "blurb": "I was lucky enough to catch Naked Lunch at the Eugene Art House. I took my younger son to see it, to which he described it later as \"very creative\" and \"a little gay\". I always find it impressive…",
-    "img": "images/2025-11-29_mugwriter.webp"
+    "img": "/images/2025-11-29_mugwriter.webp"
   },
   {
     "slug": "2025-11-28",
     "date": "2025-11-28",
     "displayDate": "2025.11.28",
     "blurb": "I have decided to write a blog (again?). Having grown through the dotcom era, I saw so many social sites pop up. As an internet guy, I felt compelled to engage in these things constantly,…",
-    "img": "images/2025-11-28_empty_stage.webp"
+    "img": "/images/2025-11-28_empty_stage.webp"
   }
 ]

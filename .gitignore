@@ -1,11 +1,11 @@
 logs/
 
 # Asha Memory (local symlinks)
-Memory/
-asha/
+/Memory/
+/asha/
 
 # Asha runtime
-.asha/
-Memory/sessions/
-Memory/vector_db/
-Memory/reasoning_bank/
+/.asha/
+/Memory/sessions/
+/Memory/vector_db/
+/Memory/reasoning_bank/
