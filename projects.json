@@ -4,7 +4,7 @@
     "title": "Asha",
     "kind": "coding",
     "state": "active",
-    "lede": "A cognitive scaffold for Claude Code. Persistent identity, session memory, and domain-specific plugins for development, creative writing, research, and automation.",
+    "lede": "A multi-harness AI workflow system: persistent identity, session memory, and domain-specific plugins for Claude Code and Codex, installed via direct symlink mount.",
     "links": [
       {
         "label": "github",
@@ -22,7 +22,7 @@
     "title": "Thallus",
     "kind": "coding",
     "state": "active",
-    "lede": "Decentralized AI agent infrastructure. Local-first, cryptographically signed, no central authority.",
+    "lede": "Umbrella repo for local-first AI agent infrastructure: Egregore, Familiar, Servitor, Scry, and thallus-core coordinated by a shared architecture contract.",
     "links": [
       {
         "label": "egregore",
@@ -120,6 +120,28 @@
     "etymology": {
       "word": "cc",
       "gloss": "Claude Code, of course. The 'helpers' is doing a lot of work."
+    }
+  },
+  {
+    "slug": "pknull-ai",
+    "title": "PKNULL.AI",
+    "kind": "coding",
+    "state": "active",
+    "lede": "The site itself: a hand-built personal notebook and workshop index, generated as a static multipage site from Markdown, JSON, and a small Python build step.",
+    "links": [
+      {
+        "label": "github",
+        "href": "https://github.com/pknull/pknull.github.io"
+      },
+      {
+        "label": "live",
+        "href": "https://pknull.ai/"
+      }
+    ],
+    "body": "projects/pknull-ai.md",
+    "etymology": {
+      "word": "null",
+      "gloss": "Latin nullus — none. The old handle carried forward into a domain."
     }
   },
   {

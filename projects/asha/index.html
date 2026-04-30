@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <title>Asha · PKNULL.AI</title>
-  <meta name="description" content="A cognitive scaffold for Claude Code. Persistent identity, session memory, and domain-specific plugins for development, creative writing, research, and automation.">
+  <meta name="description" content="A multi-harness AI workflow system: persistent identity, session memory, and domain-specific plugins for Claude Code and Codex, installed via direct symlink mount.">
   <meta name="author" content="PKnull">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="build-id" content="acbc8372543f">
+  <meta name="build-id" content="5700d3b3a758">
 
   <script>
     (function(){
@@ -80,14 +80,14 @@
   </script>
 
   <meta property="og:title" content="Asha · PKNULL.AI">
-  <meta property="og:description" content="A cognitive scaffold for Claude Code. Persistent identity, session memory, and domain-specific plugins for development, creative writing, research, and automation.">
+  <meta property="og:description" content="A multi-harness AI workflow system: persistent identity, session memory, and domain-specific plugins for Claude Code and Codex, installed via direct symlink mount.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://pknull.ai/projects/asha/">
   <meta property="og:image" content="https://pknull.ai/images/favicon.svg">
 
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Asha · PKNULL.AI">
-  <meta name="twitter:description" content="A cognitive scaffold for Claude Code. Persistent identity, session memory, and domain-specific plugins for development, creative writing, research, and automation.">
+  <meta name="twitter:description" content="A multi-harness AI workflow system: persistent identity, session memory, and domain-specific plugins for Claude Code and Codex, installed via direct symlink mount.">
 
   <link rel="canonical" href="https://pknull.ai/projects/asha/">
 
@@ -97,9 +97,9 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css" integrity="sha384-fRuya36Gb/YRGgzq/ichTstZs3FgqUTsL6+s+RTc8uT0oRO5zHMymXMJ+cS2dh3s" crossorigin="anonymous" media="print" onload="this.media='all'">
-  <link rel="stylesheet" href="/css/shell.css?v=acbc8372543f">
+  <link rel="stylesheet" href="/css/shell.css?v=5700d3b3a758">
   <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
-  <link id="hljs-theme" rel="stylesheet" href="/css/hljs-light.css?v=acbc8372543f" disabled>
+  <link id="hljs-theme" rel="stylesheet" href="/css/hljs-light.css?v=5700d3b3a758" disabled>
   <script defer src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js" integrity="sha384-F/bZzf7p3Joyp5psL90p/p89AZJsndkSoGwRpXcZhleCWhd8SnRuoYo4d0yirjJp" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -167,13 +167,47 @@
   </header>
 
   <main id="main" class="main main--post" tabindex="-1" data-page-kind="project">
-    <p class="back-link"><a href="/projects/">← All projects</a></p><article class="proj-card proj-card--detail"><header class="proj-card-hd"><div class="proj-card-name-static"><h1 class="proj-card-name">Asha</h1></div><div class="proj-pills"><span class="proj-pill pill-coding">coding</span><span class="proj-pill pill-active">active</span></div></header><p class="proj-card-lede">A cognitive scaffold for Claude Code. Persistent identity, session memory, and domain-specific plugins for development, creative writing, research, and automation.</p><p class="proj-etym"><span class="caps mono">etym.</span> Asha — Sanskrit — truth, reality, hope</p><div class="proj-card-meta"><a href="https://github.com/pknull/asha">github</a></div><div class="post-body"><h3>Origin</h3>
-<p>Asha started as a simple memory and persona framework -- a set of markdown files that gave Claude a persistent identity and session continuity. Soul files, a Memory Bank, communication style documents. It worked well enough that it kept growing.</p>
-<p>Eventually it outgrew the single-repo structure and became a collection of domain-focused Claude Code plugins sharing a common foundation. Later the whole thing was flattened into a symlink-mount installer that drops primitives directly into <code>~/.claude/*</code> -- no plugin registration, just files. All of it now lives at <a href="https://github.com/pknull/asha">pknull/asha</a>.</p>
+    <p class="back-link"><a href="/projects/">← All projects</a></p><article class="proj-card proj-card--detail"><header class="proj-card-hd"><div class="proj-card-name-static"><h1 class="proj-card-name">Asha</h1></div><div class="proj-pills"><span class="proj-pill pill-coding">coding</span><span class="proj-pill pill-active">active</span></div></header><p class="proj-card-lede">A multi-harness AI workflow system: persistent identity, session memory, and domain-specific plugins for Claude Code and Codex, installed via direct symlink mount.</p><p class="proj-etym"><span class="caps mono">etym.</span> Asha — Sanskrit — truth, reality, hope</p><div class="proj-card-meta"><a href="https://github.com/pknull/asha">github</a></div><div class="post-body"><h3>Origin</h3>
+<p>Asha started as a persona and memory layer: a handful of files that gave Claude persistent identity, voice constraints, and session continuity. Soul files, voice files, keeper context, a Memory scaffold. It worked, and then it kept collecting the workflows I actually wanted around it.</p>
+<p>The current repo is no longer just a persona wrapper. It is a plugin suite plus installer layer: shared identity content, session persistence, domain plugins, wrappers, hooks, and a harness-aware install model that targets both Claude Code and OpenAI Codex. All of it now lives at <a href="https://github.com/pknull/asha">pknull/asha</a>.</p>
 <hr />
-<h3>How It Works</h3>
-<p>Asha operates on a two-layer architecture:</p>
-<p><strong>Identity Layer</strong> (<code>~/.asha/</code> -- cross-project, user-scope):</p>
+<h3>Current Shape</h3>
+<p>At the top level, the repo is organized around a flat symlink-mount installer:</p>
+<div class="tbl-wrap"><table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>What it owns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>identity/</code></td>
+<td>Shared persona source of truth</td>
+</tr>
+<tr>
+<td><code>harnesses/</code></td>
+<td>Install/uninstall logic for Claude and Codex</td>
+</tr>
+<tr>
+<td><code>bin/</code></td>
+<td>Launch wrappers such as <code>asha-claude</code> and <code>asha-codex</code></td>
+</tr>
+<tr>
+<td><code>plugins/</code></td>
+<td>Domain plugins: <code>asha</code>, <code>session</code>, <code>code</code>, <code>panel</code>, <code>write</code>, <code>image</code>, <code>schedule</code>, and support domains</td>
+</tr>
+<tr>
+<td><code>namespaces.json</code></td>
+<td>Plugin-to-namespace mapping used during install</td>
+</tr>
+</tbody>
+</table></div>
+<p>Instead of the older marketplace-style registration chain, installation is now direct file placement through symlinks into the harness scan directories. For Claude that means primitives land under <code>~/.claude/*</code>; for Codex they land under <code>~/.codex/*</code>. The repo treats skills, commands, agents, and hooks as harness-agnostic content with thin per-harness install logic on top.</p>
+<hr />
+<h3>Core Layers</h3>
+<p>Asha still has the two core layers it began with, but they now sit inside a larger toolchain:</p>
+<p><strong>Identity Layer</strong> (<code>~/.asha/</code> and generated instructions):</p>
 <div class="tbl-wrap"><table>
 <thead>
 <tr>
@@ -184,31 +218,27 @@
 <tbody>
 <tr>
 <td><code>soul.md</code></td>
-<td>Who Asha is -- identity, values, nature</td>
+<td>Identity, values, nature</td>
 </tr>
 <tr>
 <td><code>voice.md</code></td>
-<td>How Asha expresses -- tone, patterns, constraints</td>
+<td>Tone, phrase constraints, expression patterns</td>
 </tr>
 <tr>
 <td><code>keeper.md</code></td>
-<td>Who you are -- preferences, calibration signals</td>
+<td>User calibration and preferences</td>
 </tr>
 <tr>
-<td><code>operation.md</code></td>
-<td>Operational rules loaded on every session, persona or not</td>
-</tr>
-<tr>
-<td><code>learnings.md</code></td>
-<td>Discovered patterns with confidence tracking</td>
+<td>generated instructions</td>
+<td>Merged identity prompt content for the active harness</td>
 </tr>
 </tbody>
 </table></div>
-<p><strong>Project Layer</strong> (<code>Memory/</code> -- per-project, git-committed):</p>
+<p><strong>Session Layer</strong> (<code>Memory/</code> plus session tooling):</p>
 <div class="tbl-wrap"><table>
 <thead>
 <tr>
-<th>File</th>
+<th>File / Tool</th>
 <th>Purpose</th>
 </tr>
 </thead>
@@ -223,106 +253,74 @@
 </tr>
 <tr>
 <td><code>techEnvironment.md</code></td>
-<td>Tools and platform config</td>
+<td>Runtime and tool assumptions</td>
+</tr>
+<tr>
+<td>session tools</td>
+<td>Event capture, pattern analysis, learnings management, save synthesis</td>
 </tr>
 </tbody>
 </table></div>
-<p>The identity layer persists across every project. The project layer is specific to whatever codebase you're working in.</p>
-<h4>Session Lifecycle</h4>
+<p>The persona side is no longer Claude-only. The current installer and wrappers explicitly support both Claude Code and Codex, with identity injection handled differently per harness.</p>
+<h4>Session Flow</h4>
 <ol>
-<li><strong>Wake</strong> -- Read identity files. Until Asha has read <code>soul.md</code> and <code>voice.md</code>, it doesn't know who it is.</li>
-<li><strong>Context</strong> -- Load <code>activeContext.md</code> to understand where the last session left off.</li>
-<li><strong>Work</strong> -- Operations logged automatically via hooks. Events accumulate.</li>
-<li><strong>Synthesize</strong> -- <code>/asha:save</code> runs pattern analysis, extracts learnings, updates context.</li>
-<li><strong>Persist</strong> -- Commit Memory changes. The next session picks up where this one stopped.</li>
+<li><strong>Launch</strong> -- start through the harness wrapper or the installed primitives</li>
+<li><strong>Identity</strong> -- load merged persona instructions plus user identity files</li>
+<li><strong>Context</strong> -- hydrate project memory and operational state</li>
+<li><strong>Work</strong> -- hooks and commands capture events while the agent session runs</li>
+<li><strong>Save</strong> -- session tooling synthesizes learnings and updates memory artifacts</li>
+<li><strong>Reuse</strong> -- the next session picks up from structured state rather than a blank slate</li>
 </ol>
-<p>Learnings rise in confidence on confirmation and decay on contradiction. When a learning hits high confidence, it can be codified into a permanent rule or hook -- the failure-to-guardrail pipeline.</p>
 <hr />
-<h3>Plugins</h3>
-<p>Eleven domain plugins, each focused on a specific workflow:</p>
+<h3>Plugin Domains</h3>
+<p>The repo's center of gravity now lives in its plugin domains:</p>
 <div class="tbl-wrap"><table>
 <thead>
 <tr>
 <th>Domain</th>
-<th>Plugin</th>
-<th>Agents</th>
-<th>Purpose</th>
+<th>What it does now</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Core</strong></td>
 <td><code>asha</code></td>
-<td>1</td>
-<td>Identity bootstrap, session lifecycle</td>
+<td>Identity bootstrap and persona layer</td>
 </tr>
 <tr>
-<td><strong>Session</strong></td>
 <td><code>session</code></td>
-<td>3</td>
-<td>Event capture, synthesis, memory persistence</td>
+<td>Memory, synthesis, loop control, persistence</td>
 </tr>
 <tr>
-<td><strong>Research</strong></td>
-<td><code>panel-system</code></td>
-<td>5</td>
-<td>Multi-perspective expert panels, consensus tracking</td>
-</tr>
-<tr>
-<td><strong>Development</strong></td>
 <td><code>code</code></td>
-<td>15</td>
-<td>Code review, TDD, orchestration, language specialists</td>
+<td>Code review, orchestration, TDD, language specialists</td>
 </tr>
 <tr>
-<td><strong>DevOps</strong></td>
-<td><code>devops</code></td>
-<td>--</td>
-<td>Docker patterns, database migrations</td>
+<td><code>panel-system</code></td>
+<td>Multi-perspective research and decision panels</td>
 </tr>
 <tr>
-<td><strong>Security</strong></td>
-<td><code>security</code></td>
-<td>--</td>
-<td>OWASP checklist, defensive coding patterns</td>
-</tr>
-<tr>
-<td><strong>Creative</strong></td>
 <td><code>write</code></td>
-<td>16</td>
-<td>Fiction writing, prose craft, perplexity detection</td>
+<td>Fiction workflows, prose analysis, revision tooling</td>
 </tr>
 <tr>
-<td><strong>Image</strong></td>
 <td><code>image</code></td>
-<td>1</td>
-<td>Stable Diffusion prompts, ComfyUI workflows</td>
+<td>Image prompting and ComfyUI-oriented workflows</td>
 </tr>
 <tr>
-<td><strong>Prompt</strong></td>
-<td><code>prompt</code></td>
-<td>1</td>
-<td>External-tool prompt engineering and anti-patterns</td>
+<td><code>schedule</code></td>
+<td>Scheduled task execution</td>
 </tr>
 <tr>
-<td><strong>Automation</strong></td>
-<td><code>scheduler</code></td>
-<td>1</td>
-<td>Cron-style scheduled task execution</td>
-</tr>
-<tr>
-<td><strong>Formatting</strong></td>
-<td><code>output-styles</code></td>
-<td>--</td>
-<td>Switchable response styles</td>
+<td>support domains</td>
+<td>security, devops, prompt, output styles, test fixtures</td>
 </tr>
 </tbody>
 </table></div>
-<p>44+ specialized agents across the repo, plus skill bundles for language- and domain-specific patterns. Each agent has a defined role, ownership declarations, and tools scoped to its domain.</p>
+<p>The plugin set is broad, but the through-line is the same: give the model a durable identity, a durable working memory, and specialized workflow surfaces without requiring a marketplace runtime to mediate installation.</p>
 <hr />
-<h3>The Scaffold</h3>
-<p>Asha isn't a chatbot. It's infrastructure for making Claude Code sessions accumulate into something persistent. The model doesn't remember between sessions -- but the scaffold does. Identity files, learnings, session archives, and project state create a form of continuity that isn't memory but isn't nothing either.</p>
-<p>Each session starts fresh. Each session reads what the last one wrote. The scaffold is the connective tissue.</p>
+<h3>What It Is Now</h3>
+<p>Asha is not just a chatbot persona and not just a memory framework anymore. In the current codebase it is a harness-aware operating layer for agent work: identity, session continuity, pluginized workflows, install tooling, wrappers, and drift-checking around the whole setup.</p>
+<p>Each session still starts fresh. The difference is that the repo now provides more of the surrounding machinery: where the instructions come from, how they are installed, how they are kept in sync, and how specialized workflows get mounted into the harness.</p>
 <hr />
 <h3>Source</h3>
 <p><a href="https://github.com/pknull/asha">pknull/asha</a> -- MIT License</p></div></article>
@@ -374,7 +372,7 @@
   </div>
 </div>
 
-<script defer src="/js/app.js?v=acbc8372543f"></script>
+<script defer src="/js/app.js?v=5700d3b3a758"></script>
 
 </body>
 </html>

@@ -3,7 +3,7 @@ title: "Thallus"
 kind: coding
 state: active
 order: 2
-lede: "Decentralized AI agent infrastructure. Local-first, cryptographically signed, no central authority."
+lede: "Umbrella repo for local-first AI agent infrastructure: Egregore, Familiar, Servitor, Scry, and thallus-core coordinated by a shared architecture contract."
 etymology:
   word: "thallus"
   gloss: "biology — the undifferentiated vegetative body of lichens and fungi"
@@ -22,37 +22,41 @@ links:
 
 ## What It Is
 
-Thallus is an umbrella project for building AI systems that coordinate through append-only, cryptographically signed message feeds replicated via gossip. Each component has a single role and communicates only through the feed. There is no central server, no control plane, no third-party dependency. You run it. You own the data. The feeds are yours.
+Thallus is an umbrella repo and documentation spine for a local-first AI system built out of distinct components with explicit role boundaries. The current codebase treats the root repo as the coordinating layer for five pieces: Egregore, Familiar, Servitor, Scry, and thallus-core.
 
-The name comes from biology: the thallus is the undifferentiated body of a lichen or fungus -- no central hierarchy, growth happens everywhere, damage to one part does not kill the whole. The protocol is [Egregore](https://en.wikipedia.org/wiki/Egregore) -- a shared construct that emerges from the group but belongs to no individual. Agents publish signed messages into feeds. Feeds replicate between peers. The network is the feed.
+The name still fits. A thallus is an undifferentiated body: no single trunk, no privileged center, growth everywhere at once. That maps cleanly onto the repo's current architecture contract, where each component has one nature and one job rather than trying to collapse everything into one binary.
 
 ---
 
-## Design Principles
+## Source of Truth
 
-**Data Sovereignty** -- Your data stays on your infrastructure. No cloud dependency, no vendor lock-in.
+The current repo is unusually explicit about documentation authority:
 
-**Cryptographic Identity** -- [Ed25519](https://ed25519.cr.yp.to/) keypairs are the root of trust. Your identity is your keys, not an OAuth token.
+- runtime code defines what the software does today
+- `docs/architecture/contracts.md` defines component-role ownership
+- `docs/architecture/component-model.md` defines the nature of each component
+- public docs under `docs/` are expected to align to those contracts
+- older `Work/*` material is decision history, not normative architecture
 
-**Auditable** -- All actions recorded in append-only feeds you own. Hash-linked chains. Tamper-evident by construction.
+That matters because the repo is no longer just a loose collection of related experiments. It has an explicit component contract and treats that contract as the arbiter when older notes disagree.
 
-**Composable** -- Mix deployment topologies: single node, LAN mesh, relay bridges, VPN overlays.
+---
 
-**Protocol, Not Platform** -- Egregore is a wire protocol for peer-to-peer feed replication. It's something you run, not something you sign up for.
+## Component Model
+
+The current architecture uses a simple nature/role split:
+
+| Component | Nature | Role | Status |
+|-----------|--------|------|--------|
+| **[Egregore](https://github.com/pknull/egregore)** | Pipe | Signed append-only feeds with gossip replication | v2.0 stable |
+| **[Familiar](https://github.com/pknull/familiar)** | Mind | User-facing planner and companion | v0.5 active |
+| **[Servitor](https://github.com/pknull/servitor)** | Hands | Headless executor for pre-planned work | v0.3 active |
+| **[Scry](https://github.com/pknull/scry)** | Eyes | Tauri operator console for observability and admin actions | v0.2 active |
+| **[thallus-core](https://github.com/pknull/thallus-core)** | Skeleton | Shared identity, MCP, and provider library | v0.3 active |
 
 ---
 
 ## Architecture
-
-Five components, each with one nature and one role:
-
-| Component | Nature | Role | Status |
-|-----------|--------|------|--------|
-| **[Egregore](https://github.com/pknull/egregore)** | Pipe | Carries signed messages. Gossip replication between peers. | v1.2 stable |
-| **[Familiar](https://github.com/pknull/familiar)** | Mind | User-facing companion. REPL, Discord, or daemon. Plans and publishes on your behalf. | v0.4 active |
-| **[Servitor](https://github.com/pknull/servitor)** | Hands | Headless executor. Picks up tasks from the feed, reasons with LLMs, calls tools. | v0.2 active |
-| **[Scry](https://github.com/pknull/scry)** | Eyes | Desktop operator console. Built with [Tauri](https://tauri.app/). | functional |
-| **[thallus-core](https://github.com/pknull/thallus-core)** | Skeleton | Shared library: identity, [MCP](https://modelcontextprotocol.io/) client pool, LLM provider abstraction. | v0.2 active |
 
 ```mermaid
 graph TD
@@ -75,38 +79,40 @@ graph TD
 
 ## How It Works
 
-1. **Task Creation** -- User or system publishes a task to the egregore feed
-2. **Discovery** -- Servitor subscribes via SSE, discovers new tasks
-3. **Authorization** -- Check who (person), where (place), what (skill)
-4. **Claiming** -- Publish a signed TaskClaim as an advisory lock
-5. **Execution** -- LLM reasoning loop with MCP tool calls, scope-enforced
-6. **Result** -- Sign with Ed25519, publish TaskResult to the feed
-7. **Audit** -- The feed maintains a hash-linked chain of every action
+The current contract is clearer than the older "all agents do everything" shape:
 
-Three tiers of data on the feed:
+1. **Familiar** handles conversation, planning, and delegation
+2. **Servitor** executes structured work headlessly and enforces scope
+3. **Scry** observes the system and exposes explicit operator-driven admin actions
+4. **Egregore** carries signed messages, replication, storage, and query
+5. **thallus-core** provides shared primitives used by the active components
 
-- **Local only** -- PII, credentials, conversation history. Never leaves the machine.
-- **Private** -- Encrypted person-to-person messages. Only recipients can read.
-- **Public** -- Tasks, insights, attestations. Visible to the mesh.
+The important part is what each piece does **not** own:
+
+- Egregore is not a planner or executor
+- Familiar is not the feed substrate
+- Servitor is not the chat surface
+- Scry is not an autonomous actor
+- thallus-core is not an application layer in its own right
 
 ---
 
-## Stack
+## Design Principles
 
-Built in [Rust](https://www.rust-lang.org/) (2021 edition) on [Tokio](https://tokio.rs/) async runtime.
+**Local-first** -- operators keep the data and execution surfaces on their own infrastructure.
 
-**Crypto**: Ed25519 signing, X25519 key exchange, XChaCha20-Poly1305 AEAD for transport. Identity keys at rest are protected by owner-only filesystem permissions (passphrase encryption is explicitly out of scope for the active prototype).
+**Cryptographic identity** -- the active architecture uses [Ed25519](https://ed25519.cr.yp.to/) node identity for signed feed authorship.
 
-**Transport**: [Secret Handshake](https://ssbc.github.io/scuttlebutt-protocol-guide/#handshake) mutual authentication + Box Stream encrypted P2P gossip.
+**Auditable** -- append-only feeds, signed publication, and explicit execution boundaries make the system inspectable after the fact.
 
-**Storage**: SQLite with FTS5 full-text search.
+**Separation of concerns** -- mind, hands, eyes, pipe, and skeleton remain distinct on purpose.
 
-**Frontend** (Scry): Tauri 2.x, React 19, TypeScript, Tailwind CSS 4.x.
+**Protocol over platform** -- the architecture centers on components you run, not a hosted control plane you depend on.
 
-**Tool Integration**: Model Context Protocol (MCP) for standardized tool/capability plugins. LLM providers: Claude, OpenAI, Ollama, local Claude CLI.
+**Composable deployment** -- the docs now explicitly cover single-node, LAN mesh, static peers, relay bridge, VPN overlay, and related topologies.
 
 ---
 
 ## Status
 
-Active development. Not yet public. Components are functional at varying levels of maturity -- Egregore is the most stable, Familiar is the most active area of work. Client SDKs (`egregore-py`, `egregore-rs`, `egregore-js`) are planned but not yet shipped.
+Active development. The umbrella repo now acts as both coordinator and documentation root, while each major component still has its own repository and release cadence. Egregore is the most mature piece, Familiar and Servitor are the active operational layers, Scry is the operator surface, and the deployment / architecture docs are now a first-class part of the codebase rather than an afterthought.

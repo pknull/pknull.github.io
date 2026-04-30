@@ -3,7 +3,7 @@ title: "Asha"
 kind: coding
 state: active
 order: 1
-lede: "A cognitive scaffold for Claude Code. Persistent identity, session memory, and domain-specific plugins for development, creative writing, research, and automation."
+lede: "A multi-harness AI workflow system: persistent identity, session memory, and domain-specific plugins for Claude Code and Codex, installed via direct symlink mount."
 etymology:
   word: "Asha"
   gloss: "Sanskrit — truth, reality, hope"
@@ -14,75 +14,87 @@ links:
 
 ## Origin
 
-Asha started as a simple memory and persona framework -- a set of markdown files that gave Claude a persistent identity and session continuity. Soul files, a Memory Bank, communication style documents. It worked well enough that it kept growing.
+Asha started as a persona and memory layer: a handful of files that gave Claude persistent identity, voice constraints, and session continuity. Soul files, voice files, keeper context, a Memory scaffold. It worked, and then it kept collecting the workflows I actually wanted around it.
 
-Eventually it outgrew the single-repo structure and became a collection of domain-focused Claude Code plugins sharing a common foundation. Later the whole thing was flattened into a symlink-mount installer that drops primitives directly into `~/.claude/*` -- no plugin registration, just files. All of it now lives at [pknull/asha](https://github.com/pknull/asha).
+The current repo is no longer just a persona wrapper. It is a plugin suite plus installer layer: shared identity content, session persistence, domain plugins, wrappers, hooks, and a harness-aware install model that targets both Claude Code and OpenAI Codex. All of it now lives at [pknull/asha](https://github.com/pknull/asha).
 
 ---
 
-## How It Works
+## Current Shape
 
-Asha operates on a two-layer architecture:
+At the top level, the repo is organized around a flat symlink-mount installer:
 
-**Identity Layer** (`~/.asha/` -- cross-project, user-scope):
+| Layer | What it owns |
+|------|---------------|
+| `identity/` | Shared persona source of truth |
+| `harnesses/` | Install/uninstall logic for Claude and Codex |
+| `bin/` | Launch wrappers such as `asha-claude` and `asha-codex` |
+| `plugins/` | Domain plugins: `asha`, `session`, `code`, `panel`, `write`, `image`, `schedule`, and support domains |
+| `namespaces.json` | Plugin-to-namespace mapping used during install |
+
+Instead of the older marketplace-style registration chain, installation is now direct file placement through symlinks into the harness scan directories. For Claude that means primitives land under `~/.claude/*`; for Codex they land under `~/.codex/*`. The repo treats skills, commands, agents, and hooks as harness-agnostic content with thin per-harness install logic on top.
+
+---
+
+## Core Layers
+
+Asha still has the two core layers it began with, but they now sit inside a larger toolchain:
+
+**Identity Layer** (`~/.asha/` and generated instructions):
 
 | File | Purpose |
 |------|---------|
-| `soul.md` | Who Asha is -- identity, values, nature |
-| `voice.md` | How Asha expresses -- tone, patterns, constraints |
-| `keeper.md` | Who you are -- preferences, calibration signals |
-| `operation.md` | Operational rules loaded on every session, persona or not |
-| `learnings.md` | Discovered patterns with confidence tracking |
+| `soul.md` | Identity, values, nature |
+| `voice.md` | Tone, phrase constraints, expression patterns |
+| `keeper.md` | User calibration and preferences |
+| generated instructions | Merged identity prompt content for the active harness |
 
-**Project Layer** (`Memory/` -- per-project, git-committed):
+**Session Layer** (`Memory/` plus session tooling):
 
-| File | Purpose |
-|------|---------|
+| File / Tool | Purpose |
+|-------------|---------|
 | `activeContext.md` | Current session state |
 | `projectbrief.md` | Project foundation and goals |
-| `techEnvironment.md` | Tools and platform config |
+| `techEnvironment.md` | Runtime and tool assumptions |
+| session tools | Event capture, pattern analysis, learnings management, save synthesis |
 
-The identity layer persists across every project. The project layer is specific to whatever codebase you're working in.
+The persona side is no longer Claude-only. The current installer and wrappers explicitly support both Claude Code and Codex, with identity injection handled differently per harness.
 
-### Session Lifecycle
+### Session Flow
 
-1. **Wake** -- Read identity files. Until Asha has read `soul.md` and `voice.md`, it doesn't know who it is.
-2. **Context** -- Load `activeContext.md` to understand where the last session left off.
-3. **Work** -- Operations logged automatically via hooks. Events accumulate.
-4. **Synthesize** -- `/asha:save` runs pattern analysis, extracts learnings, updates context.
-5. **Persist** -- Commit Memory changes. The next session picks up where this one stopped.
-
-Learnings rise in confidence on confirmation and decay on contradiction. When a learning hits high confidence, it can be codified into a permanent rule or hook -- the failure-to-guardrail pipeline.
-
----
-
-## Plugins
-
-Eleven domain plugins, each focused on a specific workflow:
-
-| Domain | Plugin | Agents | Purpose |
-|--------|--------|--------|---------|
-| **Core** | `asha` | 1 | Identity bootstrap, session lifecycle |
-| **Session** | `session` | 3 | Event capture, synthesis, memory persistence |
-| **Research** | `panel-system` | 5 | Multi-perspective expert panels, consensus tracking |
-| **Development** | `code` | 15 | Code review, TDD, orchestration, language specialists |
-| **DevOps** | `devops` | -- | Docker patterns, database migrations |
-| **Security** | `security` | -- | OWASP checklist, defensive coding patterns |
-| **Creative** | `write` | 16 | Fiction writing, prose craft, perplexity detection |
-| **Image** | `image` | 1 | Stable Diffusion prompts, ComfyUI workflows |
-| **Prompt** | `prompt` | 1 | External-tool prompt engineering and anti-patterns |
-| **Automation** | `scheduler` | 1 | Cron-style scheduled task execution |
-| **Formatting** | `output-styles` | -- | Switchable response styles |
-
-44+ specialized agents across the repo, plus skill bundles for language- and domain-specific patterns. Each agent has a defined role, ownership declarations, and tools scoped to its domain.
+1. **Launch** -- start through the harness wrapper or the installed primitives
+2. **Identity** -- load merged persona instructions plus user identity files
+3. **Context** -- hydrate project memory and operational state
+4. **Work** -- hooks and commands capture events while the agent session runs
+5. **Save** -- session tooling synthesizes learnings and updates memory artifacts
+6. **Reuse** -- the next session picks up from structured state rather than a blank slate
 
 ---
 
-## The Scaffold
+## Plugin Domains
 
-Asha isn't a chatbot. It's infrastructure for making Claude Code sessions accumulate into something persistent. The model doesn't remember between sessions -- but the scaffold does. Identity files, learnings, session archives, and project state create a form of continuity that isn't memory but isn't nothing either.
+The repo's center of gravity now lives in its plugin domains:
 
-Each session starts fresh. Each session reads what the last one wrote. The scaffold is the connective tissue.
+| Domain | What it does now |
+|--------|-------------------|
+| `asha` | Identity bootstrap and persona layer |
+| `session` | Memory, synthesis, loop control, persistence |
+| `code` | Code review, orchestration, TDD, language specialists |
+| `panel-system` | Multi-perspective research and decision panels |
+| `write` | Fiction workflows, prose analysis, revision tooling |
+| `image` | Image prompting and ComfyUI-oriented workflows |
+| `schedule` | Scheduled task execution |
+| support domains | security, devops, prompt, output styles, test fixtures |
+
+The plugin set is broad, but the through-line is the same: give the model a durable identity, a durable working memory, and specialized workflow surfaces without requiring a marketplace runtime to mediate installation.
+
+---
+
+## What It Is Now
+
+Asha is not just a chatbot persona and not just a memory framework anymore. In the current codebase it is a harness-aware operating layer for agent work: identity, session continuity, pluginized workflows, install tooling, wrappers, and drift-checking around the whole setup.
+
+Each session still starts fresh. The difference is that the repo now provides more of the surrounding machinery: where the instructions come from, how they are installed, how they are kept in sync, and how specialized workflows get mounted into the harness.
 
 ---
 
