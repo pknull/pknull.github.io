@@ -745,7 +745,7 @@
     ])
       .then(function(arr) {
         var posts = arr[0].map(normalizePost);
-        var projects = arr[1].slice(0, 6);
+        var projects = arr[1].slice(0, 4);
         var meta = arr[2] || {};
         var feat = posts.slice(0, 3);
         var rest = posts.slice(3, 8);
