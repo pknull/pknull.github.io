@@ -16,6 +16,7 @@ Conventions:
     - Body is the prose after the frontmatter
 """
 import json
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -31,9 +32,12 @@ POSTS_DIR = ROOT / 'posts'
 POSTS_JSON = ROOT / 'posts.json'
 PROJECTS_DIR = ROOT / 'projects'
 PROJECTS_JSON = ROOT / 'projects.json'
+INDEX_HTML = ROOT / 'index.html'
 
 POST_SLUG_PATTERN = re.compile(r'^(\d{4})-(\d{2})-(\d{2})$')
 FRONTMATTER_PATTERN = re.compile(r'\A---\s*\n(.*?)\n---\s*\n', re.DOTALL)
+BUILD_ID_PATTERN = re.compile(r'(<meta name="build-id" content=")([^"]*)(">)')
+SHELL_CSS_PATTERN = re.compile(r'(<link rel="stylesheet" href="css/shell\.css)(?:\?v=[^"]*)?(">)')
 
 
 def split_frontmatter(text):
@@ -84,6 +88,46 @@ def write_if_changed(path, new_content):
     path.write_text(new_content)
     print(f'  ✓ {path.name} written')
     return True
+
+
+def iter_build_id_sources():
+    for path in [ROOT / 'js' / 'app.js', ROOT / 'css' / 'shell.css', ROOT / 'meta.json', ROOT / 'reading.json']:
+        if path.exists():
+            yield path
+    if INDEX_HTML.exists():
+        yield INDEX_HTML
+    for path in sorted(POSTS_DIR.glob('*.md')):
+        yield path
+    for path in sorted(PROJECTS_DIR.glob('*.md')):
+        yield path
+
+
+def compute_build_id():
+    h = hashlib.sha256()
+    for path in iter_build_id_sources():
+        h.update(str(path.relative_to(ROOT)).encode('utf-8'))
+        data = path.read_text()
+        if path == INDEX_HTML:
+            data = BUILD_ID_PATTERN.sub(r'\1__BUILD_ID__\3', data)
+            data = SHELL_CSS_PATTERN.sub(r'\1?v=__BUILD_ID__\2', data)
+        h.update(data.encode('utf-8'))
+    return h.hexdigest()[:12]
+
+
+def update_index_build_id():
+    if not INDEX_HTML.exists():
+        print('  ! index.html missing; skipped build-id update', file=sys.stderr)
+        return
+    build_id = compute_build_id()
+    text = INDEX_HTML.read_text()
+    if BUILD_ID_PATTERN.search(text):
+        new_text = BUILD_ID_PATTERN.sub(lambda m: m.group(1) + build_id + m.group(3), text, count=1)
+    else:
+        needle = '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        insert = needle + f'  <meta name="build-id" content="{build_id}">\n'
+        new_text = text.replace(needle, insert, 1)
+    new_text = SHELL_CSS_PATTERN.sub(lambda m: m.group(1) + '?v=' + build_id + m.group(2), new_text, count=1)
+    write_if_changed(INDEX_HTML, new_text)
 
 
 def build_posts():
@@ -155,6 +199,8 @@ def main():
     build_posts()
     print('projects:')
     build_projects()
+    print('index:')
+    update_index_build_id()
     return 0
 
 

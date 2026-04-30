@@ -208,11 +208,13 @@ tbody tr:hover{ background: var(--stripe); }
 /* ── Shell grid ──────────────────────────────────────────────── */
 .shell{
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto auto 1fr;
   min-height: 100vh;
   position: relative;
   z-index: 1;
 }
+.shell > *{ min-width: 0; }
 
 /* ── Header ──────────────────────────────────────────────────── */
 .nb-hd{

@@ -31,13 +31,17 @@
   var hljsTheme = document.getElementById('hljs-theme');
   var prefersDarkMq = window.matchMedia('(prefers-color-scheme: dark)');
 
-  // Daily cache-buster
+  // Build-stamped cache version
   var CACHE_VERSION = (document.querySelector('meta[name="build-id"]') || {}).content || new Date().toISOString().slice(0, 10);
 
   var HLJS_THEMES = {
     dark:  { href: 'css/hljs-dark.css' },
     light: { href: 'css/hljs-light.css' }
   };
+  var SITE_NAME = 'PKNULL.AI';
+  var SITE_DESCRIPTION = "PK's Personal Site";
+  var SITE_ROOT = 'https://pknull.ai/';
+  var DEFAULT_OG_IMAGE = 'https://pknull.ai/images/favicon.svg';
 
   function getStoredMode() {
     var v = localStorage.getItem('pk-mode');
@@ -364,6 +368,18 @@
     });
   }
 
+  function wrapTables(scope) {
+    var root = scope || document;
+    root.querySelectorAll('table').forEach(function(table) {
+      var parent = table.parentElement;
+      if (parent && parent.classList && parent.classList.contains('tbl-wrap')) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'tbl-wrap';
+      table.parentNode.insertBefore(wrap, table);
+      wrap.appendChild(table);
+    });
+  }
+
   // Open off-site links in a new tab. Internal targets (#/route, anchors,
   // same-host URLs, javascript:) are left alone so SPA routing still works.
   function markExternalLinks(scope) {
@@ -557,7 +573,7 @@
   function parseHash() {
     var hash = window.location.hash.slice(1);
     if (!hash || hash === '/') return { name: 'home' };
-    if (hash.charAt(0) !== '/') return { name: 'home' }; // fallback (legacy redirect runs separately)
+    if (hash.charAt(0) !== '/') return { name: 'anchor', slug: hash };
 
     var segments = hash.slice(1).split('/').filter(Boolean);
     if (segments.length === 0) return { name: 'home' };
@@ -582,6 +598,40 @@
         link.removeAttribute('aria-current');
       }
     });
+  }
+
+  function setMetaContent(selector, value) {
+    var el = document.querySelector(selector);
+    if (el && value != null) el.setAttribute('content', value);
+  }
+
+  function setLinkHref(selector, value) {
+    var el = document.querySelector(selector);
+    if (el && value != null) el.setAttribute('href', value);
+  }
+
+  function absoluteUrl(url) {
+    if (!url) return SITE_ROOT;
+    if (/^https?:\/\//i.test(url)) return url;
+    return new URL(url, window.location.href).href;
+  }
+
+  function setPageMeta(opts) {
+    opts = opts || {};
+    var title = opts.title ? opts.title + ' · ' + SITE_NAME : SITE_NAME;
+    var description = opts.description || SITE_DESCRIPTION;
+    var canonical = opts.canonical || window.location.href;
+    var image = opts.image ? absoluteUrl(opts.image) : DEFAULT_OG_IMAGE;
+
+    document.title = title;
+    setMetaContent('meta[name="description"]', description);
+    setMetaContent('meta[property="og:title"]', title);
+    setMetaContent('meta[property="og:description"]', description);
+    setMetaContent('meta[property="og:url"]', canonical);
+    setMetaContent('meta[property="og:image"]', image);
+    setMetaContent('meta[name="twitter:title"]', title);
+    setMetaContent('meta[name="twitter:description"]', description);
+    setLinkHref('link[rel="canonical"]', canonical);
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -636,6 +686,7 @@
       '<p>' + escapeHtml(message) + '</p>' +
       '<p><a href="#/">Return home</a> or <a href="javascript:location.reload()">try again</a></p>' +
       '</div>';
+    setPageMeta({ title: 'Error', description: message });
     showToast(message, 'error');
   }
 
@@ -837,6 +888,9 @@
           '</div>' +
           linksHtml;
         hideGiscus();
+        setPageMeta({
+          description: 'Engineer, worldbuilder, late-night blogger. Personal writing, projects, and workshop notes.'
+        });
         updateActiveNav('home');
         setLazyImages(mainEl);
         markExternalLinks(mainEl);
@@ -889,6 +943,10 @@
           (posts.length ? groupHtml : '<p class="empty">No entries yet.</p>');
 
         hideGiscus();
+        setPageMeta({
+          title: 'Blog',
+          description: 'Notebook entries, newest first.'
+        });
         updateActiveNav('blog');
         setLazyImages(mainEl);
         markExternalLinks(mainEl);
@@ -913,6 +971,10 @@
               '</header>' +
               '<div class="post-body">' + DOMPurify.sanitize(renderMarkdown(md)) + '</div>' +
             '</article>';
+          setPageMeta({
+            title: 'Test page',
+            description: 'Scratch page for local rendering checks.'
+          });
           finishPostRender('test');
         })
         .catch(function() { showError('Test page failed to load.'); });
@@ -927,11 +989,12 @@
         var bodyMd = arr[0];
         var posts = arr[1].map(normalizePost);
         var displayDate = toDisplayDate(slug);
+        var match = null;
 
         // posts.json is sorted newest→oldest, so idx-1 = newer post, idx+1 = older
         var idx = -1;
         for (var i = 0; i < posts.length; i++) {
-          if (posts[i].slug === slug) { idx = i; break; }
+          if (posts[i].slug === slug) { idx = i; match = posts[i]; break; }
         }
         var newer = idx > 0 ? posts[idx - 1] : null;
         var older = idx >= 0 && idx < posts.length - 1 ? posts[idx + 1] : null;
@@ -957,6 +1020,11 @@
             navHtml +
           '</article>';
 
+        setPageMeta({
+          title: displayDate,
+          description: (match && match.blurb) || ('Notebook entry from ' + displayDate + '.'),
+          image: match && match.img
+        });
         addReadTimeForPost();
         finishPostRender(slug);
       })
@@ -968,6 +1036,7 @@
   function finishPostRender(term) {
     setLazyImages(mainEl);
     markExternalLinks(mainEl);
+    wrapTables(mainEl);
     processMermaidBlocks(mainEl);
     if (window.hljs) hljs.highlightAll();
     addCodeCopyButtons();
@@ -1012,6 +1081,10 @@
           '</header>' +
           (projects.length ? cards : '<p class="empty">No projects yet.</p>');
         hideGiscus();
+        setPageMeta({
+          title: 'Projects',
+          description: 'Long-running threads, experiments, and project notes.'
+        });
         updateActiveNav('projects');
       })
       .catch(function() { showError('Failed to load projects.'); });
@@ -1059,8 +1132,13 @@
             '<div class="post-body">' + DOMPurify.sanitize(renderMarkdown(bodyMd)) + '</div>' +
           '</article>';
 
+        setPageMeta({
+          title: p.title,
+          description: p.lede || ('Project notes for ' + p.title + '.')
+        });
         setLazyImages(mainEl);
         markExternalLinks(mainEl);
+        wrapTables(mainEl);
         processMermaidBlocks(mainEl);
         if (window.hljs) hljs.highlightAll();
         addCodeCopyButtons();
@@ -1077,6 +1155,8 @@
   function dispatch() {
     if (legacyRedirect()) return; // browser will fire hashchange after the replace
     var route = parseHash();
+    if (route.name === 'anchor') return;
+    window.scrollTo(0, 0);
     switch (route.name) {
       case 'home':     return renderHome();
       case 'blog':     return renderBlog();
