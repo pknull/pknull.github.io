@@ -238,6 +238,14 @@ def load_image_manifest():
 IMAGE_MANIFEST = load_image_manifest()
 
 
+def largest_variant(src: str) -> str:
+    """Return the URL of the largest variant for src, or src unchanged."""
+    info = IMAGE_MANIFEST.get(src)
+    if not info or not info.get("variants"):
+        return src
+    return max(info["variants"], key=lambda v: v["width"])["url"]
+
+
 def picture_for(src: str, alt: str = "", *, sizes: str = PICTURE_DEFAULT_SIZES, lazy: bool = True) -> str:
     """Render <picture> markup for src if responsive variants exist; else <img>."""
     info = IMAGE_MANIFEST.get(src)
@@ -426,7 +434,7 @@ def build_posts_json(posts):
             "blurb": post["blurb"],
         }
         if post.get("img"):
-            entry["img"] = post["img"]
+            entry["img"] = largest_variant(post["img"])
         payload.append(entry)
     write_if_changed(POSTS_JSON, json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
 
@@ -947,7 +955,7 @@ def jsonld_article(post):
         "description": post["blurb"] or f'Notebook entry from {post["displayDate"]}.',
     }
     if post.get("img"):
-        payload["image"] = absolute_url(post["img"])
+        payload["image"] = absolute_url(largest_variant(post["img"]))
     return payload
 
 
@@ -1050,7 +1058,7 @@ def main():
                 title=post["displayDate"],
                 description=post["blurb"] or f'Notebook entry from {post["displayDate"]}.',
                 canonical=post["canonical"],
-                og_image=absolute_url(post["img"]) if post.get("img") else DEFAULT_OG_IMAGE,
+                og_image=absolute_url(largest_variant(post["img"])) if post.get("img") else DEFAULT_OG_IMAGE,
                 giscus_term=post["slug"],
                 json_ld=render_jsonld(
                     jsonld_article(post),
