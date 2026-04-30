@@ -876,7 +876,6 @@
               '</div>' +
               featHtml +
               restHtml +
-              aboutHtml +
             '</section>' +
             '<section class="col-shop" aria-labelledby="shop-h2">' +
               '<div class="col-hd">' +
@@ -885,6 +884,7 @@
               '</div>' +
               projectsHtml +
             '</section>' +
+            aboutHtml +
           '</div>' +
           linksHtml;
         hideGiscus();

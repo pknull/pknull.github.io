@@ -379,8 +379,7 @@ tbody tr:hover{ background: var(--stripe); }
 .now-val a{ color: var(--ink); border-bottom: 1px dotted var(--ink-3); }
 .now-val a:hover{ color: var(--accent); border-bottom-color: var(--accent); }
 @media (max-width: 720px){
-  .now-strip-inner{ flex-direction: column; flex-wrap: wrap; gap: 6px; }
-  .now-val{ white-space: normal; overflow: visible; text-overflow: clip; }
+  .now-strip{ display: none; }
 }
 
 /* ── Home: hero with marginalia "Standing" panel ─────────────── */
@@ -874,7 +873,8 @@ tbody tr:hover{ background: var(--stripe); }
 
 /* ── Home: About block (under recent entries) ───────────────── */
 .home-about{
-  margin-top: var(--s-7);
+  grid-column: 1;
+  margin-top: 0;
 }
 .about-body{
   display: grid;
