@@ -476,12 +476,14 @@
       fetchJson('/meta.json').catch(function() { return {}; }),
       fetchJson('/posts.json').catch(function() { return []; }),
       fetchJson('/reading.json').catch(function() { return null; }),
-      fetchJson('/gaming.json').catch(function() { return null; })
+      fetchJson('/gaming.json').catch(function() { return null; }),
+      fetchJson('/coding.json').catch(function() { return null; })
     ]).then(function(arr) {
       var meta = arr[0] || {};
       var posts = arr[1] || [];
       var reading = arr[2];
       var gaming = arr[3];
+      var coding = arr[4];
       var now = meta.now || {};
 
       if (readingEl) {
@@ -521,12 +523,21 @@
         }
       }
 
-      if (buildingEl && now.building && now.building.label) {
-        var buildingLink = document.createElement('a');
-        buildingLink.href = normalizeInternalHref(now.building.href || '#');
-        buildingLink.textContent = now.building.label;
-        buildingEl.innerHTML = '';
-        buildingEl.appendChild(buildingLink);
+      if (buildingEl) {
+        var buildingLabel = (coding && coding.label) || (now.building && now.building.label) || '';
+        var buildingRawHref = (coding && coding.href) || (now.building && now.building.href) || '';
+        if (buildingLabel) {
+          var buildingLink = document.createElement('a');
+          var buildingHref = normalizeInternalHref(buildingRawHref || '#');
+          buildingLink.href = buildingHref;
+          if (/^https?:\/\//i.test(buildingHref)) {
+            buildingLink.target = '_blank';
+            buildingLink.rel = 'noopener noreferrer';
+          }
+          buildingLink.textContent = buildingLabel;
+          buildingEl.innerHTML = '';
+          buildingEl.appendChild(buildingLink);
+        }
       }
 
       if (!nowEl) return;
