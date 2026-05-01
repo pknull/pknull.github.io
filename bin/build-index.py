@@ -344,6 +344,7 @@ def iter_build_id_sources():
         ROOT / "css" / "_fonts.css",
         ROOT / "meta.json",
         ROOT / "reading.json",
+        ROOT / "gaming.json",
         IMAGE_VARIANTS_JSON,
         RESUME_SRC,
         TEMPLATES_DIR / TEMPLATE_NAME,

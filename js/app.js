@@ -475,11 +475,13 @@
     Promise.all([
       fetchJson('/meta.json').catch(function() { return {}; }),
       fetchJson('/posts.json').catch(function() { return []; }),
-      fetchJson('/reading.json').catch(function() { return null; })
+      fetchJson('/reading.json').catch(function() { return null; }),
+      fetchJson('/gaming.json').catch(function() { return null; })
     ]).then(function(arr) {
       var meta = arr[0] || {};
       var posts = arr[1] || [];
       var reading = arr[2];
+      var gaming = arr[3];
       var now = meta.now || {};
 
       if (readingEl) {
@@ -502,17 +504,21 @@
         }
       }
 
-      if (gamingEl && now.gaming && now.gaming.label) {
-        var gamingLink = document.createElement('a');
-        var gamingHref = normalizeInternalHref(now.gaming.href || '#');
-        gamingLink.href = gamingHref;
-        if (/^https?:\/\//i.test(gamingHref)) {
-          gamingLink.target = '_blank';
-          gamingLink.rel = 'noopener noreferrer';
+      if (gamingEl) {
+        var gamingLabel = (gaming && gaming.label) || (now.gaming && now.gaming.label) || '';
+        var gamingRawHref = (gaming && gaming.href) || (now.gaming && now.gaming.href) || '';
+        if (gamingLabel) {
+          var gamingLink = document.createElement('a');
+          var gamingHref = normalizeInternalHref(gamingRawHref || '#');
+          gamingLink.href = gamingHref;
+          if (/^https?:\/\//i.test(gamingHref)) {
+            gamingLink.target = '_blank';
+            gamingLink.rel = 'noopener noreferrer';
+          }
+          gamingLink.textContent = gamingLabel;
+          gamingEl.innerHTML = '';
+          gamingEl.appendChild(gamingLink);
         }
-        gamingLink.textContent = now.gaming.label;
-        gamingEl.innerHTML = '';
-        gamingEl.appendChild(gamingLink);
       }
 
       if (buildingEl && now.building && now.building.label) {

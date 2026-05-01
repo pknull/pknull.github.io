@@ -1,0 +1,40 @@
+name: Sync gaming
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Hourly at :37 — offset from sync-reading (:23) to avoid overlap.
+    - cron: '37 * * * *'
+
+concurrency:
+  group: sync-gaming
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Sync recent game from Steam
+        run: python3 bin/sync-gaming.py
+
+      - name: Commit and push if changed
+        run: |
+          if git diff --quiet gaming.json; then
+            echo "gaming.json already up to date — nothing to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add gaming.json
+          git commit -m "ci: sync recent game [skip ci]"
+          git push
