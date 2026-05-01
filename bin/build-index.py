@@ -45,6 +45,9 @@ INDEX_HTML = ROOT / "index.html"
 BLOG_INDEX = ROOT / "blog" / "index.html"
 POST_ROUTE_DIR = ROOT / "post"
 NOT_FOUND_HTML = ROOT / "404.html"
+RESUME_SRC = ROOT.parent / "resume" / "source.md"
+RESUME_PDF = ROOT / "resume" / "resume.pdf"
+RESUME_HTML = ROOT / "resume" / "index.html"
 
 SITE_NAME = "PKNULL.AI"
 SITE_DESCRIPTION = "PK's Personal Site"
@@ -299,10 +302,11 @@ def make_markdown_renderer():
     return markdown.Markdown(extensions=["extra", "sane_lists", "md_in_html"])
 
 
-def render_markdown(markdown_text: str) -> str:
+def render_markdown(markdown_text: str, *, bump: bool = True) -> str:
     md = make_markdown_renderer()
     rendered = md.convert(markdown_text.strip())
-    rendered = bump_headings(rendered)
+    if bump:
+        rendered = bump_headings(rendered)
     rendered = rewrite_html_urls(rendered)
     rendered = wrap_tables(rendered)
     rendered = add_lazy_loading(rendered)
@@ -341,6 +345,7 @@ def iter_build_id_sources():
         ROOT / "meta.json",
         ROOT / "reading.json",
         IMAGE_VARIANTS_JSON,
+        RESUME_SRC,
         TEMPLATES_DIR / TEMPLATE_NAME,
     ]
     for path in fixed:
@@ -355,7 +360,11 @@ def iter_build_id_sources():
 def compute_build_id() -> str:
     digest = hashlib.sha256()
     for path in iter_build_id_sources():
-        digest.update(str(path.relative_to(ROOT)).encode("utf-8"))
+        try:
+            key = str(path.relative_to(ROOT))
+        except ValueError:
+            key = str(path)
+        digest.update(key.encode("utf-8"))
         digest.update(path.read_text().encode("utf-8"))
     return digest.hexdigest()[:12]
 
@@ -832,6 +841,60 @@ def render_project_detail_page(project):
     ).format(header=header_html, body=body_html)
 
 
+def load_resume():
+    if not RESUME_SRC.exists():
+        return None
+    meta, body = split_frontmatter(RESUME_SRC.read_text())
+    return {"meta": meta or {}, "body_md": body.strip()}
+
+
+def resume_path() -> str:
+    return "/resume/"
+
+
+def render_resume_page(resume):
+    body_html = render_markdown(resume["body_md"], bump=False)
+    pdf_link = ""
+    if RESUME_PDF.exists():
+        pdf_link = (
+            '<p class="resume-actions">'
+            '<a class="btn-pri" href="/resume/resume.pdf" download>Download PDF →</a>'
+            "</p>"
+        )
+    return (
+        '<p class="back-link"><a href="/">← Home</a></p>'
+        '<article class="resume">'
+        f"{pdf_link}"
+        f'<div class="post-body">{body_html}</div>'
+        "</article>"
+    )
+
+
+def jsonld_resume(meta):
+    name = meta.get("name") or "Louis Grenzebach"
+    payload = {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": name,
+        "jobTitle": "Principal Software Engineer",
+        "worksFor": {
+            "@type": "Organization",
+            "name": "Allstate Identity Protection",
+            "url": "https://www.allstateidentityprotection.com/",
+        },
+        "url": SITE_ROOT,
+        "email": meta.get("email") or "louis.grenzebach@gmail.com",
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Eugene",
+            "addressRegion": "OR",
+            "addressCountry": "US",
+        },
+        "sameAs": [link["href"] for link in (meta.get("links") or []) if link.get("href")],
+    }
+    return payload
+
+
 def render_not_found_page():
     return (
         '<header class="page-hd"><p class="hd-kicker dim"><a href="/">← home</a></p><h1>Not Found</h1><p class="page-lede">That page does not exist.</p></header>'
@@ -882,8 +945,10 @@ def write_page(template, path: Path, **context):
     write_if_changed(path, template.render(**context))
 
 
-def build_sitemap(posts, projects):
+def build_sitemap(posts, projects, *, resume=None):
     urls = [absolute_url(home_path()), absolute_url(blog_path()), absolute_url(projects_path())]
+    if resume:
+        urls.append(absolute_url(resume_path()))
     urls.extend(post["canonical"] for post in posts)
     urls.extend(project["canonical"] for project in projects)
     entries = "".join(f"  <url>\n    <loc>{html.escape(url)}</loc>\n  </url>\n" for url in urls)
@@ -1124,8 +1189,28 @@ def main():
             canonical=absolute_url("/404.html"),
         ),
     )
+    resume = load_resume()
+    if resume:
+        write_page(
+            template,
+            RESUME_HTML,
+            **page_context(
+                build_id=build_id,
+                main_html=render_resume_page(resume),
+                nav="resume",
+                page_kind="resume",
+                main_class="main main--post",
+                title="Résumé",
+                description="Louis Grenzebach — Principal Software Engineer at Allstate Identity Protection. Three decades in software, focused on identity, security, and AI-augmented engineering.",
+                canonical=absolute_url(resume_path()),
+                json_ld=render_jsonld(
+                    jsonld_resume(resume["meta"]),
+                    jsonld_breadcrumbs([("Home", home_path()), ("Résumé", resume_path())]),
+                ),
+            ),
+        )
     print("sitemap:")
-    build_sitemap(posts, projects)
+    build_sitemap(posts, projects, resume=resume)
     print("feed:")
     build_feed(posts)
     return 0
