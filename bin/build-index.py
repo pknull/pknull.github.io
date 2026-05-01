@@ -9,6 +9,7 @@ import json
 import math
 import re
 import sys
+from datetime import date
 from pathlib import Path
 from urllib.parse import quote
 
@@ -696,7 +697,14 @@ def render_blog_page(posts):
         for month in order:
             items = []
             for post in grouped[month]:
-                title = re.split(r"[.!?]", post["blurb"], maxsplit=1)[0] if post["blurb"] else post["displayDate"]
+                if post["blurb"]:
+                    title = post["blurb"]
+                    if len(title) > 110:
+                        title = title[:107].rstrip()
+                        title = re.sub(r"\s+\S*$", "", title).rstrip(" ,;:-")
+                        title += "…"
+                else:
+                    title = post["displayDate"]
                 items.append(
                     '<li><a href="{href}"><div class="pl-meta"><span>{date}</span></div><div class="pl-title-big">{title}</div>{blurb}</a></li>'.format(
                         href=html.escape(post["path"], quote=True),
@@ -921,6 +929,7 @@ def page_context(
     full_title = f"{title} · {SITE_NAME}" if title else SITE_NAME
     return {
         "build_id": build_id,
+        "current_year": date.today().year,
         "full_title": full_title,
         "description": description,
         "canonical": canonical,

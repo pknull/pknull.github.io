@@ -1153,6 +1153,9 @@ pre.expanded .code-toolbar{ right: var(--s-5); }
   margin: 0 0 var(--s-4);
   font-family: var(--f-sans);
 }
+.giscus-load{
+  margin-bottom: var(--s-4);
+}
 .giscus-section .giscus{ min-height: 150px; }
 
 /* ── Skip link / sr-only / error ─────────────────────────────── */

@@ -33,6 +33,7 @@
     light: { href: '/css/hljs-light.css' }
   };
   var giscusContainer = document.getElementById('giscus-container');
+  var giscusLoadBtn = document.getElementById('giscus-load');
   var giscusLoaded = false;
   var mermaidLoaded = false;
 
@@ -278,7 +279,7 @@
       if (lower[0] === '#' || lower[0] === '/' || lower.indexOf('javascript:') === 0) return;
       var external = false;
       if (lower.indexOf('mailto:') === 0 || lower.indexOf('tel:') === 0 || lower.indexOf('sms:') === 0) {
-        external = true;
+        return;
       } else if (/^https?:\/\//i.test(href)) {
         try {
           external = new URL(href).hostname !== here;
@@ -332,6 +333,10 @@
     giscusContainer.hidden = false;
     var mount = giscusContainer.querySelector('.giscus');
     if (!mount || mount.querySelector('iframe.giscus-frame')) return;
+    if (giscusLoadBtn) {
+      giscusLoadBtn.disabled = true;
+      giscusLoadBtn.textContent = 'Loading comments…';
+    }
 
     var script = document.createElement('script');
     script.src = 'https://giscus.app/client.js';
@@ -350,6 +355,16 @@
     script.setAttribute('data-loading', 'lazy');
     script.crossOrigin = 'anonymous';
     script.async = true;
+    script.onload = function() {
+      if (giscusLoadBtn) giscusLoadBtn.remove();
+    };
+    script.onerror = function() {
+      if (giscusLoadBtn) {
+        giscusLoadBtn.disabled = false;
+        giscusLoadBtn.textContent = 'Load comments';
+      }
+      showToast('Failed to load comments', 'error');
+    };
     mount.appendChild(script);
     giscusLoaded = true;
   }
@@ -465,6 +480,42 @@
       });
   }
 
+  function readCachedWeather(coords) {
+    if (!coords || coords.length !== 2) return null;
+    var cacheKey = 'pk-weather-cache';
+    var ttl = 30 * 60 * 1000;
+    try {
+      var raw = localStorage.getItem(cacheKey);
+      if (!raw) return null;
+      var cached = JSON.parse(raw);
+      var fresh = cached && (Date.now() - cached.t) < ttl;
+      var sameLoc = cached && cached.lat === coords[0] && cached.lon === coords[1];
+      return fresh && sameLoc ? cached.v : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function afterFirstInteraction(callback) {
+    var done = false;
+    var events = ['pointerdown', 'keydown', 'touchstart', 'scroll'];
+    function cleanup() {
+      events.forEach(function(name) {
+        window.removeEventListener(name, onFirstInteraction, listenerOpts);
+      });
+    }
+    function onFirstInteraction() {
+      if (done) return;
+      done = true;
+      cleanup();
+      callback();
+    }
+    var listenerOpts = { once: true, passive: true };
+    events.forEach(function(name) {
+      window.addEventListener(name, onFirstInteraction, listenerOpts);
+    });
+  }
+
   function initNowStrip() {
     var nowEl = document.getElementById('now-val-now');
     var readingEl = document.getElementById('now-val-reading');
@@ -554,8 +605,13 @@
         nowEl.textContent = bits.join(' · ');
       }
 
-      paint(null);
-      fetchWeather(now.coords, now.timezone).then(paint);
+      var cachedWeather = readCachedWeather(now.coords);
+      paint(cachedWeather);
+      if (!cachedWeather && now.coords && now.coords.length === 2) {
+        afterFirstInteraction(function() {
+          fetchWeather(now.coords, now.timezone).then(paint);
+        });
+      }
     });
   }
 
@@ -569,8 +625,10 @@
     addCodeCopyButtons(mainEl || document);
     initNowStrip();
 
-    if (giscusContainer) {
-      loadGiscus(giscusContainer.getAttribute('data-term'));
+    if (giscusContainer && giscusLoadBtn) {
+      giscusLoadBtn.addEventListener('click', function() {
+        loadGiscus(giscusContainer.getAttribute('data-term'));
+      });
     }
   });
 })();
