@@ -101,7 +101,14 @@ def main() -> int:
         print("no photographic images found")
         return 0
 
+    # Preserve orphan-source entries (source jpg deleted, variants kept).
     manifest: dict[str, dict] = {}
+    if MANIFEST_PATH.exists():
+        try:
+            manifest = json.loads(MANIFEST_PATH.read_text())
+        except json.JSONDecodeError:
+            manifest = {}
+
     for source in sources:
         rel = "/" + str(source.relative_to(ROOT)).replace("\\", "/")
         print(f"image: {source.name}")
@@ -114,8 +121,13 @@ def main() -> int:
             "variants": variants,
         }
 
-    MANIFEST_PATH.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
-    print(f"\nmanifest: {MANIFEST_PATH.relative_to(ROOT)} ({len(manifest)} images)")
+    pruned = {
+        rel: info for rel, info in manifest.items()
+        if all((ROOT / v["url"].lstrip("/")).exists() for v in info.get("variants", []))
+    }
+
+    MANIFEST_PATH.write_text(json.dumps(pruned, indent=2, sort_keys=True) + "\n")
+    print(f"\nmanifest: {MANIFEST_PATH.relative_to(ROOT)} ({len(pruned)} images)")
     return 0
 
 
