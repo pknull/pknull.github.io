@@ -361,7 +361,7 @@ tbody tr:hover{ background: var(--stripe); }
   font-family: var(--f-mono);
   font-size: 11.5px;
   color: var(--ink-3);
-  letter-spacing: .04em;
+  letter-spacing: 0;
 }
 .now-strip-inner{
   max-width: var(--wide);
@@ -373,7 +373,7 @@ tbody tr:hover{ background: var(--stripe); }
   gap: var(--s-5);
 }
 .now-item{ display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
-.now-key{ color: var(--accent); letter-spacing: .12em; flex-shrink: 0; }
+.now-key{ color: var(--accent); letter-spacing: .06em; flex-shrink: 0; }
 .now-val{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .now-val em{ color: var(--ink); font-style: italic; }
 .now-val a{ color: var(--ink); border-bottom: 1px dotted var(--ink-3); }
@@ -1274,3 +1274,103 @@ pre.expanded .code-toolbar{ right: var(--s-5); }
 .resume-actions{
   margin: 0 0 1.4em;
 }
+
+/* ── HUD section headers (Nier/YoRHa-style bracketed + indexed) ─ */
+.col-hd--major{
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: var(--s-3);
+  padding-bottom: 10px;
+  margin-bottom: var(--s-5);
+  border-bottom: 0;
+}
+.col-hd--major::before{
+  content: "[ " attr(data-idx) " ]";
+  font-family: var(--f-mono);
+  font-size: .82rem;
+  font-weight: 500;
+  letter-spacing: .12em;
+  color: var(--accent);
+}
+.col-hd--major > h2{
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  font-family: var(--f-mono);
+  font-weight: 500;
+  font-size: .92rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  white-space: nowrap;
+  min-width: 0;
+}
+.col-hd--major > h2::before{ content: none; }
+.col-hd--major > h2::after{
+  content: "";
+  flex: 1 1 0;
+  min-width: 0;
+  height: 1px;
+  background: var(--rule);
+  align-self: center;
+}
+.col-hd--major > h2 em{ font-style: normal; font-family: inherit; }
+.col-hd--major > a{
+  font-family: var(--f-mono);
+  font-size: .78rem;
+  letter-spacing: .08em;
+  text-transform: lowercase;
+  color: var(--ink-3);
+  border: 0;
+}
+.col-hd--major > a:hover{ color: var(--accent); }
+@media (max-width: 560px){
+  .col-hd--major > h2{ gap: var(--s-3); letter-spacing: .1em; }
+  .col-hd--major > h2::after{ min-width: 16px; }
+}
+
+/* ── Bracketed pills (item 6) ───────────────────────────────── */
+.proj-pill{
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  font-weight: 500;
+}
+.proj-pill::before{ content: "[ "; margin-right: .1em; opacity: .55; }
+.proj-pill::after{  content: " ]"; margin-left:  .1em; opacity: .55; }
+.pill-coding{ background: transparent; color: #076678; }
+.pill-writing{ background: transparent; color: #B57614; }
+.pill-active{ background: transparent; color: var(--accent); }
+.pill-inactive,
+.pill-archived,
+.pill-archive{ background: transparent; color: var(--ink-3); border: 0; }
+:root[data-mode="dark"] .pill-coding{ color: #83A598; }
+:root[data-mode="dark"] .pill-writing{ color: #FABD2F; }
+
+/* ── Project card indices on home (item 7) ──────────────────── */
+.col-shop .proj-list{ counter-reset: projidx 0; }
+.col-shop .proj-card{ counter-increment: projidx; }
+.col-shop .proj-card-name .proj-dot{ display: none; }
+.col-shop .proj-card-name::before{
+  content: ":" counter(projidx, decimal-leading-zero) "  ";
+  color: var(--ink-3);
+  font-family: var(--f-mono);
+  font-size: .72em;
+  letter-spacing: .08em;
+  font-weight: 500;
+}
+.col-shop .proj-card.state-active .proj-card-name::before{
+  color: var(--accent);
+}
+
+/* ── Hero coordinate readout + nightcap brackets (item 4) ───── */
+.hero-kicker::before{
+  content: "[ NODE.001 ]  ";
+  color: var(--accent);
+}
+.hero-title em::before{ content: "["; opacity: .7; }
+.hero-title em::after{  content: "]"; opacity: .7; }
+

@@ -581,7 +581,7 @@ def render_about(meta):
         return ""
     return (
         '<aside class="home-about" aria-labelledby="about-h2">'
-        '<div class="col-hd"><h2 id="about-h2"><em>About</em></h2></div>'
+        '<div class="col-hd col-hd--major" data-idx="03"><h2 id="about-h2"><em>About</em></h2></div>'
         '<div class="about-body">'
         '{portrait}'
         '<div class="about-bio">{bio}</div>'
@@ -616,7 +616,7 @@ def render_link_groups(links):
         )
     return (
         '<section class="home-links" aria-labelledby="elsewhere-h2">'
-        '<div class="col-hd"><h2 id="elsewhere-h2"><em>Elsewhere</em></h2></div>'
+        '<div class="col-hd col-hd--major" data-idx="04"><h2 id="elsewhere-h2"><em>Elsewhere</em></h2></div>'
         '<div class="link-grid">{groups}</div>'
         "</section>"
     ).format(groups="".join(groups))
@@ -653,18 +653,18 @@ def render_home_page(posts, projects, meta):
     return (
         '<section class="hero" aria-labelledby="hero-title">'
         '<div class="hero-body">'
-        '<div class="hero-kicker">est. 2025 · a notebook by louis g.</div>'
+        '<div class="hero-kicker">EST.2025  /  AUTH.LOUIS.G</div>'
         '<h1 class="hero-title" id="hero-title">Engineer, worldbuilder, late-night <em>nightcap</em> blogger. Writing things down before I forget them.</h1>'
         '<p class="hero-lede">Three decades in software, mostly systems and security. Currently in Eugene, building <a href="/projects/asha/">Asha</a> and a cosmic horror novel called <a href="/projects/hush/">The Hush</a>. Updated whenever the day quiets down.</p>'
         '<div class="hero-actions"><a href="/blog/" class="btn-pri">Read the journal →</a><a href="/projects/" class="btn-sec">See the workshop</a></div>'
         '</div>{standing}</section>'
         '<div class="home-split">'
         '<section class="col-recent" aria-labelledby="recent-h2">'
-        '<div class="col-hd"><h2 id="recent-h2"><em>Recent entries</em></h2><a href="/blog/">view all {post_count} →</a></div>'
+        '<div class="col-hd col-hd--major" data-idx="01"><h2 id="recent-h2"><em>Recent entries</em></h2><a href="/blog/">view all {post_count} →</a></div>'
         '{featured}{recent}'
         "</section>"
         '<section class="col-shop" aria-labelledby="shop-h2">'
-        '<div class="col-hd"><h2 id="shop-h2"><em>In the workshop</em></h2><a href="/projects/">all projects →</a></div>'
+        '<div class="col-hd col-hd--major" data-idx="02"><h2 id="shop-h2"><em>In the workshop</em></h2><a href="/projects/">all projects →</a></div>'
         "{projects_html}"
         "</section>"
         "{about}"
