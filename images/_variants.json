@@ -79,65 +79,23 @@
     ]
   },
   "/images/2025-12-02_flaminglips.jpg": {
-    "intrinsic_height": 1800,
-    "intrinsic_width": 3200,
+    "intrinsic_height": 3072,
+    "intrinsic_width": 4080,
     "variants": [
       {
-        "height": 270,
+        "height": 361,
         "url": "/images/2025-12-02_flaminglips-480.webp",
         "width": 480
       },
       {
-        "height": 540,
+        "height": 723,
         "url": "/images/2025-12-02_flaminglips-960.webp",
         "width": 960
       },
       {
-        "height": 810,
+        "height": 1084,
         "url": "/images/2025-12-02_flaminglips-1440.webp",
         "width": 1440
-      }
-    ]
-  },
-  "/images/2025-12-04-dice.jpg": {
-    "intrinsic_height": 788,
-    "intrinsic_width": 1047,
-    "variants": [
-      {
-        "height": 361,
-        "url": "/images/2025-12-04-dice-480.webp",
-        "width": 480
-      },
-      {
-        "height": 723,
-        "url": "/images/2025-12-04-dice-960.webp",
-        "width": 960
-      },
-      {
-        "height": 788,
-        "url": "/images/2025-12-04-dice-1440.webp",
-        "width": 1047
-      }
-    ]
-  },
-  "/images/2026-04-29_tulip.jpg": {
-    "intrinsic_height": 904,
-    "intrinsic_width": 1200,
-    "variants": [
-      {
-        "height": 362,
-        "url": "/images/2026-04-29_tulip-480.webp",
-        "width": 480
-      },
-      {
-        "height": 723,
-        "url": "/images/2026-04-29_tulip-960.webp",
-        "width": 960
-      },
-      {
-        "height": 904,
-        "url": "/images/2026-04-29_tulip-1440.webp",
-        "width": 1200
       }
     ]
   },
