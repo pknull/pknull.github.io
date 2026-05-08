@@ -1,0 +1,206 @@
+---
+name: Louis Grenzebach
+pronouns: They/Them
+location: Eugene, Oregon
+email: louis.grenzebach@gmail.com
+links:
+  - { label: pknull.ai, href: "https://pknull.ai" }
+  - { label: linkedin.com/in/louisg, href: "https://www.linkedin.com/in/louisg" }
+  - { label: github.com/pknull, href: "https://github.com/pknull" }
+---
+
+# Louis Grenzebach
+
+**Principal Software Engineer · Solution Architect · Prompt Engineer**
+
+Location
+:   Eugene, Oregon
+
+Pronouns
+:   They/Them
+
+Email
+:   [louis.grenzebach@gmail.com](mailto:louis.grenzebach@gmail.com)
+
+Web
+:   [pknull.ai](https://pknull.ai)
+
+LinkedIn
+:   [linkedin.com/in/louisg](https://www.linkedin.com/in/louisg)
+
+GitHub
+:   [github.com/pknull](https://github.com/pknull)
+
+## Summary
+
+Three decades in software, the last nine architecting and shipping
+identity-protection systems at scale. Strongest where high-level systems
+architecture meets low-level implementation — built a company's first
+SSO/JWT auth platform, founded its cross-team architecture function, and
+led a multi-year greenfield platform rebuild that now serves ~1.7M
+customers. Currently driving field-level encryption, audit log
+standards, and AI-augmented engineering practices at Allstate Identity
+Protection.
+
+## Experience
+
+### Principal Software Engineer · [Allstate Identity Protection](https://www.allstateidentityprotection.com/)
+
+**Jul 2022 – present** · Remote (Eugene, OR)
+
+Led the post-acquisition greenfield platform rebuild across the finish
+line; **platform shipped Jan 2023, serving ~1.7M customers**.
+Continues as a lead principal in the Solution Architecture and Design
+(SAD) function, driving cross-team architecture and standards.
+
+- **Field Level Encryption**: drives both the standard and the
+  platform-wide rollout, encrypting **~60% of customer profile
+  fields** to protect PII against service-layer leakage — addressing
+  what database-level encryption-at-rest leaves uncovered (compliance
+  met; live-path leaks unmitigated).
+- **Audit Log standards & implementation**: owns the org-wide
+  standard and its rollout across services for compliance and
+  observability.
+- **Unified interface pattern**: original architecture design that
+  exposes **CQRS and REST** through a single specification (shipped,
+  in production), with **Model Context Protocol (MCP)** as the
+  planned third leg now in active design — positioning AI-agent
+  integration as a first-class interface modality alongside existing
+  consumers.
+- **AI-assisted code generation** (specification-driven, test-gated):
+  authored a methodology in which standards inform tests, tests are
+  human-reviewed, and an LLM produces code bound to those tests —
+  treating the LLM as a constrained implementer, not a free agent.
+- Established the company's **internal data archiving system**,
+  **API standards**, and **security standards** as part of the
+  post-launch SAD agenda.
+
+### Senior Developer · InfoArmor / [Allstate Identity Protection](https://www.allstateidentityprotection.com/)
+
+**Jun 2017 – Jul 2022** · Phoenix, AZ
+
+- **Built the company's first SSO / JWT identity & authentication
+  platform** from scratch — peak ~40,000 active users — establishing
+  the auth substrate that carried the product through multiple
+  platform generations.
+- **Drove engineering-practice modernization** in the first two
+  years — including the move from git-based deployment to a Jenkins
+  CI/CD pipeline — bringing standard practices into a small-company
+  org, slowly and by partnership rather than mandate.
+- **Led the post-acquisition greenfield platform rebuild** (2018+):
+  new CI on **Buildkite** in place of Jenkins, **Helm-chart
+  deployment to Kubernetes**, and **migration of the in-house auth
+  platform onto Auth0** (freeing engineering capacity from owning a
+  security-critical undifferentiated service).
+- **Modernized internal API systems** as a multi-year thread —
+  pattern work that later became the org-wide API standards under
+  SAD.
+- **Founded the Solution Architecture and Design (SAD) function**:
+  started as an internal initiative ~late 2019; recognized as an
+  official function within months. **Every initiative now flows
+  through SAD** for spec research and acceptance criteria; the
+  function also maintains architectural alignment and
+  interoperability across domains and teams, so engineering work is
+  *informed, not ad hoc*.
+
+### Owner · Up9 Consulting
+
+**Jan 2008 – Dec 2021** · Phoenix, AZ · concurrent side practice
+
+- Served primarily K-12 and higher-ed clients across OS X / Linux
+  server deployment, directory and SSO integration, SIS integration
+  and reporting, LAMP application development, MySQL data
+  warehousing, and network-based lab imaging.
+- **Remote Linux host deployments for a new PayPal datacenter** as
+  part of a three-person team over six months.
+- **AESD email migration to Google Workspace** — cleaned up an
+  overloaded legacy mail system; included server placement and an
+  OAuth gateway shim for legacy clients during cutover.
+- **VUSD Curriculum Planner** — centralized web app that loaded
+  curriculum from multiple districts and pushed daily/weekly goals
+  to teachers as iCal calendar updates.
+- **PVUSD LDAP centralization** — led the move of district
+  authentication onto a single LDAP service, integrating
+  service-by-service across the existing application landscape.
+- **HCLC charter-district consolidation** — collapsed a charter
+  district's auth and file-storage workloads onto a single
+  high-capacity VM host; on-site deployment included.
+- **PVUSD pCHAT** — Jabber server installation tied into LDAP for
+  authentication, with MySQL-backed maintenance and persistence.
+
+### Senior Customer Delivery Technical Engineer · CyberSponse
+
+**Jun 2013 – Dec 2016** · Phoenix, AZ
+
+Hired as a senior application developer on a Symfony2 platform;
+scope expanded across operations, system architecture, and lead
+developer duties as the startup evolved.
+
+- **Designed the security mechanism for inter-service communications
+  and the licensing system**, owning the cryptographic boundaries
+  between platform components.
+- **Led the application architecture rework into microservices** for
+  geographically distributed scaling.
+- Took on and delivered a major government client at end-of-year
+  before the company closed its Phoenix office.
+
+### Earlier roles
+
+**Unix/Linux Administrator** at Bechtel (May 2007 – Feb 2008) —
+monitoring and audit tooling on HP-UX.
+
+**Senior Systems Analyst** at Arizona State University (May 2006 –
+May 2007) — development and project lead on a data warehouse
+contracted to Paradise Valley USD; aggregated data nightly from ~40
+source databases (DBF, SyBase, MySQL) into a Drupal-fronted query
+environment with a self-service query module so end users could
+build views without ASU assistance.
+
+**Programmer II → Network Applications Specialist III** at Paradise
+Valley USD (Jan 2001 – May 2006) — established the district's data
+warehousing initiative (later continued under ASU); built a PHP
+standards-based testing platform (DAPS), a 5-server OS X + XRAID
+web-storage cluster on Apache + WebObjects (ePAC), a district
+gradebook with nightly SIS sync across five high schools (pOGB), an
+automated account-generation system pulling from ~30 dBase sources
+plus Powerschool exports (pACC), a PHP trouble-ticket system, and a
+Moodle deployment used as a standards-testing pilot. Trained other
+programmers and introduced district-wide use of blogging, wikis,
+instant messaging, secure email, and mailing-list collaboration
+during a period when those were novel for a K-12 IT organization.
+
+**Junior Developer** at What's For Free Technologies (May – Dec
+2000) — JSP brand-promotion portal with newsletter opt-in, Oracle
+data-entry web frontends, and a JSP + Sendmail mailing system; the
+dot-com collapsed mid-December 2000.
+
+**Self-Employed Consultant** (Jan 1997 – Jun 2002) — dynamic
+shopping carts, small-to-mid network buildouts, home-to-office
+VPNs.
+
+## Selected Projects
+
+Active personal work; full notes at [pknull.ai/projects](https://pknull.ai/projects).
+
+- **[Asha](https://pknull.ai/projects/asha/)** — multi-harness AI
+  workflow system: persistent identity, session memory, and
+  pluginized workflows for Claude Code and Codex.
+- **[Thallus](https://pknull.ai/projects/thallus/)** — local-first AI
+  agent infrastructure umbrella covering Egregore, Familiar,
+  Servitor, Scry, and thallus-core.
+
+## Skills
+
+- **Languages** — Python (3.10+), Go, Rust, TypeScript, JavaScript (Node.js), PHP, Bash, SQL
+- **AI / LLM engineering** — Anthropic Claude API, prompt engineering,
+  LLM-bound TDD methodology, multi-agent / multi-harness coordination,
+  Model Context Protocol (MCP) design
+- **Architecture** — CQRS, REST, event-driven systems, microservices,
+  identity & SSO design, schema- and standards-driven design
+- **Platform & infra** — Linux, Kubernetes, Helm, Docker, Apache,
+  Buildkite, Jenkins, Ansible, AWS, Auth0, PostgreSQL, MySQL, MongoDB,
+  Redis
+- **Security** — field-level encryption, SSO / JWT, LDAP, identity &
+  access management, audit log standards, security architecture
+- **Practices** — test-driven development, cross-team standards
+  authorship, technical writing, code review

@@ -167,6 +167,7 @@
       <a href="/resume/" data-route="resume"{% if nav == 'resume' %} class="on" aria-current="page"{% endif %}>Résumé</a>
     </nav>
     <div class="nb-meta">
+      {% if markdown_url %}<a class="raw-md" href="{{ markdown_url }}" rel="alternate" type="text/markdown" aria-label="View this page as Markdown">MACHINE</a>{% endif %}
       <button id="mode-toggle" class="mode-toggle" type="button" aria-label="Cycle color mode">AUTO</button>
     </div>
   </header>

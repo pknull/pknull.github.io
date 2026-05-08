@@ -64,6 +64,10 @@ TABLE_PATTERN = re.compile(r"(<table\b[\s\S]*?</table>)", re.IGNORECASE)
 IMG_LOADING_PATTERN = re.compile(r"<img\b(?![^>]*\bloading=)", re.IGNORECASE)
 TAG_HEADING_PATTERN = re.compile(r"<(/?)h([1-6])(?=[\s>])", re.IGNORECASE)
 URL_ATTR_PATTERN = re.compile(r"""\b(href|src)=(["'])(.*?)\2""", re.IGNORECASE)
+DRAFT_COMMENT_PATTERN = re.compile(
+    r"<!--\s*(?:STUB|SCRATCH|DRAFT|TODO)\b.*?-->\s*",
+    re.DOTALL | re.IGNORECASE,
+)
 
 LEGACY_PROJECTS = {"asha", "thallus"}
 
@@ -77,6 +81,28 @@ def split_frontmatter(text: str):
     except yaml.YAMLError as exc:
         raise RuntimeError(f"YAML frontmatter parse error: {exc}") from exc
     return meta, text[match.end():]
+
+
+def strip_draft_comments(text: str) -> str:
+    cleaned = DRAFT_COMMENT_PATTERN.sub("", text)
+    return cleaned.rstrip() + "\n"
+
+
+DRAFT_MARKER_PATTERN = re.compile(r"<!--\s*(?:STUB|DRAFT)\b", re.IGNORECASE)
+
+
+def is_draft(text: str) -> bool:
+    """True if the first non-blank line carries a draft marker (STUB / DRAFT)."""
+    body = text
+    fm_match = FRONTMATTER_PATTERN.match(text)
+    if fm_match:
+        body = text[fm_match.end():]
+    for line in body.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        return bool(DRAFT_MARKER_PATTERN.match(stripped))
+    return False
 
 
 def compute_blurb(body: str) -> str:
@@ -384,8 +410,15 @@ def load_posts():
         if not match:
             print(f"  ! skipping {path.name}: filename does not match YYYY-MM-DD", file=sys.stderr)
             continue
-        meta, body = split_frontmatter(path.read_text())
+        raw = path.read_text()
+        if is_draft(raw):
+            print(f"  · skipping {path.name}: draft marker on first line", file=sys.stderr)
+            continue
+        meta, body = split_frontmatter(raw)
         meta = meta or {}
+        if meta.get("draft") is True:
+            print(f"  · skipping {path.name}: draft: true in frontmatter", file=sys.stderr)
+            continue
         body = body.strip()
         img = normalize_content_url(meta.get("img")) if meta.get("img") else first_image(body)
         post = {
@@ -408,9 +441,16 @@ def load_projects():
     projects = []
     for path in sorted(PROJECTS_DIR.glob("*.md")):
         slug = path.stem
-        meta, body = split_frontmatter(path.read_text())
+        raw = path.read_text()
+        if is_draft(raw):
+            print(f"  · skipping {path.name}: draft marker on first line", file=sys.stderr)
+            continue
+        meta, body = split_frontmatter(raw)
         if not meta:
             print(f"  ! skipping {path.name}: no YAML frontmatter", file=sys.stderr)
+            continue
+        if meta.get("draft") is True:
+            print(f"  · skipping {path.name}: draft: true in frontmatter", file=sys.stderr)
             continue
         if not meta.get("title"):
             print(f"  ! skipping {path.name}: frontmatter missing required `title`", file=sys.stderr)
@@ -467,6 +507,64 @@ def build_projects_json(projects):
             }
         )
     write_if_changed(PROJECTS_JSON, json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
+
+
+LLMS_TXT = ROOT / "llms.txt"
+LLMS_INVENTORY_PATTERN = re.compile(r"^## Inventory\b.*\Z", re.DOTALL | re.MULTILINE)
+ASCII_PUNCTUATION = {
+    "—": "-",   # em dash
+    "–": "-",   # en dash
+    "…": "...", # horizontal ellipsis
+    "·": "/",   # middle dot
+    "“": '"', "”": '"',  # curly double quotes
+    "‘": "'", "’": "'",  # curly single quotes
+}
+
+
+def asciify_punctuation(text: str) -> str:
+    if not text:
+        return text
+    for src, dst in ASCII_PUNCTUATION.items():
+        text = text.replace(src, dst)
+    return text
+
+
+def build_llms_txt(posts, projects):
+    if not LLMS_TXT.exists():
+        return
+    current = LLMS_TXT.read_text()
+    if not LLMS_INVENTORY_PATTERN.search(current):
+        return
+
+    lines = [
+        "## Inventory",
+        "",
+        "> Auto-generated from `posts/` and `projects/` on every build. Edits below this point are overwritten.",
+        "",
+        "### Posts (newest first)",
+        "",
+    ]
+    for post in posts:
+        url = absolute_url(post_path(post["slug"])) + "index.md"
+        blurb = asciify_punctuation(strip_draft_comments(post.get("blurb") or "").strip())
+        suffix = f" - {blurb}" if blurb else ""
+        lines.append(f"- [{post['displayDate']}]({url}){suffix}")
+
+    lines.extend(["", "### Projects", ""])
+    for project in projects:
+        url = absolute_url(project_path(project["slug"])) + "index.md"
+        kind = project.get("kind", "")
+        state = project.get("state", "")
+        tags = " / ".join(t for t in (kind, state) if t)
+        lede = asciify_punctuation(project.get("lede") or "")
+        bits = [b for b in (tags, lede) if b]
+        suffix = f" - {' - '.join(bits)}" if bits else ""
+        lines.append(f"- [{project['title']}]({url}){suffix}")
+
+    lines.append("")
+    replacement = "\n".join(lines)
+    updated = LLMS_INVENTORY_PATTERN.sub(lambda _: replacement, current)
+    write_if_changed(LLMS_TXT, updated)
 
 
 def render_featured_posts(posts):
@@ -925,6 +1023,7 @@ def page_context(
     og_image=DEFAULT_OG_IMAGE,
     giscus_term="",
     json_ld="",
+    markdown_url="/llms.txt",
 ):
     full_title = f"{title} · {SITE_NAME}" if title else SITE_NAME
     return {
@@ -942,6 +1041,7 @@ def page_context(
         "giscus_term": giscus_term,
         "validator_url": validator_url_for(canonical),
         "json_ld": json_ld,
+        "markdown_url": markdown_url,
     }
 
 
@@ -1089,6 +1189,9 @@ def main():
     print("projects:")
     build_projects_json(projects)
 
+    print("llms.txt:")
+    build_llms_txt(posts, projects)
+
     print("pages:")
     write_page(
         template,
@@ -1101,6 +1204,7 @@ def main():
             main_class="main",
             description="Engineer, worldbuilder, late-night blogger. Personal writing, projects, and workshop notes.",
             canonical=absolute_url(home_path()),
+            markdown_url="/llms.txt",
             json_ld=render_jsonld(jsonld_website()),
         ),
     )
@@ -1136,6 +1240,7 @@ def main():
                 canonical=post["canonical"],
                 og_image=absolute_url(largest_variant(post["img"])) if post.get("img") else DEFAULT_OG_IMAGE,
                 giscus_term=post["slug"],
+                markdown_url="index.md",
                 json_ld=render_jsonld(
                     jsonld_article(post),
                     jsonld_breadcrumbs([
@@ -1146,6 +1251,10 @@ def main():
                 ),
             ),
         )
+        md_src = (POSTS_DIR / f"{post['slug']}.md").read_text()
+        md_out = POST_ROUTE_DIR / post["slug"] / "index.md"
+        md_out.parent.mkdir(parents=True, exist_ok=True)
+        write_if_changed(md_out, strip_draft_comments(md_src))
     write_page(
         template,
         ROOT / "projects" / "index.html",
@@ -1176,6 +1285,7 @@ def main():
                 title=project["title"],
                 description=project["lede"] or f'Project notes for {project["title"]}.',
                 canonical=project["canonical"],
+                markdown_url="index.md",
                 json_ld=render_jsonld(
                     jsonld_project(project),
                     jsonld_breadcrumbs([
@@ -1186,6 +1296,10 @@ def main():
                 ),
             ),
         )
+        md_src = (PROJECTS_DIR / f"{project['slug']}.md").read_text()
+        md_out = ROOT / "projects" / project["slug"] / "index.md"
+        md_out.parent.mkdir(parents=True, exist_ok=True)
+        write_if_changed(md_out, strip_draft_comments(md_src))
     write_page(
         template,
         NOT_FOUND_HTML,
@@ -1214,12 +1328,16 @@ def main():
                 title="Résumé",
                 description="Louis Grenzebach — Principal Software Engineer at Allstate Identity Protection. Three decades in software, focused on identity, security, and AI-augmented engineering.",
                 canonical=absolute_url(resume_path()),
+                markdown_url="index.md",
                 json_ld=render_jsonld(
                     jsonld_resume(resume["meta"]),
                     jsonld_breadcrumbs([("Home", home_path()), ("Résumé", resume_path())]),
                 ),
             ),
         )
+        resume_md_out = ROOT / "resume" / "index.md"
+        resume_md_out.parent.mkdir(parents=True, exist_ok=True)
+        write_if_changed(resume_md_out, strip_draft_comments(RESUME_SRC.read_text()))
     print("sitemap:")
     build_sitemap(posts, projects, resume=resume)
     print("feed:")

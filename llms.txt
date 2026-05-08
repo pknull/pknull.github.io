@@ -38,3 +38,50 @@ The tone is personal but technical. It mixes notebook-style writing, software pr
 - The site now publishes real static routes rather than a hash-routed SPA.
 - Generated pages are canonical for public consumption.
 - The codebase lives at: https://github.com/pknull/pknull.github.io
+
+## Machine-Readable Companions
+
+Every published post and project page has a sibling Markdown file at the same path. Replace `index.html` with `index.md` (or simply append `index.md` to a directory URL):
+
+- Post: https://pknull.ai/post/<slug>/index.md
+- Project: https://pknull.ai/projects/<slug>/index.md
+
+These are the canonical source Markdown without HTML chrome. Frontmatter (YAML) is preserved. Draft markers (`<!-- STUB -->`, `<!-- SCRATCH -->`, etc.) are stripped at build time.
+
+Index/listing pages (home, blog index, projects index, résumé) do not have `.md` companions. Use the JSON indexes below to discover all available pages.
+
+## JSON Indexes
+
+Machine-readable lists of all published content:
+
+- Posts: https://pknull.ai/posts.json
+- Projects: https://pknull.ai/projects.json
+- Sitemap: https://pknull.ai/sitemap.xml
+- RSS/Atom feed: https://pknull.ai/feed.xml
+
+## Inventory
+
+> Auto-generated from `posts/` and `projects/` on every build. Edits below this point are overwritten.
+
+### Posts (newest first)
+
+- [2026.04.29](https://pknull.ai/post/2026-04-29/index.md) - Last week I was in a training where they paired us up to write code with an LLM, which was a frustrating waste of a day in nearly every dimension except one: it made it really obvious that...
+- [2025.12.03](https://pknull.ai/post/2025-12-03/index.md) - I feel like I'm doing these at the wrong time of day currently. Like a nightcap of sorts. Probably doesn't matter as these words are falling to an audience of none. Today I was toying with the...
+- [2025.12.02](https://pknull.ai/post/2025-12-02/index.md) - Every technology gets the same flurries of woe and worry before it's even truly born. Plato had Socrates warning that writing would rot our memory-people trusting "external marks" instead of...
+- [2025.12.01](https://pknull.ai/post/2025-12-01/index.md) - Today I worked out some sequence diagrams in PUML for some ways of handling old auth issues like deeplinks via SSO and passkey management. Neither of which is exciting to talk about. I also made...
+- [2025.11.30](https://pknull.ai/post/2025-11-30/index.md) - I spent most of today playing with this site, mostly cleaning up some CSS inconsistencies and playing with getting a comment system going. The fact that it's run like a git repo made the entire...
+- [2025.11.29](https://pknull.ai/post/2025-11-29/index.md) - I was lucky enough to catch Naked Lunch at the Eugene Art House. I took my younger son to see it, to which he described it later as "very creative" and "a little gay". I always find it impressive...
+- [2025.11.28](https://pknull.ai/post/2025-11-28/index.md) - I have decided to write a blog (again?). Having grown through the dotcom era, I saw so many social sites pop up. As an internet guy, I felt compelled to engage in these things constantly,...
+
+### Projects
+
+- [Asha](https://pknull.ai/projects/asha/index.md) - coding / active - A multi-harness AI workflow system: persistent identity, session memory, and domain-specific plugins for Claude Code and Codex, installed via direct symlink mount.
+- [Thallus](https://pknull.ai/projects/thallus/index.md) - coding / active - Umbrella repo for local-first AI agent infrastructure: Egregore, Familiar, Servitor, Scry, and thallus-core coordinated by a shared architecture contract.
+- [The Hush](https://pknull.ai/projects/hush/index.md) - writing / active - A cosmic horror novel in long-form revision. Reality stays mundane; the protagonist's experience of it does not.
+- [botcore](https://pknull.ai/projects/botcore/index.md) - coding / active - Python bot framework with Claude SDK integration. Discord sessions, command registry, conversation state across messages.
+- [termart](https://pknull.ai/projects/termart/index.md) - coding / active - Generative art for the terminal. Bonsai trees, animated visualizations, ratatui in Rust.
+- [CC-Helpers](https://pknull.ai/projects/cc-helpers/index.md) - coding / active - Two small tools for managing Claude Code sessions: a TUI session manager and a virtual-office visualizer.
+- [PKNULL.AI](https://pknull.ai/projects/pknull-ai/index.md) - coding / active - The site itself: a hand-built personal notebook and workshop index, generated as a static multipage site from Markdown, JSON, and a small Python build step.
+- [RPG Tools](https://pknull.ai/projects/rpg-tools/index.md) - coding / inactive - Three small Python libraries for tabletop RPG bots: dice expressions, weighted random selection, card draws.
+- [MC Datapacks](https://pknull.ai/projects/minecraft/index.md) - coding / inactive - Two datapacks for Minecraft 1.21: quality-of-life crafting recipes, and a hunter-vs-hunted PvP minigame.
+- [mplay](https://pknull.ai/projects/mplay/index.md) - coding / archived - TUI MPRIS music client. Rust + ratatui.
