@@ -530,7 +530,7 @@ def asciify_punctuation(text: str) -> str:
     return text
 
 
-def build_llms_txt(posts, projects):
+def build_llms_txt(posts, projects, *, resume=None):
     if not LLMS_TXT.exists():
         return
     current = LLMS_TXT.read_text()
@@ -540,11 +540,21 @@ def build_llms_txt(posts, projects):
     lines = [
         "## Inventory",
         "",
-        "> Auto-generated from `posts/` and `projects/` on every build. Edits below this point are overwritten.",
-        "",
-        "### Posts (newest first)",
+        "> Auto-generated from `posts/`, `projects/`, and `resume/` on every build. Edits below this point are overwritten.",
         "",
     ]
+
+    if resume:
+        meta = resume.get("meta") or {}
+        name = meta.get("name") or AUTHOR_NAME
+        lines.extend([
+            "### Résumé",
+            "",
+            f"- [{name}]({absolute_url(resume_path())}index.md) - Principal Software Engineer at Allstate Identity Protection. Three decades in software, focused on identity, security, and AI-augmented engineering.",
+            "",
+        ])
+
+    lines.extend(["### Posts (newest first)", ""])
     for post in posts:
         url = absolute_url(post_path(post["slug"])) + "index.md"
         blurb = asciify_punctuation(strip_draft_comments(post.get("blurb") or "").strip())
@@ -1205,8 +1215,10 @@ def main():
     print("projects:")
     build_projects_json(projects)
 
+    resume = load_resume()
+
     print("llms.txt:")
-    build_llms_txt(posts, projects)
+    build_llms_txt(posts, projects, resume=resume)
 
     print("pages:")
     write_page(
@@ -1330,7 +1342,6 @@ def main():
             canonical=absolute_url("/404.html"),
         ),
     )
-    resume = load_resume()
     if resume:
         write_page(
             template,
