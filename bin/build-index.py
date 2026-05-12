@@ -50,6 +50,7 @@ RESUME_SRC = ROOT.parent / "resume" / "source.md"
 RESUME_FALLBACK = ROOT / "resume" / "index.md"
 RESUME_PDF = ROOT / "resume" / "resume.pdf"
 RESUME_HTML = ROOT / "resume" / "index.html"
+RESUME_TXT = ROOT / "resume.txt"
 
 SITE_NAME = "PKNULL.AI"
 SITE_DESCRIPTION = "PK's Personal Site"
@@ -974,6 +975,73 @@ def resume_path() -> str:
     return "/resume/"
 
 
+def resume_to_plaintext(resume) -> str:
+    """Render the resume as plain text for crawlers that reject text/markdown.
+
+    Strategy: render markdown -> HTML (existing pipeline), then strip tags and
+    decode entities. Keeps link URLs visible by rewriting <a href="X">Y</a> as
+    "Y (X)" before tag stripping. Frontmatter fields (name, contact, links) are
+    prepended so the .txt is self-contained.
+    """
+    meta = resume.get("meta") or {}
+    header_lines: list[str] = []
+    name = meta.get("name") or AUTHOR_NAME
+    header_lines.append(name)
+    for key in ("pronouns", "location", "email"):
+        val = meta.get(key)
+        if val:
+            header_lines.append(f"{key.capitalize()}: {val}")
+    for link in meta.get("links") or []:
+        label = link.get("label")
+        href = link.get("href")
+        if label and href:
+            header_lines.append(f"{label}: {href}")
+        elif href:
+            header_lines.append(href)
+
+    body_html = render_markdown(resume["body_md"], bump=False)
+
+    def expand_link(match):
+        href = match.group(1)
+        text = match.group(2)
+        normalized = re.sub(r"^(mailto:|tel:|https?://(?:www\.)?)", "", href).rstrip("/")
+        text_normalized = re.sub(r"^https?://(?:www\.)?", "", text).rstrip("/")
+        if normalized == text_normalized or normalized in text_normalized:
+            return text
+        return f"{text} ({href})"
+
+    # Surface link targets before stripping anchors.
+    body_html = re.sub(
+        r'<a [^>]*href="([^"]+)"[^>]*>(.*?)</a>',
+        expand_link,
+        body_html,
+        flags=re.DOTALL,
+    )
+    # Add line breaks after block-level closers so stripping doesn't smash everything together.
+    body_html = re.sub(
+        r"</(p|h[1-6]|li|dt|dd|tr|div|section|article|blockquote|pre)>",
+        r"</\1>\n",
+        body_html,
+    )
+    body_html = re.sub(r"<br\s*/?>", "\n", body_html)
+    # Strip all HTML tags.
+    text = re.sub(r"<[^>]+>", "", body_html)
+    text = html.unescape(text)
+    # Normalize whitespace.
+    lines = [line.rstrip() for line in text.splitlines()]
+    collapsed: list[str] = []
+    blank = False
+    for line in lines:
+        if line.strip():
+            collapsed.append(line)
+            blank = False
+        elif not blank:
+            collapsed.append("")
+            blank = True
+
+    return "\n".join(header_lines) + "\n\n" + "\n".join(collapsed).strip() + "\n"
+
+
 def render_resume_page(resume):
     body_html = render_markdown(resume["body_md"], bump=False)
     pdf_link = ""
@@ -1366,6 +1434,7 @@ def main():
             resume_md_out = ROOT / "resume" / "index.md"
             resume_md_out.parent.mkdir(parents=True, exist_ok=True)
             write_if_changed(resume_md_out, strip_draft_comments(RESUME_SRC.read_text()))
+        write_if_changed(RESUME_TXT, resume_to_plaintext(resume))
     print("sitemap:")
     build_sitemap(posts, projects, resume=resume)
     print("feed:")
