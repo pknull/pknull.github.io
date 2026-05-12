@@ -2,6 +2,7 @@
 title: "PKNULL.AI"
 kind: coding
 state: active
+featured: true
 order: 6
 lede: "The site itself: a hand-built personal notebook and workshop index, generated as a static multipage site from Markdown, JSON, and a small Python build step."
 etymology:

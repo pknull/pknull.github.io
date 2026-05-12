@@ -2,6 +2,7 @@
 title: "Asha"
 kind: coding
 state: active
+featured: true
 order: 1
 lede: "A multi-harness AI workflow system: persistent identity, session memory, and domain-specific plugins for Claude Code, OpenAI Codex, and GitHub Copilot CLI, installed via direct symlink mount."
 etymology:

@@ -2,6 +2,7 @@
 title: "Thallus"
 kind: coding
 state: active
+featured: true
 order: 2
 lede: "Umbrella repo for local-first AI agent infrastructure: Egregore, Familiar, Servitor, Scry, and thallus-core coordinated by a shared architecture contract."
 etymology:

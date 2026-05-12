@@ -12,6 +12,7 @@
       }
     ],
     "body": "projects/asha.md",
+    "featured": true,
     "etymology": {
       "word": "Asha",
       "gloss": "Sanskrit — truth, reality, hope"
@@ -46,6 +47,7 @@
       }
     ],
     "body": "projects/thallus.md",
+    "featured": true,
     "etymology": {
       "word": "thallus",
       "gloss": "biology — the undifferentiated vegetative body of lichens and fungi"
@@ -59,6 +61,7 @@
     "lede": "A cosmic horror novel in long-form revision. Reality stays mundane; the protagonist's experience of it does not.",
     "links": [],
     "body": "projects/hush.md",
+    "featured": true,
     "etymology": {
       "word": "Hush",
       "gloss": "Middle English husht — imitative. The word is the noise."
@@ -77,6 +80,7 @@
       }
     ],
     "body": "projects/botcore.md",
+    "featured": false,
     "etymology": {
       "word": "bot + core",
       "gloss": "robot (← Czech robota: forced labor, R.U.R., 1920) + Latin cor: heart"
@@ -95,6 +99,7 @@
       }
     ],
     "body": "projects/termart.md",
+    "featured": false,
     "etymology": {
       "word": "terminal + art",
       "gloss": "Latin terminus — boundary. The edge of the screen as canvas."
@@ -117,6 +122,7 @@
       }
     ],
     "body": "projects/cc-helpers.md",
+    "featured": false,
     "etymology": {
       "word": "cc",
       "gloss": "Claude Code, of course. The 'helpers' is doing a lot of work."
@@ -139,6 +145,7 @@
       }
     ],
     "body": "projects/pknull-ai.md",
+    "featured": true,
     "etymology": {
       "word": "null",
       "gloss": "Latin nullus — none. The old handle carried forward into a domain."
@@ -165,6 +172,7 @@
       }
     ],
     "body": "projects/rpg-tools.md",
+    "featured": false,
     "etymology": {
       "word": "RPG",
       "gloss": "role-playing game; the abbreviation crystallized around D&D in the mid-1970s"
@@ -187,6 +195,7 @@
       }
     ],
     "body": "projects/minecraft.md",
+    "featured": false,
     "etymology": {
       "word": "mine + craft",
       "gloss": "Old English cræft — skill, strength, cunning. Burrow plus know-how."
@@ -205,6 +214,7 @@
       }
     ],
     "body": "projects/mplay.md",
+    "featured": false,
     "etymology": {
       "word": "m + play",
       "gloss": "the m is for MPRIS (Media Player Remote Interfacing Specification, 2006); now lowercase humility"

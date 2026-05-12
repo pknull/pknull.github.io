@@ -2,6 +2,7 @@
 title: "The Hush"
 kind: writing
 state: active
+featured: true
 order: 3
 lede: "A cosmic horror novel in long-form revision. Reality stays mundane; the protagonist's experience of it does not."
 etymology:

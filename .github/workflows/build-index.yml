@@ -44,10 +44,12 @@ jobs:
         run: python3 bin/build-index.py
 
       - name: Commit and push if changed
+        id: commit
         run: |
-          TRACKED="posts.json projects.json index.html blog/index.html post/ projects/ 404.html resume/index.html resume.txt sitemap.xml feed.xml llms.txt llms-full.txt"
+          TRACKED=".well-known/security.txt posts.json projects.json index.html blog/index.html post/ projects/ 404.html resume/index.html resume.txt sitemap.xml feed.xml llms.txt llms-full.txt"
           if git diff --quiet -- $TRACKED; then
             echo "site outputs already up to date — nothing to commit"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
@@ -55,3 +57,42 @@ jobs:
           git add $TRACKED
           git commit -m "ci: rebuild site outputs [skip ci]"
           git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Notify IndexNow (Bing/Yandex)
+        if: steps.commit.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        run: |
+          # Find the IndexNow key file at repo root (single .txt with 32-hex name).
+          KEY_FILE=$(ls *.txt 2>/dev/null | grep -E '^[0-9a-f]{32}\.txt$' | head -n1)
+          if [ -z "$KEY_FILE" ]; then
+            echo "no IndexNow key file at repo root; skipping ping"
+            exit 0
+          fi
+          KEY="${KEY_FILE%.txt}"
+          # Submit the discovery surfaces — search engines crawl from there.
+          PAYLOAD=$(jq -nc --arg key "$KEY" --arg kloc "https://pknull.ai/$KEY_FILE" '{
+            host: "pknull.ai",
+            key: $key,
+            keyLocation: $kloc,
+            urlList: [
+              "https://pknull.ai/",
+              "https://pknull.ai/blog/",
+              "https://pknull.ai/projects/",
+              "https://pknull.ai/resume/",
+              "https://pknull.ai/resume.txt",
+              "https://pknull.ai/sitemap.xml",
+              "https://pknull.ai/llms.txt",
+              "https://pknull.ai/llms-full.txt"
+            ]
+          }')
+          STATUS=$(curl -sS -o /tmp/indexnow.body -w "%{http_code}" \
+            -X POST "https://api.indexnow.org/IndexNow" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            --data-binary "$PAYLOAD")
+          echo "IndexNow returned HTTP $STATUS"
+          cat /tmp/indexnow.body 2>/dev/null || true
+          # 200 = processed, 202 = accepted; anything else is a soft failure.
+          case "$STATUS" in
+            200|202) exit 0 ;;
+            *) echo "::warning::IndexNow returned non-success $STATUS; URLs may not be reindexed promptly"; exit 0 ;;
+          esac

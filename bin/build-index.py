@@ -481,6 +481,7 @@ def load_projects():
             "lede": meta.get("lede", ""),
             "links": meta.get("links") or [],
             "etymology": meta.get("etymology"),
+            "featured": bool(meta.get("featured", False)),
             "body_md": body.strip(),
             "body": f"projects/{slug}.md",
             "_order": meta.get("order", 999),
@@ -521,6 +522,7 @@ def build_projects_json(projects):
                 "lede": project["lede"],
                 "links": project["links"],
                 "body": project["body"],
+                "featured": project.get("featured", False),
                 **({"etymology": project["etymology"]} if project.get("etymology") else {}),
             }
         )
@@ -529,6 +531,12 @@ def build_projects_json(projects):
 
 LLMS_TXT = ROOT / "llms.txt"
 LLMS_INVENTORY_PATTERN = re.compile(r"^## Inventory\b.*\Z", re.DOTALL | re.MULTILINE)
+# Captures the "## Notable Projects" section: from the heading through the next
+# top-level heading (or end-of-file). Replaced from `featured: true` projects.
+LLMS_NOTABLE_PATTERN = re.compile(
+    r"^## Notable Projects\b.*?(?=^## |\Z)",
+    re.DOTALL | re.MULTILINE,
+)
 ASCII_PUNCTUATION = {
     "—": "-",   # em dash
     "–": "-",   # en dash
@@ -547,12 +555,32 @@ def asciify_punctuation(text: str) -> str:
     return text
 
 
+def _render_notable_projects_block(projects) -> str:
+    featured = [p for p in projects if p.get("featured")]
+    lines = ["## Notable Projects", ""]
+    if not featured:
+        lines.append("> No projects flagged `featured: true`. Add the flag to a project's frontmatter to surface it here.")
+    else:
+        for project in featured:
+            lede = asciify_punctuation(project.get("lede") or "")
+            suffix = f": {lede}" if lede else ""
+            lines.append(f"- {project['title']}{suffix}")
+    # Trailing blank line so the next `## ` section keeps its separator.
+    lines.extend(["", ""])
+    return "\n".join(lines)
+
+
 def build_llms_txt(posts, projects, *, resume=None):
     if not LLMS_TXT.exists():
         return
     current = LLMS_TXT.read_text()
     if not LLMS_INVENTORY_PATTERN.search(current):
         return
+
+    # Auto-replace "## Notable Projects" from featured frontmatter.
+    notable_block = _render_notable_projects_block(projects)
+    if LLMS_NOTABLE_PATTERN.search(current):
+        current = LLMS_NOTABLE_PATTERN.sub(lambda _: notable_block, current)
 
     lines = [
         "## Inventory",
@@ -1280,6 +1308,25 @@ def build_sitemap(posts, projects, *, resume=None):
     write_if_changed(SITEMAP_XML, sitemap)
 
 
+def build_security_txt():
+    """RFC 9116 security.txt with rolling Expires (today + 12 months).
+
+    Rewriting on every build keeps the file from going stale. The Expires
+    field is required by RFC 9116 and must be in the future for crawlers
+    that validate it (e.g. securitytxt.org, Google security tooling).
+    """
+    expires = date.today().replace(year=date.today().year + 1).isoformat() + "T00:00:00.000Z"
+    body = (
+        "# Security contact for pknull.ai (RFC 9116)\n"
+        f"Contact: mailto:louis.grenzebach@gmail.com\n"
+        f"Expires: {expires}\n"
+        "Preferred-Languages: en\n"
+        "Canonical: https://pknull.ai/.well-known/security.txt\n"
+    )
+    SECURITY_TXT.parent.mkdir(parents=True, exist_ok=True)
+    write_if_changed(SECURITY_TXT, body)
+
+
 def build_feed(posts):
     feed_url = absolute_url("/feed.xml")
     home_url = absolute_url(home_path())
@@ -1431,6 +1478,9 @@ def main():
 
     print("llms-full.txt:")
     build_llms_full_txt(posts, projects, resume=resume, meta=meta)
+
+    print("security.txt:")
+    build_security_txt()
 
     print("pages:")
     write_page(

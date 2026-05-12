@@ -26,10 +26,10 @@ The tone is personal but technical. It mixes notebook-style writing, software pr
 
 ## Notable Projects
 
-- Asha: multi-harness AI workflow system with persistent identity, session memory, and pluginized workflows for Claude Code and Codex
-- Thallus: umbrella repo for local-first AI agent infrastructure, including Egregore, Familiar, Servitor, Scry, and thallus-core
-- The Hush: long-form cosmic horror novel in revision
-- PKNULL.AI: the site itself as a maintained software project
+- Asha: A multi-harness AI workflow system: persistent identity, session memory, and domain-specific plugins for Claude Code, OpenAI Codex, and GitHub Copilot CLI, installed via direct symlink mount.
+- Thallus: Umbrella repo for local-first AI agent infrastructure: Egregore, Familiar, Servitor, Scry, and thallus-core coordinated by a shared architecture contract.
+- The Hush: A cosmic horror novel in long-form revision. Reality stays mundane; the protagonist's experience of it does not.
+- PKNULL.AI: The site itself: a hand-built personal notebook and workshop index, generated as a static multipage site from Markdown, JSON, and a small Python build step.
 
 ## Content Guidance
 
