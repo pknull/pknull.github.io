@@ -6,7 +6,7 @@
 
 ## Social
 
-[Bluesky](https://bsky.app/profile/pknullifier.bsky.social) · [X](https://x.com/pknull) · [Threads](https://www.threads.com/@pk00101) · [Instagram](https://www.instagram.com/pk00101/) · [Facebook](https://www.facebook.com/pknull) · [Reddit](https://www.reddit.com/user/pknull/) · [Discord](https://discord.com/users/187488812471943168)
+[Bluesky](https://bsky.app/profile/pknullifier.bsky.social) · [X](https://x.com/pknull) · [Threads](https://www.threads.com/@pk00101) · [Instagram](https://www.instagram.com/pk00101/) · [Flickr](https://www.flickr.com/photos/pknull/) · [Facebook](https://www.facebook.com/pknull) · [Reddit](https://www.reddit.com/user/pknull/) · [Discord](https://discord.com/users/187488812471943168)
 
 ## Tracking
 
