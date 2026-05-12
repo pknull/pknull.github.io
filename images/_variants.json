@@ -141,6 +141,27 @@
       }
     ]
   },
+  "/images/2026-05-04_moss.jpg": {
+    "intrinsic_height": 3072,
+    "intrinsic_width": 4080,
+    "variants": [
+      {
+        "height": 361,
+        "url": "/images/2026-05-04_moss-480.webp",
+        "width": 480
+      },
+      {
+        "height": 723,
+        "url": "/images/2026-05-04_moss-960.webp",
+        "width": 960
+      },
+      {
+        "height": 1084,
+        "url": "/images/2026-05-04_moss-1440.webp",
+        "width": 1440
+      }
+    ]
+  },
   "/images/meta_headshot.webp": {
     "intrinsic_height": 1079,
     "intrinsic_width": 809,
