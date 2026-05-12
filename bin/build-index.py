@@ -51,11 +51,16 @@ RESUME_FALLBACK = ROOT / "resume" / "index.md"
 RESUME_PDF = ROOT / "resume" / "resume.pdf"
 RESUME_HTML = ROOT / "resume" / "index.html"
 RESUME_TXT = ROOT / "resume.txt"
+LLMS_FULL_TXT = ROOT / "llms-full.txt"
+HUMANS_TXT = ROOT / "humans.txt"
+SECURITY_TXT = ROOT / ".well-known" / "security.txt"
 
 SITE_NAME = "PKNULL.AI"
 SITE_DESCRIPTION = "PK's Personal Site"
 SITE_ROOT = "https://pknull.ai/"
 DEFAULT_OG_IMAGE = "https://pknull.ai/images/meta_headshot-1440.webp"
+DEFAULT_OG_IMAGE_WIDTH = 809
+DEFAULT_OG_IMAGE_HEIGHT = 1079
 AUTHOR_NAME = "Louis Grenzebach"
 AUTHOR_URL = "https://pknull.ai/"
 PICTURE_DEFAULT_SIZES = "(max-width: 720px) 100vw, 720px"
@@ -276,6 +281,17 @@ def largest_variant(src: str) -> str:
     if not info or not info.get("variants"):
         return src
     return max(info["variants"], key=lambda v: v["width"])["url"]
+
+
+def largest_variant_dims(src: str) -> tuple[int, int] | None:
+    """Return (width, height) of the largest variant for src, or None."""
+    info = IMAGE_MANIFEST.get(src)
+    if not info or not info.get("variants"):
+        return None
+    largest = max(info["variants"], key=lambda v: v["width"])
+    if "width" in largest and "height" in largest:
+        return (largest["width"], largest["height"])
+    return None
 
 
 def picture_for(src: str, alt: str = "", *, sizes: str = PICTURE_DEFAULT_SIZES, lazy: bool = True) -> str:
@@ -577,6 +593,70 @@ def build_llms_txt(posts, projects, *, resume=None):
     replacement = "\n".join(lines)
     updated = LLMS_INVENTORY_PATTERN.sub(lambda _: replacement, current)
     write_if_changed(LLMS_TXT, updated)
+
+
+def build_llms_full_txt(posts, projects, *, resume=None, meta=None):
+    """Single-file content dump for one-shot agent ingestion.
+
+    Includes inlined plain text for: site overview, résumé body, every active
+    project, every post. Designed for crawlers that prefer a one-fetch context
+    grab over discovering pages individually.
+    """
+    today = date.today().isoformat()
+    sections: list[str] = []
+
+    sections.append(f"# PKNULL.AI — Full Content Mirror")
+    sections.append(
+        f"> Single-file inlined-content mirror for agent crawlers. "
+        f"Generated {today}. Canonical HTML at https://pknull.ai/."
+    )
+    sections.append(
+        "> Per-page sources also available at /<path>/index.md (markdown) and "
+        "/<path>/index.txt (plain text). See https://pknull.ai/llms.txt for the structured index."
+    )
+
+    sections.append("\n## Site Overview\n")
+    sections.append(
+        "PKNULL.AI is the personal site of Louis Grenzebach: software engineering, "
+        "project notes, personal writing, and a workshop index for active codebases. "
+        "Hand-built static site, generated from Markdown plus a small Python build step."
+    )
+    if meta and meta.get("bio"):
+        sections.append("")
+        for line in meta["bio"]:
+            sections.append(re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"\1 (\2)", line))
+
+    if resume:
+        sections.append(f"\n## Résumé\n")
+        sections.append(f"URL: {absolute_url(resume_path())}")
+        sections.append("")
+        sections.append(resume_to_plaintext(resume).strip())
+
+    if projects:
+        sections.append("\n## Projects\n")
+        for project in projects:
+            sections.append(f"### {project['title']}\n")
+            sections.append(f"URL: {project['canonical']}")
+            tags = " / ".join(t for t in (project.get("kind"), project.get("state")) if t)
+            if tags:
+                sections.append(f"Tags: {tags}")
+            sections.append("")
+            sections.append(project_to_plaintext(project).strip())
+            sections.append("")
+
+    if posts:
+        sections.append("\n## Posts (newest first)\n")
+        for post in posts:
+            label = post.get("title") or post.get("displayDate") or post["slug"]
+            sections.append(f"### {label}\n")
+            sections.append(f"URL: {post['canonical']}")
+            sections.append(f"Date: {post['date']}")
+            sections.append("")
+            sections.append(post_to_plaintext(post).strip())
+            sections.append("")
+
+    content = "\n".join(sections).rstrip() + "\n"
+    write_if_changed(LLMS_FULL_TXT, content)
 
 
 def render_featured_posts(posts):
@@ -975,14 +1055,88 @@ def resume_path() -> str:
     return "/resume/"
 
 
-def resume_to_plaintext(resume) -> str:
-    """Render the resume as plain text for crawlers that reject text/markdown.
+def _expand_link(match):
+    href = match.group(1)
+    text = match.group(2)
+    normalized = re.sub(r"^(mailto:|tel:|https?://(?:www\.)?)", "", href).rstrip("/")
+    text_normalized = re.sub(r"^https?://(?:www\.)?", "", text).rstrip("/")
+    if normalized == text_normalized or normalized in text_normalized:
+        return text
+    return f"{text} ({href})"
 
-    Strategy: render markdown -> HTML (existing pipeline), then strip tags and
-    decode entities. Keeps link URLs visible by rewriting <a href="X">Y</a> as
-    "Y (X)" before tag stripping. Frontmatter fields (name, contact, links) are
-    prepended so the .txt is self-contained.
+
+def _indent_pre_block(match):
+    inner = match.group(1)
+    inner = html.unescape(inner)
+    inner = re.sub(r"<[^>]+>", "", inner)
+    indented = "\n".join("    " + line if line.strip() else "" for line in inner.splitlines())
+    return f"\n{indented}\n"
+
+
+def body_to_plaintext(body_md: str) -> str:
+    """Render markdown body as plain text. Strips HTML chrome but preserves link URLs.
+
+    Code blocks (<pre>...</pre>) are indented 4 spaces so embedded markdown
+    examples don't look like document structure to crawlers parsing llms-full.txt.
     """
+    body_html = render_markdown(body_md, bump=False)
+    # Indent <pre> contents before any other processing so we don't accidentally
+    # strip their tags as inline.
+    body_html = re.sub(r"<pre[^>]*>(.*?)</pre>", _indent_pre_block, body_html, flags=re.DOTALL)
+    body_html = re.sub(
+        r'<a [^>]*href="([^"]+)"[^>]*>(.*?)</a>',
+        _expand_link,
+        body_html,
+        flags=re.DOTALL,
+    )
+    body_html = re.sub(
+        r"</(p|h[1-6]|li|dt|dd|tr|div|section|article|blockquote)>",
+        r"</\1>\n",
+        body_html,
+    )
+    body_html = re.sub(r"<br\s*/?>", "\n", body_html)
+    text = re.sub(r"<[^>]+>", "", body_html)
+    text = html.unescape(text)
+    lines = [line.rstrip() for line in text.splitlines()]
+    collapsed: list[str] = []
+    blank = False
+    for line in lines:
+        if line.strip():
+            collapsed.append(line)
+            blank = False
+        elif not blank:
+            collapsed.append("")
+            blank = True
+    return "\n".join(collapsed).strip()
+
+
+def post_to_plaintext(post) -> str:
+    header = [
+        post.get("displayDate") or post.get("title") or post.get("slug", ""),
+        absolute_url(post_path(post["slug"])),
+    ]
+    blurb = strip_draft_comments(post.get("blurb") or "").strip()
+    if blurb:
+        header.append("")
+        header.append(blurb)
+    body = body_to_plaintext(post.get("body_md") or "")
+    return "\n".join(header) + ("\n\n" + body if body else "") + "\n"
+
+
+def project_to_plaintext(project) -> str:
+    header = [project["title"], absolute_url(project_path(project["slug"]))]
+    bits = " / ".join(t for t in (project.get("kind"), project.get("state")) if t)
+    if bits:
+        header.append(bits)
+    if project.get("lede"):
+        header.append("")
+        header.append(project["lede"])
+    body = body_to_plaintext(project.get("body_md") or "")
+    return "\n".join(header) + ("\n\n" + body if body else "") + "\n"
+
+
+def resume_to_plaintext(resume) -> str:
+    """Render the resume as plain text for crawlers that reject text/markdown."""
     meta = resume.get("meta") or {}
     header_lines: list[str] = []
     name = meta.get("name") or AUTHOR_NAME
@@ -999,47 +1153,8 @@ def resume_to_plaintext(resume) -> str:
         elif href:
             header_lines.append(href)
 
-    body_html = render_markdown(resume["body_md"], bump=False)
-
-    def expand_link(match):
-        href = match.group(1)
-        text = match.group(2)
-        normalized = re.sub(r"^(mailto:|tel:|https?://(?:www\.)?)", "", href).rstrip("/")
-        text_normalized = re.sub(r"^https?://(?:www\.)?", "", text).rstrip("/")
-        if normalized == text_normalized or normalized in text_normalized:
-            return text
-        return f"{text} ({href})"
-
-    # Surface link targets before stripping anchors.
-    body_html = re.sub(
-        r'<a [^>]*href="([^"]+)"[^>]*>(.*?)</a>',
-        expand_link,
-        body_html,
-        flags=re.DOTALL,
-    )
-    # Add line breaks after block-level closers so stripping doesn't smash everything together.
-    body_html = re.sub(
-        r"</(p|h[1-6]|li|dt|dd|tr|div|section|article|blockquote|pre)>",
-        r"</\1>\n",
-        body_html,
-    )
-    body_html = re.sub(r"<br\s*/?>", "\n", body_html)
-    # Strip all HTML tags.
-    text = re.sub(r"<[^>]+>", "", body_html)
-    text = html.unescape(text)
-    # Normalize whitespace.
-    lines = [line.rstrip() for line in text.splitlines()]
-    collapsed: list[str] = []
-    blank = False
-    for line in lines:
-        if line.strip():
-            collapsed.append(line)
-            blank = False
-        elif not blank:
-            collapsed.append("")
-            blank = True
-
-    return "\n".join(header_lines) + "\n\n" + "\n".join(collapsed).strip() + "\n"
+    body = body_to_plaintext(resume["body_md"])
+    return "\n".join(header_lines) + "\n\n" + body + "\n"
 
 
 def render_resume_page(resume):
@@ -1103,6 +1218,8 @@ def page_context(
     description=SITE_DESCRIPTION,
     canonical=SITE_ROOT,
     og_image=DEFAULT_OG_IMAGE,
+    og_image_width=DEFAULT_OG_IMAGE_WIDTH,
+    og_image_height=DEFAULT_OG_IMAGE_HEIGHT,
     giscus_term="",
     json_ld="",
     markdown_url="/llms.txt",
@@ -1115,6 +1232,8 @@ def page_context(
         "description": description,
         "canonical": canonical,
         "og_image": og_image,
+        "og_image_width": og_image_width,
+        "og_image_height": og_image_height,
         "og_type": "article" if page_kind == "post" else "website",
         "nav": nav,
         "page_kind": page_kind,
@@ -1253,6 +1372,28 @@ def jsonld_website():
     }
 
 
+def jsonld_blog_home(posts, *, limit: int = 12):
+    if not posts:
+        return None
+    return {
+        "@context": "https://schema.org",
+        "@type": "Blog",
+        "name": SITE_NAME,
+        "url": absolute_url(blog_path()),
+        "author": {"@type": "Person", "name": AUTHOR_NAME, "url": AUTHOR_URL},
+        "blogPost": [
+            {
+                "@type": "BlogPosting",
+                "headline": post.get("title") or post.get("displayDate") or post["slug"],
+                "url": post["canonical"],
+                "datePublished": post["date"],
+                **({"description": asciify_punctuation(strip_draft_comments(post.get("blurb") or "").strip())} if post.get("blurb") else {}),
+            }
+            for post in posts[:limit]
+        ],
+    }
+
+
 def render_jsonld(*payloads):
     if not payloads:
         return ""
@@ -1288,6 +1429,9 @@ def main():
     print("llms.txt:")
     build_llms_txt(posts, projects, resume=resume)
 
+    print("llms-full.txt:")
+    build_llms_full_txt(posts, projects, resume=resume, meta=meta)
+
     print("pages:")
     write_page(
         template,
@@ -1301,7 +1445,7 @@ def main():
             description="Engineer, worldbuilder, late-night blogger. Personal writing, projects, and workshop notes.",
             canonical=absolute_url(home_path()),
             markdown_url="/llms.txt",
-            json_ld=render_jsonld(jsonld_website()),
+            json_ld=render_jsonld(jsonld_website(), jsonld_blog_home(posts)),
         ),
     )
     write_page(
@@ -1322,6 +1466,12 @@ def main():
         ),
     )
     for post in posts:
+        if post.get("img"):
+            post_og = absolute_url(largest_variant(post["img"]))
+            dims = largest_variant_dims(post["img"]) or (DEFAULT_OG_IMAGE_WIDTH, DEFAULT_OG_IMAGE_HEIGHT)
+        else:
+            post_og = DEFAULT_OG_IMAGE
+            dims = (DEFAULT_OG_IMAGE_WIDTH, DEFAULT_OG_IMAGE_HEIGHT)
         write_page(
             template,
             POST_ROUTE_DIR / post["slug"] / "index.html",
@@ -1334,7 +1484,9 @@ def main():
                 title=post["displayDate"],
                 description=post["blurb"] or f'Notebook entry from {post["displayDate"]}.',
                 canonical=post["canonical"],
-                og_image=absolute_url(largest_variant(post["img"])) if post.get("img") else DEFAULT_OG_IMAGE,
+                og_image=post_og,
+                og_image_width=dims[0],
+                og_image_height=dims[1],
                 giscus_term=post["slug"],
                 markdown_url="index.md",
                 json_ld=render_jsonld(
@@ -1351,6 +1503,8 @@ def main():
         md_out = POST_ROUTE_DIR / post["slug"] / "index.md"
         md_out.parent.mkdir(parents=True, exist_ok=True)
         write_if_changed(md_out, strip_draft_comments(md_src))
+        txt_out = POST_ROUTE_DIR / post["slug"] / "index.txt"
+        write_if_changed(txt_out, post_to_plaintext(post))
     write_page(
         template,
         ROOT / "projects" / "index.html",
@@ -1396,6 +1550,8 @@ def main():
         md_out = ROOT / "projects" / project["slug"] / "index.md"
         md_out.parent.mkdir(parents=True, exist_ok=True)
         write_if_changed(md_out, strip_draft_comments(md_src))
+        txt_out = ROOT / "projects" / project["slug"] / "index.txt"
+        write_if_changed(txt_out, project_to_plaintext(project))
     write_page(
         template,
         NOT_FOUND_HTML,

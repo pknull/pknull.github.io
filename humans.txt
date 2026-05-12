@@ -1,0 +1,35 @@
+/* TEAM */
+
+Site author and engineer: Louis Grenzebach (PKnull)
+Contact: louis.grenzebach@gmail.com
+Location: Eugene, Oregon, USA
+Web: https://pknull.ai
+GitHub: https://github.com/pknull
+LinkedIn: https://www.linkedin.com/in/louisg
+
+/* SITE */
+
+Standards: HTML5, CSS3, vanilla JavaScript
+Build: hand-rolled Python static-site generator (bin/build-index.py)
+Source: https://github.com/pknull/pknull.github.io
+Hosting: GitHub Pages
+Fonts: Source Serif 4, IBM Plex Sans (Google Fonts, self-hosted)
+Syntax highlighting: highlight.js
+Comments: Giscus (GitHub Discussions)
+
+/* CONTENT */
+
+License: All content © Louis Grenzebach. Code samples MIT unless noted.
+
+/* MACHINE-READABLE COMPANIONS */
+
+This site is dual-encoded for humans and machines. See:
+  https://pknull.ai/llms.txt        — content map for LLM agents
+  https://pknull.ai/llms-full.txt   — single-fetch inlined-content mirror
+  https://pknull.ai/sitemap.xml     — full URL list
+  https://pknull.ai/feed.xml        — Atom feed
+  https://pknull.ai/posts.json      — machine-readable post index
+  https://pknull.ai/projects.json   — machine-readable project index
+
+Every published post, project, and the résumé has sibling Markdown
+(/index.md) and plain-text (/index.txt) at the same path.

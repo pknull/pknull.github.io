@@ -19,7 +19,10 @@ The tone is personal but technical. It mixes notebook-style writing, software pr
 - Blog index: https://pknull.ai/blog/
 - Projects index: https://pknull.ai/projects/
 - Résumé: https://pknull.ai/resume/ (markdown: https://pknull.ai/resume/index.md, plain text: https://pknull.ai/resume.txt, PDF: https://pknull.ai/resume/resume.pdf)
+- Full-content mirror: https://pknull.ai/llms-full.txt
 - Sitemap: https://pknull.ai/sitemap.xml
+- Humans: https://pknull.ai/humans.txt
+- Security contact: https://pknull.ai/.well-known/security.txt
 
 ## Notable Projects
 
@@ -42,15 +45,19 @@ The tone is personal but technical. It mixes notebook-style writing, software pr
 
 ## Machine-Readable Companions
 
-Every published post, project page, and the résumé has a sibling Markdown file at the same path. Replace `index.html` with `index.md` (or simply append `index.md` to a directory URL):
+Every published post, project page, and the résumé has both a Markdown and a plain-text sibling at the same path. Replace `index.html` with `index.md` or `index.txt`:
 
-- Post: https://pknull.ai/post/<slug>/index.md
-- Project: https://pknull.ai/projects/<slug>/index.md
-- Résumé: https://pknull.ai/resume/index.md (also served as plain text at https://pknull.ai/resume.txt for crawlers that reject text/markdown)
+- Post:   https://pknull.ai/post/<slug>/index.md     +  https://pknull.ai/post/<slug>/index.txt
+- Project: https://pknull.ai/projects/<slug>/index.md +  https://pknull.ai/projects/<slug>/index.txt
+- Résumé: https://pknull.ai/resume/index.md          +  https://pknull.ai/resume.txt
 
-These are the canonical source Markdown without HTML chrome. Frontmatter (YAML) is preserved. Draft markers (`<!-- STUB -->`, `<!-- SCRATCH -->`, etc.) are stripped at build time.
+The `.md` sources preserve markdown syntax and YAML frontmatter (Content-Type: text/markdown). The `.txt` mirrors strip markdown chrome and surface link URLs inline (Content-Type: text/plain) for crawlers that reject text/markdown.
 
-Index/listing pages (home, blog index, projects index) do not have `.md` companions. Use the JSON indexes below to discover all available pages.
+Draft markers (`<!-- STUB -->`, `<!-- SCRATCH -->`, etc.) are stripped at build time from both.
+
+For one-shot ingestion of the entire site as a single document, fetch https://pknull.ai/llms-full.txt — it inlines the résumé, every project, and every post.
+
+Index/listing pages (home, blog index, projects index) do not have `.md` or `.txt` companions. Use the JSON indexes below to discover all available pages, or grab `llms-full.txt` for inlined content.
 
 ## JSON Indexes
 
