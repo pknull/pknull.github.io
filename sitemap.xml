@@ -2,36 +2,50 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://pknull.ai/</loc>
+    <lastmod>2026-05-04</lastmod>
   </url>
   <url>
     <loc>https://pknull.ai/blog/</loc>
+    <lastmod>2026-05-04</lastmod>
   </url>
   <url>
     <loc>https://pknull.ai/projects/</loc>
   </url>
   <url>
+    <loc>https://pknull.ai/resume/</loc>
+    <lastmod>2026-05-04</lastmod>
+  </url>
+  <url>
     <loc>https://pknull.ai/post/2026-05-04/</loc>
+    <lastmod>2026-05-04</lastmod>
   </url>
   <url>
     <loc>https://pknull.ai/post/2026-04-29/</loc>
+    <lastmod>2026-04-29</lastmod>
   </url>
   <url>
     <loc>https://pknull.ai/post/2025-12-03/</loc>
+    <lastmod>2025-12-03</lastmod>
   </url>
   <url>
     <loc>https://pknull.ai/post/2025-12-02/</loc>
+    <lastmod>2025-12-02</lastmod>
   </url>
   <url>
     <loc>https://pknull.ai/post/2025-12-01/</loc>
+    <lastmod>2025-12-01</lastmod>
   </url>
   <url>
     <loc>https://pknull.ai/post/2025-11-30/</loc>
+    <lastmod>2025-11-30</lastmod>
   </url>
   <url>
     <loc>https://pknull.ai/post/2025-11-29/</loc>
+    <lastmod>2025-11-29</lastmod>
   </url>
   <url>
     <loc>https://pknull.ai/post/2025-11-28/</loc>
+    <lastmod>2025-11-28</lastmod>
   </url>
   <url>
     <loc>https://pknull.ai/projects/asha/</loc>

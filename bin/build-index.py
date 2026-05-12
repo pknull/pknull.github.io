@@ -47,13 +47,14 @@ BLOG_INDEX = ROOT / "blog" / "index.html"
 POST_ROUTE_DIR = ROOT / "post"
 NOT_FOUND_HTML = ROOT / "404.html"
 RESUME_SRC = ROOT.parent / "resume" / "source.md"
+RESUME_FALLBACK = ROOT / "resume" / "index.md"
 RESUME_PDF = ROOT / "resume" / "resume.pdf"
 RESUME_HTML = ROOT / "resume" / "index.html"
 
 SITE_NAME = "PKNULL.AI"
 SITE_DESCRIPTION = "PK's Personal Site"
 SITE_ROOT = "https://pknull.ai/"
-DEFAULT_OG_IMAGE = "https://pknull.ai/images/favicon.svg"
+DEFAULT_OG_IMAGE = "https://pknull.ai/images/meta_headshot-1440.webp"
 AUTHOR_NAME = "Louis Grenzebach"
 AUTHOR_URL = "https://pknull.ai/"
 PICTURE_DEFAULT_SIZES = "(max-width: 720px) 100vw, 720px"
@@ -950,10 +951,13 @@ def render_project_detail_page(project):
 
 
 def load_resume():
-    if not RESUME_SRC.exists():
-        return None
-    meta, body = split_frontmatter(RESUME_SRC.read_text())
-    return {"meta": meta or {}, "body_md": body.strip()}
+    if RESUME_SRC.exists():
+        meta, body = split_frontmatter(RESUME_SRC.read_text())
+        return {"meta": meta or {}, "body_md": body.strip(), "from_fallback": False}
+    if RESUME_FALLBACK.exists():
+        meta, body = split_frontmatter(RESUME_FALLBACK.read_text())
+        return {"meta": meta or {}, "body_md": body.strip(), "from_fallback": True}
+    return None
 
 
 def resume_path() -> str:
@@ -1057,13 +1061,25 @@ def write_page(template, path: Path, **context):
 
 
 def build_sitemap(posts, projects, *, resume=None):
-    urls = [absolute_url(home_path()), absolute_url(blog_path()), absolute_url(projects_path())]
+    latest_post = posts[0]["date"] if posts else None
+    entries: list[tuple[str, str | None]] = [
+        (absolute_url(home_path()), latest_post),
+        (absolute_url(blog_path()), latest_post),
+        (absolute_url(projects_path()), None),
+    ]
     if resume:
-        urls.append(absolute_url(resume_path()))
-    urls.extend(post["canonical"] for post in posts)
-    urls.extend(project["canonical"] for project in projects)
-    entries = "".join(f"  <url>\n    <loc>{html.escape(url)}</loc>\n  </url>\n" for url in urls)
-    sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + entries + "</urlset>\n"
+        entries.append((absolute_url(resume_path()), latest_post))
+    entries.extend((post["canonical"], post["date"]) for post in posts)
+    entries.extend((project["canonical"], None) for project in projects)
+    rendered = "".join(
+        (
+            f"  <url>\n    <loc>{html.escape(url)}</loc>\n"
+            + (f"    <lastmod>{lastmod}</lastmod>\n" if lastmod else "")
+            + "  </url>\n"
+        )
+        for url, lastmod in entries
+    )
+    sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + rendered + "</urlset>\n"
     write_if_changed(SITEMAP_XML, sitemap)
 
 
@@ -1335,9 +1351,10 @@ def main():
                 ),
             ),
         )
-        resume_md_out = ROOT / "resume" / "index.md"
-        resume_md_out.parent.mkdir(parents=True, exist_ok=True)
-        write_if_changed(resume_md_out, strip_draft_comments(RESUME_SRC.read_text()))
+        if not resume.get("from_fallback"):
+            resume_md_out = ROOT / "resume" / "index.md"
+            resume_md_out.parent.mkdir(parents=True, exist_ok=True)
+            write_if_changed(resume_md_out, strip_draft_comments(RESUME_SRC.read_text()))
     print("sitemap:")
     build_sitemap(posts, projects, resume=resume)
     print("feed:")

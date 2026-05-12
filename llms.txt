@@ -65,6 +65,7 @@ Machine-readable lists of all published content:
 
 ### Posts (newest first)
 
+- [2026.05.04](https://pknull.ai/post/2026-05-04/index.md) - A company I worked at became flush, and as a celebration decided the next logical move was rewriting most of the customer-facing platform. Not because it was failing, but because it was outdated,...
 - [2026.04.29](https://pknull.ai/post/2026-04-29/index.md) - Last week I was in a training where they paired us up to write code with an LLM, which was a frustrating waste of a day in nearly every dimension except one: it made it really obvious that...
 - [2025.12.03](https://pknull.ai/post/2025-12-03/index.md) - I feel like I'm doing these at the wrong time of day currently. Like a nightcap of sorts. Probably doesn't matter as these words are falling to an audience of none. Today I was toying with the...
 - [2025.12.02](https://pknull.ai/post/2025-12-02/index.md) - Every technology gets the same flurries of woe and worry before it's even truly born. Plato had Socrates warning that writing would rot our memory-people trusting "external marks" instead of...
@@ -75,7 +76,7 @@ Machine-readable lists of all published content:
 
 ### Projects
 
-- [Asha](https://pknull.ai/projects/asha/index.md) - coding / active - A multi-harness AI workflow system: persistent identity, session memory, and domain-specific plugins for Claude Code and Codex, installed via direct symlink mount.
+- [Asha](https://pknull.ai/projects/asha/index.md) - coding / active - A multi-harness AI workflow system: persistent identity, session memory, and domain-specific plugins for Claude Code, OpenAI Codex, and GitHub Copilot CLI, installed via direct symlink mount.
 - [Thallus](https://pknull.ai/projects/thallus/index.md) - coding / active - Umbrella repo for local-first AI agent infrastructure: Egregore, Familiar, Servitor, Scry, and thallus-core coordinated by a shared architecture contract.
 - [The Hush](https://pknull.ai/projects/hush/index.md) - writing / active - A cosmic horror novel in long-form revision. Reality stays mundane; the protagonist's experience of it does not.
 - [botcore](https://pknull.ai/projects/botcore/index.md) - coding / active - Python bot framework with Claude SDK integration. Discord sessions, command registry, conversation state across messages.
