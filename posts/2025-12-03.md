@@ -2,4 +2,4 @@ I feel like I'm doing these at the wrong time of day currently. Like a nightcap 
 
 I tend to like games with lots of options for ways to play especially when it comes to the more extreme things people can do. I also enjoy playing [Shadowrun](https://store.catalystgamelabs.com/collections/shadowrun) though I'm a fan of earlier versions (3 and 5 both are warm in my heart). I feel there's something really fun about tuning a character to a certain playstyle that some other systems like [D20](https://5e.d20srd.org/index.htm) don't offer in the same way. That's not to say I don't like things like [ShadowDark](https://www.thearcanelibrary.com/pages/shadowdark), [Mothership](https://www.tuesdayknightgames.com/pages/mothership-rpg), [Old Gods of Appalachia](https://www.montecookgames.com/store/product/old-gods-of-appalachia-roleplaying-game/), or [Obojima: Tales from the Tall Grass](https://obojima.com/). It's just that, when describing a system I like, I tend to be a fan of crunch.
 
-![metal dice for add thunk](./images/2025-12-04-dice.jpg)
+![metal dice for added thunk](./images/2025-12-04-dice.jpg)
