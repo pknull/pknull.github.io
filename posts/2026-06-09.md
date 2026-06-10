@@ -15,3 +15,5 @@ Now the worse embarrassment, the one I promised. I didn't write this. I handed [
 I don't have a fix. I'm not going to tell you to log off; I won't either. I'll just leave you where it left me, blinking at a percent-human score on a sentence I know I wrote: if the self was always a becoming and never a thing, what do we do with a machine that nails every pose and can't see a single transition? And which one did you think you were?
 
 *Percent human: pending.*
+
+![Occasions, all the way down.](./images/2026-06-09_polyps.jpg)

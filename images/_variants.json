@@ -183,6 +183,27 @@
       }
     ]
   },
+  "/images/2026-06-09_polyps.jpg": {
+    "intrinsic_height": 1065,
+    "intrinsic_width": 1600,
+    "variants": [
+      {
+        "height": 320,
+        "url": "/images/2026-06-09_polyps-480.webp",
+        "width": 480
+      },
+      {
+        "height": 639,
+        "url": "/images/2026-06-09_polyps-960.webp",
+        "width": 960
+      },
+      {
+        "height": 958,
+        "url": "/images/2026-06-09_polyps-1440.webp",
+        "width": 1440
+      }
+    ]
+  },
   "/images/meta_headshot.webp": {
     "intrinsic_height": 1079,
     "intrinsic_width": 809,
