@@ -162,6 +162,27 @@
       }
     ]
   },
+  "/images/2026-05-19_pose.jpg": {
+    "intrinsic_height": 1623,
+    "intrinsic_width": 1200,
+    "variants": [
+      {
+        "height": 649,
+        "url": "/images/2026-05-19_pose-480.webp",
+        "width": 480
+      },
+      {
+        "height": 1298,
+        "url": "/images/2026-05-19_pose-960.webp",
+        "width": 960
+      },
+      {
+        "height": 1623,
+        "url": "/images/2026-05-19_pose-1440.webp",
+        "width": 1200
+      }
+    ]
+  },
   "/images/meta_headshot.webp": {
     "intrinsic_height": 1079,
     "intrinsic_width": 809,
