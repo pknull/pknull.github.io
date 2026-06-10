@@ -23,3 +23,5 @@ That's the part I'm trying not to look away from. The hosts in [Westworld](https
 I don't know that I'm any better. I think I'm probably also running clean.
 
 *Penmates, apparently.*
+
+![The graded part.](./images/2026-05-19_pose.jpg)
