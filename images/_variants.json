@@ -163,23 +163,23 @@
     ]
   },
   "/images/2026-05-19_pose.jpg": {
-    "intrinsic_height": 1623,
-    "intrinsic_width": 1200,
+    "intrinsic_height": 1086,
+    "intrinsic_width": 1448,
     "variants": [
       {
-        "height": 649,
+        "height": 360,
         "url": "/images/2026-05-19_pose-480.webp",
         "width": 480
       },
       {
-        "height": 1298,
+        "height": 720,
         "url": "/images/2026-05-19_pose-960.webp",
         "width": 960
       },
       {
-        "height": 1623,
+        "height": 1080,
         "url": "/images/2026-05-19_pose-1440.webp",
-        "width": 1200
+        "width": 1440
       }
     ]
   },
