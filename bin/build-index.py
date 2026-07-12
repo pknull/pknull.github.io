@@ -397,7 +397,6 @@ def iter_build_id_sources():
         ROOT / "gaming.json",
         ROOT / "coding.json",
         IMAGE_VARIANTS_JSON,
-        RESUME_SRC,
         TEMPLATES_DIR / TEMPLATE_NAME,
     ]
     for path in fixed:
@@ -407,17 +406,29 @@ def iter_build_id_sources():
         yield path
     for path in sorted(PROJECTS_DIR.glob("*.md")):
         yield path
+    resume_source = RESUME_SRC if RESUME_SRC.exists() else RESUME_FALLBACK
+    if resume_source.exists():
+        yield resume_source
+
+
+def build_id_source_parts(path: Path) -> tuple[str, str]:
+    if path in (RESUME_SRC, RESUME_FALLBACK):
+        # Local builds read the external résumé source; CI reads its checked-in
+        # mirror. Give both the same identity and ignore trailing whitespace.
+        return "resume/source.md", path.read_text().rstrip() + "\n"
+    try:
+        key = str(path.relative_to(ROOT))
+    except ValueError:
+        key = str(path)
+    return key, path.read_text()
 
 
 def compute_build_id() -> str:
     digest = hashlib.sha256()
     for path in iter_build_id_sources():
-        try:
-            key = str(path.relative_to(ROOT))
-        except ValueError:
-            key = str(path)
+        key, content = build_id_source_parts(path)
         digest.update(key.encode("utf-8"))
-        digest.update(path.read_text().encode("utf-8"))
+        digest.update(content.encode("utf-8"))
     return digest.hexdigest()[:12]
 
 

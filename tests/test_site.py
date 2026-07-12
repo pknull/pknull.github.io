@@ -149,6 +149,20 @@ class GeneratorEdgeCaseTests(unittest.TestCase):
             self.assertEqual(1, len(posts))
             self.assertIsNone(posts[0]["img"])
 
+    def test_resume_build_id_is_stable_across_local_and_ci_sources(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            local_source = Path(directory) / "source.md"
+            ci_source = Path(directory) / "index.md"
+            local_source.write_text("résumé content\n\n")
+            ci_source.write_text("résumé content\n")
+            with (
+                patch.object(BUILD, "RESUME_SRC", local_source),
+                patch.object(BUILD, "RESUME_FALLBACK", ci_source),
+            ):
+                local_parts = BUILD.build_id_source_parts(local_source)
+                ci_parts = BUILD.build_id_source_parts(ci_source)
+            self.assertEqual(local_parts, ci_parts)
+
 
 if __name__ == "__main__":
     unittest.main()
