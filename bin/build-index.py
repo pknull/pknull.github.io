@@ -9,7 +9,7 @@ import json
 import math
 import re
 import sys
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 from urllib.parse import quote
 
@@ -77,6 +77,11 @@ DRAFT_COMMENT_PATTERN = re.compile(
 )
 
 LEGACY_PROJECTS = {"asha", "thallus"}
+
+
+def current_utc_date() -> date:
+    """Return the build date independent of the runner's local timezone."""
+    return datetime.now(timezone.utc).date()
 
 
 def split_frontmatter(text: str):
@@ -438,7 +443,8 @@ def load_posts():
             print(f"  · skipping {path.name}: draft: true in frontmatter", file=sys.stderr)
             continue
         body = body.strip()
-        img = normalize_content_url(meta.get("img")) if meta.get("img") else first_image(body)
+        raw_img = meta.get("img")
+        img = normalize_content_url(raw_img) if isinstance(raw_img, str) and raw_img else first_image(body)
         post = {
             "slug": slug,
             "date": slug,
@@ -630,7 +636,7 @@ def build_llms_full_txt(posts, projects, *, resume=None, meta=None):
     project, every post. Designed for crawlers that prefer a one-fetch context
     grab over discovering pages individually.
     """
-    today = date.today().isoformat()
+    today = current_utc_date().isoformat()
     sections: list[str] = []
 
     sections.append(f"# PKNULL.AI — Full Content Mirror")
@@ -1255,7 +1261,7 @@ def page_context(
     full_title = f"{title} · {SITE_NAME}" if title else SITE_NAME
     return {
         "build_id": build_id,
-        "current_year": date.today().year,
+        "current_year": current_utc_date().year,
         "full_title": full_title,
         "description": description,
         "canonical": canonical,
@@ -1315,7 +1321,13 @@ def build_security_txt():
     field is required by RFC 9116 and must be in the future for crawlers
     that validate it (e.g. securitytxt.org, Google security tooling).
     """
-    expires = date.today().replace(year=date.today().year + 1).isoformat() + "T00:00:00.000Z"
+    today = current_utc_date()
+    try:
+        expiry_date = today.replace(year=today.year + 1)
+    except ValueError:
+        # 29 February has no direct counterpart in a non-leap year.
+        expiry_date = today.replace(year=today.year + 1, month=2, day=28)
+    expires = expiry_date.isoformat() + "T00:00:00.000Z"
     body = (
         "# Security contact for pknull.ai (RFC 9116)\n"
         f"Contact: mailto:louis.grenzebach@gmail.com\n"

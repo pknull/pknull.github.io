@@ -8,6 +8,7 @@ on:
       - 'posts/**'
       - 'projects/**'
       - 'bin/build-index.py'
+      - 'tests/**'
       - 'templates/**'
       - 'js/**'
       - 'css/**'
@@ -30,18 +31,21 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.x'
 
       - name: Install dependencies
-        run: pip install pyyaml markdown jinja2
+        run: pip install pyyaml markdown jinja2 pillow
 
       - name: Rebuild site outputs
         run: python3 bin/build-index.py
+
+      - name: Verify generated site
+        run: python3 -m unittest discover -s tests -v
 
       - name: Commit and push if changed
         id: commit

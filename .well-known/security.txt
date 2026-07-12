@@ -1,5 +1,5 @@
 # Security contact for pknull.ai (RFC 9116)
 Contact: mailto:louis.grenzebach@gmail.com
-Expires: 2027-06-11T00:00:00.000Z
+Expires: 2027-07-12T00:00:00.000Z
 Preferred-Languages: en
 Canonical: https://pknull.ai/.well-known/security.txt
