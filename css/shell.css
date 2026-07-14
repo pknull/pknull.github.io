@@ -1016,9 +1016,19 @@ tbody tr:hover{ background: var(--stripe); }
   animation: sigil-pulse 4s ease-in-out infinite;
   /* invert hardcoded-black sigils to ink in dark mode so they stay visible */
 }
-.footer-icons img:nth-child(2){ animation-delay: 1.3s; }
-.footer-icons img:nth-child(3){ animation-delay: 2.6s; }
-.footer-icons img:nth-child(4){ animation-delay: 3.9s; }
+.footer-icons > :nth-child(2){ --sigil-delay: 1.3s; }
+.footer-icons > :nth-child(3){ --sigil-delay: 2.6s; }
+.footer-icons > :nth-child(4){ --sigil-delay: 3.9s; }
+.footer-icons img{ animation-delay: var(--sigil-delay, 0s); }
+.footer-icons a{
+  display: block;
+  border: 0;
+  line-height: 0;
+  border-radius: 4px;
+}
+.footer-icons a:hover img,
+.footer-icons a:focus-visible img{ opacity: 1; }
+.footer-icons a:focus-visible{ outline: 2px solid var(--accent); outline-offset: 4px; }
 :root[data-mode="dark"] .footer-icons img{ filter: invert(1); }
 @keyframes sigil-pulse{
   0%, 100%{ opacity: .3; }
@@ -1394,4 +1404,3 @@ pre.expanded .code-toolbar{ right: var(--s-5); }
 }
 .hero-title em::before{ content: "["; opacity: .7; }
 .hero-title em::after{  content: "]"; opacity: .7; }
-

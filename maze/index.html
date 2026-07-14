@@ -1,0 +1,2724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Dreadful Engine</title>
+<style>
+@font-face{
+font-family:'JetBrainsMono Nerd Font';
+src:url('/fonts/JetBrainsMonoNerdFontMono-Regular.woff2') format('woff2');
+font-weight:400;font-style:normal;font-display:swap;
+}
+:root{
+--gb-bg-hard:#32302f;--gb-bg:#282828;--gb-bg1:#3c3836;--gb-bg2:#504945;
+--gb-gray:#bdae93;--gb-fg3:#bdae93;--gb-fg2:#d5c4a1;--gb-fg:#ebdbb2;
+--gb-red:#ff6453;--gb-green:#b8bb26;--gb-yellow:#fabd2f;--gb-blue:#83a598;
+--gb-purple:#d3869b;--gb-aqua:#8ec07c;--gb-orange:#fe8019;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--gb-bg);overflow:hidden;font-family:'JetBrainsMono Nerd Font','JetBrains Mono',monospace;color:var(--gb-fg);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+canvas{display:block}
+#blocker{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(40,40,40,0.94);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;cursor:pointer}
+#blocker.hidden{display:none}
+#blocker h1{color:var(--gb-red);margin-bottom:16px;font-size:1.6em;letter-spacing:4px;text-shadow:0 0 18px rgba(255,100,83,.3)}
+#blocker p{color:var(--gb-fg2);font-size:0.9em}
+#blocker .sub{color:var(--gb-gray);margin-top:8px;font-size:0.75em}
+#blocker .seed{color:var(--gb-aqua);margin-top:18px;font-size:0.72em;letter-spacing:2px}
+#blocker .journal-return{position:fixed;top:18px;left:18px;color:var(--gb-red);font-size:.75em;letter-spacing:1px;text-decoration:none;border-bottom:1px solid rgba(255,100,83,.4);cursor:pointer}
+#blocker .journal-return:hover{color:var(--gb-orange);border-bottom-color:var(--gb-orange)}
+#blocker .journal-return:focus-visible{outline:2px solid var(--gb-red);outline-offset:4px}
+#hud{position:fixed;top:0;left:0;width:100%;pointer-events:none;z-index:5;padding:16px}
+#hud .room-info{font-size:14px;color:var(--gb-fg);letter-spacing:2px;text-shadow:0 1px 3px var(--gb-bg-hard)}
+#hud .tess-info{font-size:12px;color:var(--gb-fg3);margin-top:4px;text-shadow:0 1px 3px var(--gb-bg-hard)}
+#hud .hint{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);font-size:13px;color:var(--gb-aqua);letter-spacing:1px;opacity:0;transition:opacity 0.3s;text-shadow:0 1px 4px var(--gb-bg-hard)}
+#hud .hint.visible{opacity:1}
+#hud .goal{position:fixed;top:16px;right:16px;font-size:11px;color:var(--gb-fg3);text-align:right;line-height:1.6;text-shadow:0 1px 3px var(--gb-bg-hard)}
+#hud .seed-info{color:var(--gb-green);letter-spacing:1px}
+#hud .maze-label{position:fixed;top:16px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--gb-yellow);letter-spacing:3px;text-shadow:0 1px 3px var(--gb-bg-hard)}
+#hud .event-message{position:fixed;top:48px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--gb-red);letter-spacing:2px;opacity:0;transition:opacity .2s;text-shadow:0 1px 4px var(--gb-bg-hard)}
+#hud .event-message.visible{opacity:1}
+#crosshair{position:fixed;top:50%;left:50%;width:8px;height:8px;border:1px solid rgba(235,219,178,0.3);border-radius:50%;transform:translate(-50%,-50%);z-index:5;pointer-events:none}
+#win{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(40,40,40,0.97);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:20}
+#win h1{color:var(--gb-purple);font-size:2em;letter-spacing:6px;margin-bottom:20px}
+#win p{color:var(--gb-fg3);font-size:0.9em;margin:4px 0}
+#trap-flash{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,100,83,0.42);z-index:8;pointer-events:none;opacity:0;transition:opacity 0.15s}
+#minimap{position:fixed;bottom:16px;right:16px;width:160px;height:160px;z-index:6;pointer-events:none;border:1px solid rgba(235,219,178,0.16);border-radius:4px;display:none}
+</style>
+</head>
+<body>
+<div id="blocker">
+    <a class="journal-return" href="/">&larr; PKNULL.AI</a>
+    <h1>THE DREADFUL ENGINE</h1>
+    <p>Click to enter</p>
+    <p class="sub">WASD to move / Mouse to look / Click or E to interact</p>
+    <p class="seed" id="seedLine"></p>
+</div>
+<div id="hud">
+    <div class="room-info" id="roomInfo"></div>
+    <div class="tess-info" id="tessInfo"></div>
+    <div class="hint" id="hint"></div>
+    <div class="goal" id="goalInfo">ESCAPE TO THE ENTRYWAY<div class="seed-info" id="seedInfo"></div></div>
+    <div class="maze-label" id="mazeLabel"></div>
+    <div class="event-message" id="eventMessage"></div>
+</div>
+<div id="crosshair"></div>
+<div id="win">
+    <h1>YOU ESCAPED</h1>
+    <p id="winTime"></p>
+    <p id="winMazes"></p>
+</div>
+<div id="trap-flash"></div>
+<canvas id="minimap" width="160" height="160"></canvas>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
+
+// ===== PRNG =====
+function fnv1a(str) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 0x01000193);
+    }
+    return h >>> 0;
+}
+
+class Rng {
+    constructor(seed) { this.state = seed || 1; }
+    next() {
+        this.state ^= this.state << 13;
+        this.state ^= this.state >> 17;
+        this.state ^= this.state << 5;
+        this.state = this.state >>> 0;
+        return this.state / 0x100000000;
+    }
+    nextInt(min, max) { return min + Math.floor(this.next() * (max - min + 1)); }
+    pick(arr) { return arr[Math.floor(this.next() * arr.length)]; }
+    shuffle(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(this.next() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+}
+
+// ===== GRUVBOX PALETTE =====
+const GRUVBOX = Object.freeze({
+    bgHard: 0x32302f,
+    bg: 0x282828,
+    bg1: 0x3c3836,
+    bg2: 0x504945,
+    gray: 0x928374,
+    fg3: 0xbdae93,
+    fg2: 0xd5c4a1,
+    fg: 0xebdbb2,
+    red: 0xff6453,
+    green: 0xb8bb26,
+    yellow: 0xfabd2f,
+    blue: 0x83a598,
+    purple: 0xd3869b,
+    aqua: 0x8ec07c,
+    orange: 0xfe8019
+});
+
+// ===== TOPOLOGY =====
+const TESSERACTS = {
+    1:{name:'Fauna',emoji:'\u{1F98C}',color:'#fe8019'},
+    2:{name:'Heart',emoji:'\u2764\uFE0F',color:'#ff6453'},
+    3:{name:'Entryway',emoji:'\u{1F6AA}',color:'#d3869b'},
+    4:{name:'Flora',emoji:'\u{1F33F}',color:'#b8bb26'},
+    5:{name:'Space/Time',emoji:'\u{1F30C}',color:'#83a598'},
+    6:{name:'Body',emoji:'\u{1F9EC}',color:'#fabd2f'},
+    7:{name:'Mind',emoji:'\u{1F9E0}',color:'#8ec07c'},
+    8:{name:'Control',emoji:'\u{1F39B}\uFE0F',color:'#bdae93'},
+    9:{name:'Soul',emoji:'\u{1F47B}',color:'#b16286'},
+    10:{name:'Energy',emoji:'\u26A1',color:'#ebdbb2'},
+};
+
+const roomNavigation = {
+    "1.07":{"B":"1.08","E":"1.21","I":"1.33","O":"1.30","T":"1.17","W":"1.36"},
+    "1.08":{"E":"1.21","I":"1.33","N":"1.07","O":"1.30","S":"1.29","W":"1.36"},
+    "1.17":{"E":"1.21","I":"1.33","N":"1.07","O":"1.30","S":"1.29","W":"1.36"},
+    "1.21":{"B":"1.08","I":"1.33","N":"1.07","O":"1.30","S":"1.29","T":"1.17"},
+    "1.29":{"B":"1.08","E":"1.21","I":"1.33","O":"1.30","T":"1.17","W":"1.36"},
+    "1.30":{"B":"1.08","E":"1.21","N":"1.07","S":"1.29","T":"1.17","W":"1.36"},
+    "1.33":{"B":"1.08","E":"1.21","N":"1.07","S":"1.29","T":"1.17","W":"1.36"},
+    "1.36":{"B":"1.08","I":"1.33","N":"1.07","O":"1.30","S":"1.29","T":"1.17"},
+    "2.02":{"B":"2.23","E":"2.40","I":"2.33","O":"2.38","T":"2.10","W":"2.22"},
+    "2.09":{"B":"2.23","E":"2.40","I":"2.33","O":"2.38","T":"2.10","W":"2.22"},
+    "2.10":{"E":"2.40","I":"2.33","N":"2.02","O":"2.38","S":"2.09","W":"2.22"},
+    "2.22":{"B":"2.23","I":"2.33","N":"2.02","O":"2.38","S":"2.09","T":"2.10"},
+    "2.23":{"E":"2.40","I":"2.33","N":"2.02","O":"2.38","S":"2.09","W":"2.22"},
+    "2.33":{"B":"2.23","E":"2.40","N":"2.02","S":"2.09","T":"2.10","W":"2.22"},
+    "2.38":{"B":"2.23","E":"2.40","N":"2.02","S":"2.09","T":"2.10","W":"2.22"},
+    "2.40":{"B":"2.23","I":"2.33","N":"2.02","O":"2.38","S":"2.09","T":"2.10"},
+    "3.01":{"E":"3.26","N":"3.07","O":"3.16","S":"3.05","W":"3.03"},
+    "3.02":{},
+    "3.03":{"B":"3.01","N":"3.07","O":"3.16","S":"3.05","T":"3.34"},
+    "3.05":{"B":"3.01","E":"3.26","O":"3.16","T":"3.34","W":"3.03"},
+    "3.07":{"B":"3.01","E":"3.26","O":"3.16","T":"3.34","W":"3.03"},
+    "3.16":{"B":"3.01","E":"3.26","N":"3.07","S":"3.05","T":"3.34","W":"3.03"},
+    "3.26":{"B":"3.01","N":"3.07","O":"3.16","S":"3.05","T":"3.34"},
+    "3.34":{"E":"3.26","N":"3.07","O":"3.16","S":"3.05","W":"3.03"},
+    "4.04":{"B":"4.32","E":"4.31","N":"4.34","S":"4.35","T":"4.17","W":"4.06"},
+    "4.06":{"B":"4.32","I":"4.10","N":"4.34","O":"4.04","S":"4.35","T":"4.17"},
+    "4.10":{"B":"4.32","E":"4.31","N":"4.34","S":"4.35","T":"4.17","W":"4.06"},
+    "4.17":{"E":"4.31","I":"4.10","N":"4.34","O":"4.04","S":"4.35","W":"4.06"},
+    "4.31":{"B":"4.32","I":"4.10","N":"4.34","O":"4.04","S":"4.35","T":"4.17"},
+    "4.32":{"E":"4.31","I":"4.10","N":"4.34","O":"4.04","S":"4.35","W":"4.06"},
+    "4.34":{"B":"4.32","E":"4.31","I":"4.10","O":"4.04","T":"4.17","W":"4.06"},
+    "4.35":{"B":"4.32","E":"4.31","I":"4.10","O":"4.04","T":"4.17","W":"4.06"},
+    "5.03":{"B":"5.15","E":"5.11","I":"5.22","O":"5.37","T":"5.06","W":"5.36"},
+    "5.06":{"E":"5.11","I":"5.22","N":"5.03","O":"5.37","S":"5.13","W":"5.36"},
+    "5.11":{"B":"5.15","I":"5.22","N":"5.03","O":"5.37","S":"5.13","T":"5.06"},
+    "5.13":{"B":"5.15","E":"5.11","I":"5.22","O":"5.37","T":"5.06","W":"5.36"},
+    "5.15":{"E":"5.11","I":"5.22","N":"5.03","O":"5.37","S":"5.13","W":"5.36"},
+    "5.22":{"B":"5.15","E":"5.11","N":"5.03","S":"5.13","T":"5.06","W":"5.36"},
+    "5.36":{"B":"5.15","I":"5.22","N":"5.03","O":"5.37","S":"5.13","T":"5.06"},
+    "5.37":{"B":"5.15","E":"5.11","N":"5.03","S":"5.13","T":"5.06","W":"5.36"},
+    "6.05":{"B":"6.24","E":"6.27","I":"6.14","O":"6.38","T":"6.32","W":"6.11"},
+    "6.11":{"B":"6.24","I":"6.14","N":"6.05","O":"6.38","S":"6.25","T":"6.32"},
+    "6.14":{"B":"6.24","E":"6.27","N":"6.05","S":"6.25","T":"6.32","W":"6.11"},
+    "6.24":{"E":"6.27","I":"6.14","N":"6.05","O":"6.38","S":"6.25","W":"6.11"},
+    "6.25":{"B":"6.24","E":"6.27","I":"6.14","O":"6.38","T":"6.32","W":"6.11"},
+    "6.27":{"B":"6.24","I":"6.14","N":"6.05","O":"6.38","S":"6.25","T":"6.32"},
+    "6.32":{"E":"6.27","I":"6.14","N":"6.05","O":"6.38","S":"6.25","W":"6.11"},
+    "6.38":{"B":"6.24","E":"6.27","N":"6.05","S":"6.25","T":"6.32","W":"6.11"},
+    "7.04":{"E":"7.12","I":"7.14","N":"7.16","O":"7.30","S":"7.18","W":"7.37"},
+    "7.12":{"B":"7.20","I":"7.14","N":"7.16","O":"7.30","S":"7.18","T":"7.04"},
+    "7.14":{"B":"7.20","E":"7.12","N":"7.16","S":"7.18","T":"7.04","W":"7.37"},
+    "7.16":{"B":"7.20","E":"7.12","I":"7.14","O":"7.30","T":"7.04","W":"7.37"},
+    "7.18":{"B":"7.20","E":"7.12","I":"7.14","O":"7.30","T":"7.04","W":"7.37"},
+    "7.20":{"E":"7.12","I":"7.14","N":"7.16","O":"7.30","S":"7.18","W":"7.37"},
+    "7.30":{"B":"7.20","E":"7.12","N":"7.16","S":"7.18","T":"7.04","W":"7.37"},
+    "7.37":{"B":"7.20","I":"7.14","N":"7.16","O":"7.30","S":"7.18","T":"7.04"},
+    "8.09":{},"8.13":{},"8.18":{},"8.19":{},"8.25":{},"8.29":{},"8.35":{},"8.39":{},
+    "9.01":{"B":"9.08","E":"9.28","I":"9.23","O":"9.20","T":"9.24","W":"9.15"},
+    "9.08":{"E":"9.28","I":"9.23","N":"9.01","O":"9.20","S":"9.19","W":"9.15"},
+    "9.15":{"B":"9.08","I":"9.23","N":"9.01","O":"9.20","S":"9.19","T":"9.24"},
+    "9.19":{"B":"9.08","E":"9.28","I":"9.23","O":"9.20","T":"9.24","W":"9.15"},
+    "9.20":{"B":"9.08","E":"9.28","N":"9.01","S":"9.19","T":"9.24","W":"9.15"},
+    "9.23":{"B":"9.08","E":"9.28","N":"9.01","S":"9.19","T":"9.24","W":"9.15"},
+    "9.24":{"E":"9.28","I":"9.23","N":"9.01","O":"9.20","S":"9.19","W":"9.15"},
+    "9.28":{"B":"9.08","I":"9.23","N":"9.01","O":"9.20","S":"9.19","T":"9.24"},
+    "10.12":{"B":"10.39","E":"10.21","I":"10.40","O":"10.26","T":"10.31","W":"10.27"},
+    "10.21":{"B":"10.28","I":"10.40","N":"10.31","O":"10.12","S":"10.39","W":"10.27"},
+    "10.26":{"B":"10.28","E":"10.40","I":"10.27","N":"10.31","S":"10.39","T":"10.12"},
+    "10.27":{"B":"10.28","E":"10.21","N":"10.26","O":"10.12","S":"10.39","T":"10.31"},
+    "10.28":{"E":"10.21","I":"10.31","N":"10.26","S":"10.39","T":"10.40","W":"10.27"},
+    "10.31":{"B":"10.28","E":"10.21","N":"10.12","O":"10.40","S":"10.26","W":"10.27"},
+    "10.39":{"B":"10.28","E":"10.21","I":"10.40","N":"10.26","T":"10.12","W":"10.27"},
+    "10.40":{"E":"10.21","I":"10.12","N":"10.31","O":"10.28","S":"10.39","W":"10.26"}
+};
+
+const roomToggles = {
+    "1.07":"3.07","1.08":"9.08","1.17":"4.17","1.21":"10.21",
+    "1.29":"8.29","1.30":"7.30","1.33":"2.33","1.36":"5.36",
+    "2.02":"3.02","2.09":"8.09","2.10":"4.10","2.22":"5.22",
+    "2.23":"9.23","2.33":"1.33","2.38":"6.38","2.40":"10.40",
+    "3.01":"9.01","3.02":"2.02","3.03":"5.03","3.05":"6.05",
+    "3.07":"1.07","3.16":"7.16","3.26":"10.26","3.34":"4.34",
+    "4.04":"7.04","4.06":"5.06","4.10":"2.10","4.17":"1.17",
+    "4.31":"10.31","4.32":"6.32","4.34":"3.34","4.35":"8.35",
+    "5.03":"3.03","5.06":"4.06","5.11":"6.11","5.13":"8.13",
+    "5.15":"9.15","5.22":"2.22","5.36":"1.36","5.37":"7.37",
+    "6.05":"3.05","6.11":"5.11","6.14":"7.14","6.24":"9.24",
+    "6.25":"8.25","6.27":"10.27","6.32":"4.32","6.38":"2.38",
+    "7.04":"4.04","7.12":"10.12","7.14":"6.14","7.16":"3.16",
+    "7.18":"8.18","7.20":"9.20","7.30":"1.30","7.37":"5.37",
+    "8.09":"2.09","8.13":"5.13","8.18":"7.18","8.19":"9.19",
+    "8.25":"6.25","8.29":"1.29","8.35":"4.35","8.39":"10.39",
+    "9.01":"3.01","9.08":"1.08","9.15":"5.15","9.19":"8.19",
+    "9.20":"7.20","9.23":"2.23","9.24":"6.24","9.28":"10.28",
+    "10.12":"7.12","10.21":"1.21","10.26":"3.26","10.27":"6.27",
+    "10.28":"9.28","10.31":"4.31","10.39":"8.39","10.40":"2.40"
+};
+
+const CONTROL_ROOMS = ['8.09','8.13','8.18','8.19','8.25','8.29','8.35','8.39'];
+const DIRECTIONS = ['N','I','E','B','S','O','W','T'];
+const DIR_ANGLES = {N:0,I:Math.PI/4,E:Math.PI/2,B:3*Math.PI/4,S:Math.PI,O:5*Math.PI/4,W:3*Math.PI/2,T:7*Math.PI/4};
+function getTess(id) { return parseInt(id.split('.')[0]); }
+
+// Space folds may manifest anywhere, but remain more common within Space/Time.
+const DEFAULT_MAZE_LAW = Object.freeze({id:'space-fold', label:'SPACE FOLD', chance:0.22});
+const TESSERACT_LAWS = Object.freeze({
+    5: Object.freeze({id:'space-fold', label:'SPACE FOLD', chance:0.6})
+});
+function getTesseractLaw(roomId) {
+    return TESSERACT_LAWS[getTess(roomId)] || DEFAULT_MAZE_LAW;
+}
+
+// ===== CONSTANTS =====
+const CELL = 3;
+const WALL_H = 3;
+const WALL_T = 0.15;
+const EYE_H = 1.6;
+const P_RAD = 0.35;
+const MOVE_SPD = 5;
+const HUB_APO = 5;
+const HUB_RAD = HUB_APO / Math.cos(Math.PI / 8);
+const HUB_H = 5;
+const DOOR_W = 2;
+const DOOR_H = 3;
+const TOGGLE_RAD = 3;
+const EXIT_HANDOFF_DEPTH = 1;
+
+// ===== PROCEDURAL TEXTURES =====
+function finishCanvasTexture(canvas) {
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+    return texture;
+}
+
+const persistentTextures = new Set();
+const sharedDoorTextures = new Map();
+
+function getDoorTexture(tessNumber, accent) {
+    if (sharedDoorTextures.has(tessNumber)) return sharedDoorTextures.get(tessNumber);
+    const size = 256;
+    const canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const rng = new Rng(fnv1a(`door-${tessNumber}`));
+
+    const gradient = ctx.createLinearGradient(0, 0, size, 0);
+    gradient.addColorStop(0, '#282828');
+    gradient.addColorStop(0.5, '#504945');
+    gradient.addColorStop(1, '#282828');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, size, size);
+
+    ctx.strokeStyle = accent;
+    ctx.globalAlpha = 0.42;
+    ctx.lineWidth = 3;
+    for (let x = 0; x <= size; x += 64) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, size); ctx.stroke();
+    }
+    for (let y = 0; y <= size; y += 64) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(size, y); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 90; i++) {
+        const x = rng.next() * size;
+        const y = rng.next() * size;
+        const length = 4 + rng.next() * 22;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (rng.next() - 0.5) * 3, y + length); ctx.stroke();
+    }
+
+    ctx.fillStyle = accent;
+    ctx.globalAlpha = 0.55;
+    for (const [x, y] of [[16,16],[240,16],[16,240],[240,240]]) {
+        ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    const texture = finishCanvasTexture(canvas);
+    persistentTextures.add(texture);
+    sharedDoorTextures.set(tessNumber, texture);
+    return texture;
+}
+
+// ===== MAZE GENERATION =====
+class MazeGrid {
+    constructor(w, h, rng) {
+        this.w = w; this.h = h; this.rng = rng;
+        this.cells = [];
+        for (let y = 0; y < h; y++)
+            for (let x = 0; x < w; x++)
+                this.cells.push({
+                    x, y, N:true, S:true, E:true, W:true, visited:false,
+                    chamber:null, chamberId:null, chamberCenter:false,
+                    trap:false, trapDest:null,
+                    rotating:false,
+                    oneWayBlocked:{N:false,S:false,E:false,W:false}
+                });
+        this.entranceCell = null;
+        this.exitCell = null;
+        this.spaceFold = null;
+        this.oneWayGates = [];
+        this.rotatingChamber = null;
+        this.spatialLoop = null;
+        this.guidePath = null;
+    }
+    cell(x, y) {
+        if (x < 0 || x >= this.w || y < 0 || y >= this.h) return null;
+        return this.cells[y * this.w + x];
+    }
+    removeWall(a, b) {
+        if (a.x < b.x) { a.E = false; b.W = false; }
+        else if (a.x > b.x) { a.W = false; b.E = false; }
+        else if (a.y < b.y) { a.S = false; b.N = false; }
+        else if (a.y > b.y) { a.N = false; b.S = false; }
+    }
+    unvisitedNeighbors(c) {
+        const n = [];
+        const dirs = [{dx:0,dy:-1},{dx:1,dy:0},{dx:0,dy:1},{dx:-1,dy:0}];
+        for (const d of dirs) {
+            const nb = this.cell(c.x + d.dx, c.y + d.dy);
+            if (nb && !nb.visited) n.push(nb);
+        }
+        return n;
+    }
+    generate(bias) {
+        const stack = [];
+        const start = this.cell(0, 0);
+        start.visited = true;
+        stack.push(start);
+        while (stack.length > 0) {
+            const cur = stack[stack.length - 1];
+            const nb = this.unvisitedNeighbors(cur);
+            if (nb.length === 0) { stack.pop(); continue; }
+            let chosen;
+            if (bias > 0 && stack.length > 1) {
+                const prev = stack[stack.length - 2];
+                const dx = cur.x - prev.x, dy = cur.y - prev.y;
+                const straight = nb.find(n => n.x - cur.x === dx && n.y - cur.y === dy);
+                chosen = (straight && this.rng.next() < bias) ? straight : this.rng.pick(nb);
+            } else {
+                chosen = this.rng.pick(nb);
+            }
+            this.removeWall(cur, chosen);
+            chosen.visited = true;
+            stack.push(chosen);
+        }
+    }
+    addLoops(factor) {
+        const count = Math.floor(this.w * this.h * factor);
+        const offsets = [{dx:0,dy:-1,w:'N'},{dx:1,dy:0,w:'E'},{dx:0,dy:1,w:'S'},{dx:-1,dy:0,w:'W'}];
+        for (let i = 0; i < count; i++) {
+            const x = this.rng.nextInt(0, this.w - 1);
+            const y = this.rng.nextInt(0, this.h - 1);
+            const c = this.cell(x, y);
+            const o = this.rng.pick(offsets);
+            const nb = this.cell(x + o.dx, y + o.dy);
+            if (nb) this.removeWall(c, nb);
+        }
+    }
+    removeDeadEnds(removalRate) {
+        let changed = true;
+        while (changed) {
+            changed = false;
+            for (const c of this.cells) {
+                if (c === this.entranceCell || c === this.exitCell) continue;
+                if (c.chamber) continue;
+                // Count open walls (passages)
+                let openCount = 0;
+                if (!c.N) openCount++;
+                if (!c.S) openCount++;
+                if (!c.E) openCount++;
+                if (!c.W) openCount++;
+                if (openCount !== 1) continue; // not a dead end
+                if (this.rng.next() > removalRate) continue;
+                // Fill in the single opening to remove dead end
+                if (!c.N) { c.N = true; const nb = this.cell(c.x, c.y - 1); if (nb) nb.S = true; }
+                else if (!c.S) { c.S = true; const nb = this.cell(c.x, c.y + 1); if (nb) nb.N = true; }
+                else if (!c.E) { c.E = true; const nb = this.cell(c.x + 1, c.y); if (nb) nb.W = true; }
+                else if (!c.W) { c.W = true; const nb = this.cell(c.x - 1, c.y); if (nb) nb.E = true; }
+                changed = true;
+            }
+        }
+    }
+    setEntranceExit() {
+        const ey = Math.floor(this.h / 2);
+        this.entranceCell = this.cell(0, ey);
+        this.entranceCell.W = false;
+        const ex = this.w - 1;
+        this.exitCell = this.cell(ex, ey);
+        this.exitCell.E = false;
+    }
+    addSpaceFold() {
+        const reserved = new Set([
+            ...this.oneWayGates.flatMap(gate => [gate.from, gate.to]),
+            this.rotatingChamber?.entry,
+            this.rotatingChamber?.cell,
+            this.rotatingChamber?.exit,
+            this.spatialLoop?.a,
+            this.spatialLoop?.b
+        ].filter(Boolean));
+        const northCandidates = [], southCandidates = [];
+        for (let x = 1; x < this.w - 1; x++) {
+            const north = this.cell(x, 0), south = this.cell(x, this.h - 1);
+            if (!reserved.has(north)) northCandidates.push(north);
+            if (!reserved.has(south)) southCandidates.push(south);
+        }
+        const north = this.rng.pick(northCandidates);
+        let south = this.rng.pick(southCandidates);
+        if (!north || !south) return false;
+        if (south.x === north.x && southCandidates.length > 1) {
+            south = southCandidates.find(cell => cell.x !== north.x) || south;
+        }
+        north.N = false;
+        south.S = false;
+        this.spaceFold = {north, south};
+        return true;
+    }
+    passageDirection(a, b) {
+        if (b.x > a.x) return 'E';
+        if (b.x < a.x) return 'W';
+        if (b.y > a.y) return 'S';
+        if (b.y < a.y) return 'N';
+        return null;
+    }
+    setWallBetween(a, b, closed) {
+        const direction = this.passageDirection(a, b);
+        const opposite = {N:'S',S:'N',E:'W',W:'E'}[direction];
+        if (!direction || !opposite) return;
+        a[direction] = closed;
+        b[opposite] = closed;
+    }
+    findPath(start = this.entranceCell, target = this.exitCell, {
+        respectOneWay = true,
+        includeSpatialLoop = true,
+        includeSpaceFold = true,
+        excludeEdge = null
+    } = {}) {
+        if (!start || !target) return [];
+        const previous = new Map([[start, null]]);
+        const queue = [start];
+        const dirs = [
+            {dx:0,dy:-1,w:'N'}, {dx:1,dy:0,w:'E'},
+            {dx:0,dy:1,w:'S'}, {dx:-1,dy:0,w:'W'}
+        ];
+        const isExcluded = (a, b) => excludeEdge && (
+            (a === excludeEdge[0] && b === excludeEdge[1]) ||
+            (a === excludeEdge[1] && b === excludeEdge[0])
+        );
+        while (queue.length > 0) {
+            const cur = queue.shift();
+            if (cur === target) {
+                const path = [];
+                for (let cell = target; cell; cell = previous.get(cell)) path.unshift(cell);
+                return path;
+            }
+            for (const d of dirs) {
+                if (cur[d.w] || (respectOneWay && cur.oneWayBlocked[d.w])) continue;
+                const next = this.cell(cur.x + d.dx, cur.y + d.dy);
+                if (!next || isExcluded(cur, next) || previous.has(next)) continue;
+                previous.set(next, cur);
+                queue.push(next);
+            }
+            if (includeSpatialLoop && this.spatialLoop) {
+                const next = cur === this.spatialLoop.a ? this.spatialLoop.b
+                    : cur === this.spatialLoop.b ? this.spatialLoop.a : null;
+                if (next && !previous.has(next)) {
+                    previous.set(next, cur);
+                    queue.push(next);
+                }
+            }
+            if (includeSpaceFold && this.spaceFold) {
+                const next = cur === this.spaceFold.north ? this.spaceFold.south
+                    : cur === this.spaceFold.south ? this.spaceFold.north : null;
+                if (next && !previous.has(next)) {
+                    previous.set(next, cur);
+                    queue.push(next);
+                }
+            }
+        }
+        return [];
+    }
+    reachableFrom(start, options = {}) {
+        const reached = new Set();
+        if (!start) return reached;
+        const queue = [start];
+        reached.add(start);
+        const dirs = [
+            {dx:0,dy:-1,w:'N'}, {dx:1,dy:0,w:'E'},
+            {dx:0,dy:1,w:'S'}, {dx:-1,dy:0,w:'W'}
+        ];
+        while (queue.length > 0) {
+            const cur = queue.shift();
+            for (const d of dirs) {
+                if (cur[d.w] || (options.respectOneWay !== false && cur.oneWayBlocked[d.w])) continue;
+                const next = this.cell(cur.x + d.dx, cur.y + d.dy);
+                if (!next || reached.has(next)) continue;
+                reached.add(next);
+                queue.push(next);
+            }
+            if (options.includeSpatialLoop !== false && this.spatialLoop) {
+                const next = cur === this.spatialLoop.a ? this.spatialLoop.b
+                    : cur === this.spatialLoop.b ? this.spatialLoop.a : null;
+                if (next && !reached.has(next)) { reached.add(next); queue.push(next); }
+            }
+            if (options.includeSpaceFold !== false && this.spaceFold) {
+                const next = cur === this.spaceFold.north ? this.spaceFold.south
+                    : cur === this.spaceFold.south ? this.spaceFold.north : null;
+                if (next && !reached.has(next)) { reached.add(next); queue.push(next); }
+            }
+        }
+        return reached;
+    }
+    edgeSeparatesEntranceExit(a, b) {
+        return this.findPath(this.entranceCell, this.exitCell, {
+            respectOneWay:false,
+            includeSpatialLoop:false,
+            excludeEdge:[a, b]
+        }).length === 0;
+    }
+    installOneWayGate(from, to, required) {
+        const blockedDirection = this.passageDirection(to, from);
+        const allowedDirection = this.passageDirection(from, to);
+        to.oneWayBlocked[blockedDirection] = true;
+        this.oneWayGates.push({from, to, allowedDirection, blockedDirection, required});
+    }
+    placeOneWayGates(count, required = false) {
+        if (count <= 0 || !this.entranceCell) return;
+
+        if (required) {
+            const path = this.findPath();
+            const requiredCandidates = [];
+            for (let i = 1; i < path.length - 2; i++) {
+                const from = path[i], to = path[i + 1];
+                if (from.chamber || to.chamber || this.edgeSeparatesEntranceExit(from, to) === false) continue;
+                requiredCandidates.push([from, to]);
+            }
+            if (requiredCandidates.length > 0) {
+                const [from, to] = this.rng.pick(requiredCandidates);
+                this.installOneWayGate(from, to, true);
+                return;
+            }
+        }
+
+        // Catalogue only passages reachable from the entrance. A gate is
+        // eligible only when removing its edge leaves another route between
+        // its cells, so changing it to one-way cannot strand the player.
+        const reachable = this.reachableFrom(this.entranceCell, {respectOneWay:false, includeSpatialLoop:false});
+
+        const candidates = [];
+        for (const cell of reachable) {
+            if (cell === this.entranceCell || cell === this.exitCell || cell.chamber) continue;
+            for (const {dx,dy,w} of [{dx:1,dy:0,w:'E'},{dx:0,dy:1,w:'S'}]) {
+                if (cell[w]) continue;
+                const next = this.cell(cell.x + dx, cell.y + dy);
+                if (!next || !reachable.has(next) || next === this.entranceCell || next === this.exitCell || next.chamber) continue;
+                candidates.push([cell, next]);
+            }
+        }
+
+        for (const [first, second] of this.rng.shuffle(candidates)) {
+            if (this.oneWayGates.length >= count) break;
+            if (!this.findPath(first, second, {respectOneWay:false, includeSpatialLoop:false, excludeEdge:[first, second]}).length) continue;
+            const [from, to] = this.rng.next() < 0.5 ? [first, second] : [second, first];
+            this.installOneWayGate(from, to, false);
+        }
+    }
+    placeOneWayOnPath(path = this.findPath()) {
+        const reserved = new Set([
+            this.spatialLoop?.a,
+            this.spatialLoop?.b,
+            this.rotatingChamber?.entry,
+            this.rotatingChamber?.cell,
+            this.rotatingChamber?.exit
+        ].filter(Boolean));
+        const candidates = [];
+        for (let i = 1; i < path.length - 2; i++) {
+            const from = path[i], to = path[i + 1];
+            if (Math.abs(from.x - to.x) + Math.abs(from.y - to.y) !== 1) continue;
+            if (from.chamber || to.chamber || reserved.has(from) || reserved.has(to)) continue;
+            candidates.push([from, to]);
+        }
+        if (!candidates.length) return false;
+        const [from, to] = this.rng.pick(candidates);
+        this.installOneWayGate(from, to, this.edgeSeparatesEntranceExit(from, to));
+        return true;
+    }
+    placeRotatingChamber() {
+        const path = this.findPath();
+        const gateCells = new Set(this.oneWayGates.flatMap(gate => [gate.from, gate.to]));
+        const candidates = [];
+        for (let i = 2; i < path.length - 2; i++) {
+            const entry = path[i - 1], cell = path[i], exit = path[i + 1];
+            if (cell.chamber || gateCells.has(cell) || gateCells.has(entry) || gateCells.has(exit)) continue;
+            const openNeighbors = [
+                this.cell(cell.x, cell.y - 1), this.cell(cell.x + 1, cell.y),
+                this.cell(cell.x, cell.y + 1), this.cell(cell.x - 1, cell.y)
+            ].filter(next => next && !cell[this.passageDirection(cell, next)]);
+            if (openNeighbors.length !== 2 || !openNeighbors.includes(entry) || !openNeighbors.includes(exit)) continue;
+            if (!this.edgeSeparatesEntranceExit(cell, exit)) continue;
+            candidates.push({entry, cell, exit, guidePath:path});
+        }
+        if (candidates.length === 0) return false;
+        const chamber = this.rng.pick(candidates);
+        chamber.activated = false;
+        chamber.entryPanel = null;
+        chamber.exitPanel = null;
+        chamber.visual = null;
+        chamber.cell.rotating = true;
+        this.rotatingChamber = chamber;
+        this.guidePath = chamber.guidePath;
+        this.setWallBetween(chamber.cell, chamber.exit, true);
+        return true;
+    }
+    activateRotatingChamber() {
+        const chamber = this.rotatingChamber;
+        if (!chamber || chamber.activated) return false;
+        this.setWallBetween(chamber.entry, chamber.cell, true);
+        this.setWallBetween(chamber.cell, chamber.exit, false);
+        chamber.activated = true;
+        return true;
+    }
+    placeSpatialLoop(required) {
+        const basePath = this.findPath();
+        if (basePath.length < 8) return false;
+        const usable = cell => cell && cell !== this.entranceCell && cell !== this.exitCell && !cell.chamber;
+
+        if (required) {
+            const cuts = [];
+            for (let i = 2; i < basePath.length - 3; i++) {
+                const a = basePath[i], b = basePath[i + 1];
+                if (usable(a) && usable(b) && Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1 &&
+                    this.edgeSeparatesEntranceExit(a, b)) cuts.push([a, b]);
+            }
+            if (cuts.length > 0) {
+                const cut = this.rng.pick(cuts);
+                this.setWallBetween(cut[0], cut[1], true);
+                const entranceSide = [...this.reachableFrom(this.entranceCell, {respectOneWay:false, includeSpatialLoop:false})]
+                    .filter(usable);
+                const exitSide = [...this.reachableFrom(this.exitCell, {respectOneWay:false, includeSpatialLoop:false})]
+                    .filter(usable);
+                if (entranceSide.length && exitSide.length) {
+                    const a = this.rng.pick(entranceSide);
+                    const shuffledExit = this.rng.shuffle(exitSide);
+                    const b = shuffledExit.reduce((best, cell) =>
+                        Math.abs(cell.x - a.x) + Math.abs(cell.y - a.y) > Math.abs(best.x - a.x) + Math.abs(best.y - a.y) ? cell : best
+                    );
+                    this.spatialLoop = {a, b, required:true, cut, cooldown:null};
+                    this.guidePath = this.findPath();
+                    return this.guidePath.length > 0;
+                }
+                this.setWallBetween(cut[0], cut[1], false);
+            }
+        }
+
+        const candidates = [];
+        for (let i = 2; i < basePath.length - 5; i++) {
+            for (let j = i + 4; j < basePath.length - 2; j++) {
+                const a = basePath[i], b = basePath[j];
+                if (usable(a) && usable(b) && Math.abs(a.x - b.x) + Math.abs(a.y - b.y) > 3) candidates.push([a, b]);
+            }
+        }
+        if (!candidates.length) return false;
+        const [a, b] = this.rng.pick(candidates);
+        this.spatialLoop = {a, b, required:false, cut:null, cooldown:null};
+        this.guidePath = this.findPath();
+        return true;
+    }
+    placeChambers(count, types) {
+        const candidates = this.cells.filter(c => {
+            if (c === this.entranceCell || c === this.exitCell) return false;
+            if (c.x <= 1 || c.x >= this.w - 2 || c.y <= 1 || c.y >= this.h - 2) return false;
+            return true;
+        });
+        const shuffled = this.rng.shuffle(candidates);
+        let placed = 0;
+        for (const center of shuffled) {
+            if (placed >= count) break;
+            const type = this.rng.pick(types);
+            const sz = (this.w >= 13 && this.rng.next() > 0.5) ? 3 : 2;
+            const footprint = [];
+            for (let dy = 0; dy < sz; dy++) {
+                for (let dx = 0; dx < sz; dx++) {
+                    const nc = this.cell(center.x + dx, center.y + dy);
+                    if (nc) footprint.push(nc);
+                }
+            }
+            if (footprint.length !== sz * sz || footprint.some(c => c.chamber)) continue;
+
+            const chamberId = `${center.x},${center.y}`;
+            for (let dy = 0; dy < sz; dy++) {
+                for (let dx = 0; dx < sz; dx++) {
+                    const nc = this.cell(center.x + dx, center.y + dy);
+                    if (!nc) continue;
+                    nc.chamber = type;
+                    nc.chamberId = chamberId;
+                    nc.chamberCenter = dx === Math.floor(sz / 2) && dy === Math.floor(sz / 2);
+                    if (dx < sz - 1) {
+                        const right = this.cell(center.x + dx + 1, center.y + dy);
+                        if (right) this.removeWall(nc, right);
+                    }
+                    if (dy < sz - 1) {
+                        const below = this.cell(center.x + dx, center.y + dy + 1);
+                        if (below) this.removeWall(nc, below);
+                    }
+                }
+            }
+            placed++;
+        }
+    }
+    placeTraps(count, srcRoom, dstRoom) {
+        const connected = new Set();
+        for (const d of Object.values(roomNavigation[srcRoom] || {})) connected.add(d);
+        for (const d of Object.values(roomNavigation[dstRoom] || {})) connected.add(d);
+        connected.delete(srcRoom); connected.delete(dstRoom);
+        const destPool = [...connected];
+        if (destPool.length === 0) return;
+        const featureCells = new Set([
+            ...this.oneWayGates.flatMap(gate => [gate.from, gate.to]),
+            this.rotatingChamber?.entry,
+            this.rotatingChamber?.cell,
+            this.rotatingChamber?.exit,
+            this.spatialLoop?.a,
+            this.spatialLoop?.b,
+            this.spaceFold?.north,
+            this.spaceFold?.south
+        ].filter(Boolean));
+        const candidates = this.cells.filter(c =>
+            !c.chamber && c !== this.entranceCell && c !== this.exitCell &&
+            !featureCells.has(c) &&
+            c.x > 0 && c.x < this.w - 1 && c.y > 0 && c.y < this.h - 1
+        );
+        const shuffled = this.rng.shuffle(candidates);
+        for (let i = 0; i < count && i < shuffled.length; i++) {
+            shuffled[i].trap = true;
+            shuffled[i].trapDest = this.rng.pick(destPool);
+        }
+    }
+}
+
+// ===== KEY PROCESSING =====
+function getMazeParams(masterSeed, roomA, roomB) {
+    const canonical = [roomA, roomB].sort().join('|');
+    const seed = fnv1a(masterSeed + canonical);
+    const rng = new Rng(seed);
+    const tier = rng.nextInt(0, 3); // 0=simple, 1=moderate, 2=complex, 3=labyrinthine
+    const gridRanges = [[8,10],[10,14],[14,18],[18,20]];
+    const [gMin, gMax] = gridRanges[tier];
+    const w = rng.nextInt(gMin, gMax);
+    const h = rng.nextInt(gMin, gMax);
+    const bias = 0.1 + rng.next() * 0.8;
+    const loops = rng.next() * 0.15;
+    const rooms = [rng.nextInt(0,1), rng.nextInt(1,2), rng.nextInt(2,3), rng.nextInt(3,4)][tier];
+    const traps = [0, rng.nextInt(0,1), rng.nextInt(1,2), rng.nextInt(2,3)][tier];
+    const fogFar = 18 + rng.next() * 30;
+    const availableLaw = getTesseractLaw(roomA);
+    let law = rng.next() < availableLaw.chance ? availableLaw : null;
+    let structuralFeature = null;
+    if (rng.next() < [0.22, 0.36, 0.52, 0.68][tier]) {
+        const featureRoll = rng.next();
+        structuralFeature = featureRoll < 0.44 ? 'one-way'
+            : featureRoll < 0.7 ? 'rotating-chamber' : 'spatial-loop';
+    }
+    const structuralRequired = structuralFeature === 'rotating-chamber' ||
+        (structuralFeature !== null && rng.next() < 0.4);
+    if (structuralRequired) law = null;
+    return {w, h, bias, loops, rooms, traps, fogFar, seed, tier, law, structuralFeature, structuralRequired};
+}
+
+function buildStandardMaze(p, roomA, roomB) {
+    const rng = new Rng(p.seed);
+    const grid = new MazeGrid(p.w, p.h, rng);
+    grid.generate(p.bias);
+    grid.addLoops(p.loops);
+    grid.setEntranceExit();
+    const types = ['empty','empty','lore','nav'];
+    grid.placeChambers(p.rooms, types);
+    // Dead-end removal: higher tiers keep more dead ends for complexity
+    // Runs after setEntranceExit so entrance/exit cells are protected
+    const deadEndRate = [0.7, 0.5, 0.3, 0.1][p.tier];
+    grid.removeDeadEnds(deadEndRate);
+    if (p.law?.id === 'space-fold') grid.addSpaceFold();
+    if (p.structuralFeature === 'one-way') grid.placeOneWayGates(1, p.structuralRequired);
+    else if (p.structuralFeature === 'rotating-chamber') grid.placeRotatingChamber();
+    else if (p.structuralFeature === 'spatial-loop') grid.placeSpatialLoop(p.structuralRequired);
+    if (!grid.guidePath) grid.guidePath = grid.findPath();
+    grid.placeTraps(p.traps, roomA, roomB);
+    return {grid, params: p};
+}
+
+function pathUsesConnection(path, a, b) {
+    return path.some((cell, index) =>
+        (cell === a && path[index + 1] === b) ||
+        (cell === b && path[index + 1] === a)
+    );
+}
+
+function buildFeatureTestMaze(baseParams, roomA, roomB) {
+    const template = {
+        ...baseParams,
+        w:14,
+        h:14,
+        tier:2,
+        bias:0.45,
+        loops:0.055,
+        rooms:2,
+        traps:2,
+        law:DEFAULT_MAZE_LAW,
+        structuralFeature:'feature-test',
+        structuralRequired:false,
+        testMode:true
+    };
+
+    for (let attempt = 0; attempt < 128; attempt++) {
+        const p = {...template, seed:fnv1a(`${baseParams.seed}|feature-test|${attempt}`)};
+        const grid = new MazeGrid(p.w, p.h, new Rng(p.seed));
+        grid.generate(p.bias);
+        grid.addLoops(p.loops);
+        grid.setEntranceExit();
+        grid.placeChambers(p.rooms, ['empty','empty','lore','nav']);
+        grid.removeDeadEnds(0.3);
+
+        if (!grid.placeSpatialLoop(false)) continue;
+        if (!grid.placeOneWayOnPath(grid.guidePath)) continue;
+        grid.guidePath = grid.findPath();
+        if (!grid.placeRotatingChamber()) continue;
+        const guide = grid.guidePath;
+        const gate = grid.oneWayGates[0];
+        const loop = grid.spatialLoop;
+        if (!gate || !loop || !pathUsesConnection(guide, gate.from, gate.to) ||
+            !pathUsesConnection(guide, loop.a, loop.b) || !guide.includes(grid.rotatingChamber.cell)) continue;
+        if (!grid.addSpaceFold()) continue;
+        grid.placeTraps(p.traps, roomA, roomB);
+        if (!grid.cells.some(cell => cell.trap)) continue;
+        return {grid, params:p};
+    }
+
+    return buildStandardMaze({...baseParams, law:DEFAULT_MAZE_LAW}, roomA, roomB);
+}
+
+function generateMaze(masterSeed, roomA, roomB, {allFeatures = false} = {}) {
+    const p = getMazeParams(masterSeed, roomA, roomB);
+    return allFeatures ? buildFeatureTestMaze(p, roomA, roomB) : buildStandardMaze(p, roomA, roomB);
+}
+
+// ===== PATHFINDING =====
+let distances = {};
+function computeDistances() {
+    distances = {};
+    distances['3.02'] = 0;
+    const deque = ['3.02'];
+    while (deque.length > 0) {
+        const room = deque.shift();
+        const d = distances[room];
+        // Toggle edges (cost 0)
+        const tog = roomToggles[room];
+        if (tog && (distances[tog] === undefined || d < distances[tog])) {
+            distances[tog] = d;
+            deque.unshift(tog);
+        }
+        // Navigation edges (cost 1)
+        const nav = roomNavigation[room] || {};
+        for (const dest of Object.values(nav)) {
+            if (distances[dest] === undefined || d + 1 < distances[dest]) {
+                distances[dest] = d + 1;
+                deque.push(dest);
+            }
+        }
+    }
+}
+
+// ===== CHEAT: MAZE SOLVER =====
+let cheatMode = false;
+
+function solveMaze(grid) {
+    return grid.guidePath || grid.findPath();
+}
+
+function addCheatLine(group, grid) {
+    const path = solveMaze(grid);
+    if (path.length < 2) return;
+    const mat = new THREE.LineBasicMaterial({color: GRUVBOX.red, transparent: true, opacity: 0.5, depthWrite: false});
+    const centerPoint = cell => new THREE.Vector3(cell.x * CELL + CELL / 2, 0.1, cell.y * CELL + CELL / 2);
+    const foldPoint = cell => new THREE.Vector3(
+        cell.x * CELL + CELL / 2,
+        0.1,
+        cell === grid.spaceFold?.north ? 0.3 : grid.h * CELL - 0.3
+    );
+    let segment = [centerPoint(path[0])];
+    const flush = () => {
+        if (segment.length < 2) { segment = []; return; }
+        group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(segment), mat.clone()));
+        segment = [];
+    };
+    for (let i = 0; i < path.length - 1; i++) {
+        const from = path[i], to = path[i + 1];
+        if (Math.abs(from.x - to.x) + Math.abs(from.y - to.y) === 1) {
+            segment.push(centerPoint(to));
+            continue;
+        }
+        const foldJump = grid.spaceFold && (
+            (from === grid.spaceFold.north && to === grid.spaceFold.south) ||
+            (from === grid.spaceFold.south && to === grid.spaceFold.north)
+        );
+        if (foldJump) segment.push(foldPoint(from));
+        flush();
+        segment = foldJump ? [foldPoint(to), centerPoint(to)] : [centerPoint(to)];
+    }
+    flush();
+    mat.dispose();
+}
+
+function addHubCheatLine(group, roomId) {
+    const nav = roomNavigation[roomId] || {};
+    let bestDir = null, bestDist = Infinity;
+    for (const [dir, dest] of Object.entries(nav)) {
+        const d = distances[dest];
+        if (d !== undefined && d < bestDist) { bestDist = d; bestDir = dir; }
+    }
+    // Check if toggle is better
+    const tog = roomToggles[roomId];
+    if (tog && distances[tog] !== undefined && distances[tog] < bestDist) {
+        const ring = new THREE.Mesh(
+            new THREE.TorusGeometry(1.38, 0.08, 8, 48),
+            new THREE.MeshBasicMaterial({color: GRUVBOX.red, transparent: true, opacity: 0.8, depthWrite: false})
+        );
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.y = 0.12;
+        group.add(ring);
+
+        const label = makeFloorInscription(`WARP \u2192 ${tog}`, '#ff6453', {
+            size: 30,
+            worldWidth: 2.6,
+            worldHeight: 0.36,
+            plaque: true
+        });
+        label.position.set(0, 0.14, 1.65);
+        group.add(label);
+        return;
+    }
+    if (!bestDir) return;
+    const angle = DIR_ANGLES[bestDir];
+    const points = [
+        new THREE.Vector3(0, 0.1, 0),
+        new THREE.Vector3(Math.sin(angle) * (HUB_APO - 0.5), 0.1, -Math.cos(angle) * (HUB_APO - 0.5))
+    ];
+    const geom = new THREE.BufferGeometry().setFromPoints(points);
+    const mat = new THREE.LineBasicMaterial({color: GRUVBOX.red, transparent: true, opacity: 0.5, depthWrite: false});
+    group.add(new THREE.Line(geom, mat));
+    // Arrow at the end
+    const arrowGeo = new THREE.ConeGeometry(0.12, 0.25, 4);
+    const arrowMat = new THREE.MeshBasicMaterial({color: GRUVBOX.red, transparent: true, opacity: 0.5});
+    const arrow = new THREE.Mesh(arrowGeo, arrowMat);
+    arrow.rotation.x = -Math.PI / 2;
+    arrow.rotation.z = -angle;
+    arrow.position.set(Math.sin(angle) * (HUB_APO - 0.3), 0.1, -Math.cos(angle) * (HUB_APO - 0.3));
+    group.add(arrow);
+}
+
+// ===== THREE.JS SETUP =====
+let scene, camera, renderer, controls;
+const playerPos = new THREE.Vector3();
+const moveState = {forward:false, backward:false, left:false, right:false};
+const moveForward = new THREE.Vector3();
+const moveRight = new THREE.Vector3();
+const moveDirection = new THREE.Vector3();
+const minimapForward = new THREE.Vector3();
+let currentGroup = null;
+let gameState = 'GATE';
+let currentRoomId = null;
+let elapsedPlayMs = 0;
+let playStartedAt = 0;
+let mazeCount = 0;
+let masterSeed = '';
+let activeKey = '';
+let testMazeMode = false;
+let playerLight = null;
+
+function setupThree() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(GRUVBOX.bg);
+    scene.fog = new THREE.Fog(GRUVBOX.bg, 1, 48);
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(0, EYE_H, 0);
+    renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.7;
+    document.body.appendChild(renderer.domElement);
+    controls = new PointerLockControls(camera, document.body);
+    scene.add(new THREE.AmbientLight(GRUVBOX.fg, 1.05));
+    const hemi = new THREE.HemisphereLight(GRUVBOX.blue, GRUVBOX.bg1, 0.9);
+    scene.add(hemi);
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+}
+
+// ===== ARCHITECTURAL TEXT =====
+// World text is always attached to a plane. Nothing billboards toward the
+// camera, so labels read as plaques or inscriptions rather than HUD fragments.
+function makeTextPanel(text, color = '#ebdbb2', {
+    size = 28,
+    canvasWidth = 512,
+    canvasHeight = 96,
+    worldWidth = 2.4,
+    worldHeight = 0.45,
+    plaque = true
+} = {}) {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    if (plaque) {
+        ctx.fillStyle = 'rgba(40,40,40,0.92)';
+        ctx.fillRect(2, 2, canvasWidth - 4, canvasHeight - 4);
+        ctx.strokeStyle = color;
+        ctx.globalAlpha = 0.55;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(5, 5, canvasWidth - 10, canvasHeight - 10);
+        ctx.globalAlpha = 1;
+    }
+    ctx.font = `${size}px 'JetBrainsMono Nerd Font', 'JetBrains Mono', monospace`;
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, canvasWidth / 2, canvasHeight / 2);
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.minFilter = THREE.LinearFilter;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const mat = new THREE.MeshBasicMaterial({
+        map:tex,
+        transparent:true,
+        side:THREE.DoubleSide,
+        depthWrite:false,
+        polygonOffset:true,
+        polygonOffsetFactor:-1
+    });
+    return new THREE.Mesh(new THREE.PlaneGeometry(worldWidth, worldHeight), mat);
+}
+
+function makeFloorInscription(text, color, options = {}) {
+    const inscription = makeTextPanel(text, color, {...options, plaque:options.plaque ?? false});
+    inscription.rotation.x = -Math.PI / 2;
+    return inscription;
+}
+
+// ===== CLEAR SCENE =====
+function disposeMaterial(material) {
+    if (!material) return;
+    for (const value of Object.values(material)) {
+        if (value && value.isTexture && !persistentTextures.has(value)) value.dispose();
+    }
+    material.dispose();
+}
+
+function disposeObjectTree(group) {
+    if (!group) return;
+    group.traverse(obj => {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) {
+            if (Array.isArray(obj.material)) obj.material.forEach(disposeMaterial);
+            else disposeMaterial(obj.material);
+        }
+    });
+}
+
+function clearScene() {
+    if (currentGroup) {
+        scene.remove(currentGroup);
+        disposeObjectTree(currentGroup);
+        currentGroup = null;
+    }
+    // Remove any extra lights
+    const toRemove = [];
+    scene.traverse(obj => { if (obj.isPointLight && !obj._permanent) toRemove.push(obj); });
+    toRemove.forEach(l => scene.remove(l));
+}
+
+// ===== HUB STATE =====
+let hubDoorOpen = null;        // direction string or null
+let hubDoorPanels = {};        // dir -> mesh (sealed door panel)
+let hubClickables = [];        // raycasting targets
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2(0, 0); // center of screen
+
+// ===== HUB BUILDER =====
+function buildHub(roomId, {preview = false, openDirection = null} = {}) {
+    const group = new THREE.Group();
+    const tessNum = getTess(roomId);
+    const tess = TESSERACTS[tessNum];
+    const color = new THREE.Color(tess.color);
+    const nav = roomNavigation[roomId] || {};
+    const isControl = CONTROL_ROOMS.includes(roomId);
+
+    if (!preview) {
+        hubDoorOpen = null;
+        hubDoorPanels = {};
+        hubClickables = [];
+    }
+
+    // Materials
+    const wallSolid = new THREE.MeshStandardMaterial({color: GRUVBOX.bg2, side: THREE.DoubleSide, roughness: 0.88});
+    const floorMat = new THREE.MeshStandardMaterial({color: GRUVBOX.bg1, side: THREE.DoubleSide, roughness: 0.92});
+
+    function addWallEdges(geometry, mesh) {
+        const edgeGeometry = new THREE.EdgesGeometry(geometry);
+        const edgeMaterial = new THREE.LineBasicMaterial({color, transparent: true, opacity: 0.38});
+        const edges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
+        edges.position.copy(mesh.position);
+        edges.rotation.copy(mesh.rotation);
+        group.add(edges);
+    }
+
+    // Floor
+    const floorShape = new THREE.Shape();
+    for (let i = 0; i < 8; i++) {
+        const a = (i * Math.PI / 4) + Math.PI / 8;
+        const x = Math.sin(a) * HUB_RAD, z = -Math.cos(a) * HUB_RAD;
+        i === 0 ? floorShape.moveTo(x, z) : floorShape.lineTo(x, z);
+    }
+    floorShape.closePath();
+    const floorGeom = new THREE.ShapeGeometry(floorShape);
+    const floor = new THREE.Mesh(floorGeom, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    group.add(floor);
+
+    // Ceiling
+    const ceil = new THREE.Mesh(floorGeom.clone(), floorMat.clone());
+    ceil.rotation.x = Math.PI / 2;
+    ceil.position.y = HUB_H;
+    group.add(ceil);
+
+    // Walls
+    for (const dir of DIRECTIONS) {
+        const angle = DIR_ANGLES[dir];
+        const hasDoor = !!nav[dir];
+        const nx = Math.sin(angle), nz = -Math.cos(angle);
+        const wx = nx * HUB_APO, wz = nz * HUB_APO;
+        const wallLen = 2 * HUB_RAD * Math.sin(Math.PI / 8);
+        const tx = Math.cos(angle), tz = Math.sin(angle);
+
+        if (hasDoor) {
+            const halfWall = wallLen / 2;
+            const halfDoor = DOOR_W / 2;
+            // Left wall segment
+            const lgw = halfWall - halfDoor;
+            if (lgw > 0.01) {
+                const lg = new THREE.BoxGeometry(lgw, HUB_H, WALL_T);
+                const lm = new THREE.Mesh(lg, wallSolid);
+                lm.position.set(wx - tx * (halfDoor + lgw / 2), HUB_H / 2, wz - tz * (halfDoor + lgw / 2));
+                lm.rotation.y = -angle;
+                group.add(lm);
+                addWallEdges(lg, lm);
+            }
+            // Right wall segment
+            if (lgw > 0.01) {
+                const rg = new THREE.BoxGeometry(lgw, HUB_H, WALL_T);
+                const rm = new THREE.Mesh(rg, wallSolid);
+                rm.position.set(wx + tx * (halfDoor + lgw / 2), HUB_H / 2, wz + tz * (halfDoor + lgw / 2));
+                rm.rotation.y = -angle;
+                group.add(rm);
+                addWallEdges(rg, rm);
+            }
+            // Top segment above door
+            const topH = HUB_H - DOOR_H;
+            if (topH > 0.01) {
+                const tg = new THREE.BoxGeometry(DOOR_W, topH, WALL_T);
+                const tm = new THREE.Mesh(tg, wallSolid);
+                tm.position.set(wx, DOOR_H + topH / 2, wz);
+                tm.rotation.y = -angle;
+                group.add(tm);
+                addWallEdges(tg, tm);
+            }
+
+            // Sealed door panel (blocks the opening until clicked)
+            const dest = nav[dir];
+            const dt = TESSERACTS[getTess(dest)];
+            const doorColor = new THREE.Color(dt.color);
+            const closerToEntryway = distances[dest] < distances[roomId];
+            const doorMat = new THREE.MeshStandardMaterial({
+                map: getDoorTexture(getTess(dest), dt.color),
+                color: GRUVBOX.fg,
+                emissive: doorColor,
+                emissiveIntensity: closerToEntryway ? 0.2 : 0.07,
+                metalness: 0.35,
+                roughness: 0.72,
+                side: THREE.DoubleSide
+            });
+            const doorGeom = new THREE.BoxGeometry(DOOR_W, DOOR_H, 0.08);
+            const doorPanel = new THREE.Mesh(doorGeom, doorMat);
+            doorPanel.position.set(wx, DOOR_H / 2, wz);
+            doorPanel.rotation.y = -angle;
+            doorPanel.userData = {isDoor: true, direction: dir, destination: dest};
+            group.add(doorPanel);
+            if (!preview) {
+                hubDoorPanels[dir] = doorPanel;
+                hubClickables.push(doorPanel);
+            }
+
+            // Wireframe on door panel
+            const doorWireGeom = new THREE.EdgesGeometry(doorGeom);
+            const doorWireMat = new THREE.LineBasicMaterial({color: doorColor, transparent: true, opacity: 0.6});
+            const doorWire = new THREE.LineSegments(doorWireGeom, doorWireMat);
+            doorWire.position.copy(doorPanel.position);
+            doorWire.rotation.copy(doorPanel.rotation);
+            doorPanel._wire = doorWire;
+            group.add(doorWire);
+
+            // Destination and interaction text are plaques fixed to the door,
+            // rather than camera-facing labels suspended in the room.
+            const label = makeTextPanel(`${dest} · ${dt.name.toUpperCase()}`, dt.color, {
+                size: 30,
+                worldWidth: 1.72,
+                worldHeight: 0.34
+            });
+            label.position.set(wx - nx * 0.055, 2.35, wz - nz * 0.055);
+            label.rotation.y = -angle;
+            doorPanel._label = label;
+            group.add(label);
+
+            const sigil = makeTextPanel('OPEN · CLICK / E', dt.color, {
+                size: 25,
+                worldWidth: 1.62,
+                worldHeight: 0.3
+            });
+            sigil.position.set(wx - nx * 0.058, 1.25, wz - nz * 0.058);
+            sigil.rotation.y = -angle;
+            doorPanel._sigil = sigil;
+            group.add(sigil);
+
+            if (preview && dir === openDirection) {
+                doorPanel.visible = false;
+                doorWire.visible = false;
+                label.visible = false;
+                sigil.visible = false;
+            }
+        } else {
+            // Solid wall (no door)
+            const wg = new THREE.BoxGeometry(wallLen, HUB_H, WALL_T);
+            const wm = new THREE.Mesh(wg, wallSolid);
+            wm.position.set(wx, HUB_H / 2, wz);
+            wm.rotation.y = -angle;
+            group.add(wm);
+            addWallEdges(wg, wm);
+        }
+    }
+
+    // Toggle portal
+    const togDest = roomToggles[roomId];
+    if (togDest) {
+        const portalColor = isControl ? GRUVBOX.aqua : GRUVBOX.yellow;
+        const torus = new THREE.TorusGeometry(1.2, 0.06, 8, 32);
+        const torusMat = new THREE.MeshBasicMaterial({color: portalColor, transparent: true, opacity: 0.5});
+        const portal = new THREE.Mesh(torus, torusMat);
+        portal.rotation.x = -Math.PI / 2;
+        portal.position.y = 0.05;
+        group.add(portal);
+        const pLight = new THREE.PointLight(portalColor, 0.6, 6);
+        pLight.position.set(0, 0.5, 0);
+        group.add(pLight);
+        const inner = new THREE.TorusGeometry(0.6, 0.03, 8, 24);
+        const innerMat = new THREE.MeshBasicMaterial({color: portalColor, transparent: true, opacity: 0.3});
+        const innerMesh = new THREE.Mesh(inner, innerMat);
+        innerMesh.rotation.x = -Math.PI / 2;
+        innerMesh.position.y = 0.04;
+        group.add(innerMesh);
+
+        // Broad invisible target so the floor portal is practical to click.
+        const warpTarget = new THREE.Mesh(
+            new THREE.CircleGeometry(1.35, 32),
+            new THREE.MeshBasicMaterial({transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false})
+        );
+        warpTarget.rotation.x = -Math.PI / 2;
+        warpTarget.position.y = 0.08;
+        warpTarget.userData = {isWarp: true, destination: togDest};
+        group.add(warpTarget);
+        if (!preview) hubClickables.push(warpTarget);
+    }
+
+    // Central orb (near ceiling, main light source — matches original FPS)
+    const orbY = HUB_H - 0.8;
+    const orbGeo = new THREE.SphereGeometry(0.5, 32, 32);
+    const orbMat = new THREE.MeshStandardMaterial({
+        color, emissive: color, emissiveIntensity: 0.8, metalness: 0.3, roughness: 0.2
+    });
+    const orb = new THREE.Mesh(orbGeo, orbMat);
+    orb.position.set(0, orbY, 0);
+    if (togDest) orb.userData = {isWarp: true, destination: togDest};
+    group.add(orb);
+    if (togDest && !preview) hubClickables.push(orb);
+    const orbLight = new THREE.PointLight(color, 3.5, 22);
+    orbLight.position.set(0, orbY, 0);
+    group.add(orbLight);
+
+    // Floor ring beneath orb
+    const ringGeo = new THREE.TorusGeometry(1.0, 0.04, 8, 48);
+    const ringMat = new THREE.MeshBasicMaterial({color, transparent: true, opacity: 0.4, depthWrite: false});
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.set(0, 0.06, 0);
+    group.add(ring);
+
+    // Compass arrow pointing North (-Z) — 3D box so visible from all angles
+    const compassLen = 2.0;
+    const compassGeo = new THREE.BoxGeometry(0.08, 0.06, compassLen);
+    const compassMat = new THREE.MeshBasicMaterial({color, transparent: true, opacity: 0.5});
+    const compassLine = new THREE.Mesh(compassGeo, compassMat);
+    compassLine.position.set(0, 0.08, -compassLen / 2);
+    group.add(compassLine);
+    // Arrowhead
+    const arrowGeo = new THREE.ConeGeometry(0.15, 0.3, 4);
+    const arrowMat = new THREE.MeshBasicMaterial({color, transparent: true, opacity: 0.6});
+    const arrow = new THREE.Mesh(arrowGeo, arrowMat);
+    arrow.rotation.x = -Math.PI / 2;
+    arrow.position.set(0, 0.08, -compassLen - 0.1);
+    group.add(arrow);
+
+    // Compass and room identity are inlaid into the floor.
+    const nLabel = makeFloorInscription('N', tess.color, {
+        size: 38,
+        canvasWidth: 128,
+        canvasHeight: 128,
+        worldWidth: 0.42,
+        worldHeight: 0.42
+    });
+    nLabel.position.set(0, 0.085, -compassLen - 0.5);
+    group.add(nLabel);
+
+    const roomLabel = makeFloorInscription(`${roomId} · ${tess.name.toUpperCase()}`, tess.color, {
+        size: 30,
+        worldWidth: 3.2,
+        worldHeight: 0.42,
+        plaque: true
+    });
+    roomLabel.position.set(0, 0.075, 2.0);
+    group.add(roomLabel);
+
+    if (cheatMode && !preview) addHubCheatLine(group, roomId);
+
+    return group;
+}
+
+function openHubDoor(dir) {
+    // Close any currently open door
+    if (hubDoorOpen && hubDoorPanels[hubDoorOpen]) {
+        const old = hubDoorPanels[hubDoorOpen];
+        old.visible = true;
+        if (old._wire) old._wire.visible = true;
+        if (old._label) old._label.visible = true;
+        if (old._sigil) old._sigil.visible = true;
+    }
+    // Detach previous maze
+    detachMaze();
+    // Open the clicked door
+    hubDoorOpen = dir;
+    const panel = hubDoorPanels[dir];
+    if (panel) {
+        panel.visible = false;
+        if (panel._wire) panel._wire.visible = false;
+        if (panel._label) panel._label.visible = false;
+        if (panel._sigil) panel._sigil.visible = false;
+    }
+    // Generate and attach the maze beyond this door
+    attachMaze(dir);
+}
+
+function interactWithHub(allowNearbyWarp = false) {
+    if (gameState !== 'HUB' || playerInMaze || !controls.isLocked) return;
+    raycaster.setFromCamera(pointer, camera);
+    const hits = raycaster.intersectObjects(hubClickables);
+    const visibleHit = hits.find(hit => hit.object.visible);
+    if (visibleHit) {
+        const hit = visibleHit.object;
+        if (hit.userData.isDoor) {
+            openHubDoor(hit.userData.direction);
+            return;
+        }
+        if (hit.userData.isWarp) {
+            enterHub(hit.userData.destination);
+            return;
+        }
+    }
+    if (allowNearbyWarp) triggerToggle();
+}
+
+function onHubClick() {
+    interactWithHub(false);
+}
+
+// ===== MAZE BUILDER =====
+function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
+    const group = new THREE.Group();
+    const {w, h} = mazeGrid;
+    const totalW = w * CELL, totalH = h * CELL;
+    const accent = new THREE.Color(TESSERACTS[getTess(dstRoom)].color);
+    const wallColor = new THREE.Color(GRUVBOX.bg1).lerp(accent, 0.1);
+
+    // Collect unit wall segments by grid line, then collapse consecutive
+    // segments into long runs. This avoids outlining every cell as a panel.
+    const solidGeoms = [];
+    const horizontalWalls = new Map();
+    const verticalWalls = new Map();
+
+    function addWall(x, y, z, wid, hei, dep) {
+        const g = new THREE.BoxGeometry(wid, hei, dep);
+        g.translate(x, y, z);
+        solidGeoms.push(g);
+    }
+
+    function markWall(map, fixedAxis, unit) {
+        if (!map.has(fixedAxis)) map.set(fixedAxis, []);
+        map.get(fixedAxis).push(unit);
+    }
+
+    function buildWallRuns(map, horizontal) {
+        for (const [fixedAxis, units] of map) {
+            units.sort((a, b) => a - b);
+            let start = units[0];
+            let end = units[0];
+            const flush = () => {
+                const length = (end - start + 1) * CELL;
+                const center = (start + end + 1) * CELL / 2;
+                if (horizontal) addWall(center, WALL_H / 2, fixedAxis * CELL, length, WALL_H, WALL_T);
+                else addWall(fixedAxis * CELL, WALL_H / 2, center, WALL_T, WALL_H, length);
+            };
+            for (let i = 1; i < units.length; i++) {
+                if (units[i] === end + 1) {
+                    end = units[i];
+                } else {
+                    flush();
+                    start = end = units[i];
+                }
+            }
+            flush();
+        }
+    }
+
+    function isRotatingEdge(a, b) {
+        const chamber = mazeGrid.rotatingChamber;
+        if (!chamber || !a || !b) return false;
+        return (a === chamber.entry && b === chamber.cell) ||
+            (a === chamber.cell && b === chamber.entry) ||
+            (a === chamber.cell && b === chamber.exit) ||
+            (a === chamber.exit && b === chamber.cell);
+    }
+
+    // Catalogue each physical wall once using south/east cell faces plus the
+    // north/west outer boundaries.
+    for (let gy = 0; gy < h; gy++) {
+        for (let gx = 0; gx < w; gx++) {
+            const c = mazeGrid.cell(gx, gy);
+            if (gy === 0 && c.N) markWall(horizontalWalls, gy, gx);
+            if (gx === 0 && c.W) markWall(verticalWalls, gx, gy);
+            const south = mazeGrid.cell(gx, gy + 1);
+            const east = mazeGrid.cell(gx + 1, gy);
+            if (c.S && !isRotatingEdge(c, south)) markWall(horizontalWalls, gy + 1, gx);
+            if (c.E && !isRotatingEdge(c, east)) markWall(verticalWalls, gx + 1, gy);
+        }
+    }
+    buildWallRuns(horizontalWalls, true);
+    buildWallRuns(verticalWalls, false);
+
+    // Maze cells are wider than hub doors. Close the unused portion of each
+    // boundary cell so both sides meet at the same 2 m opening.
+    const doorwayCapDepth = (CELL - DOOR_W) / 2;
+    function addDoorwayCaps(x, cell) {
+        if (!cell || doorwayCapDepth <= 0) return;
+        const centerZ = cell.y * CELL + CELL / 2;
+        const offset = DOOR_W / 2 + doorwayCapDepth / 2;
+        addWall(x, WALL_H / 2, centerZ - offset, WALL_T, WALL_H, doorwayCapDepth);
+        addWall(x, WALL_H / 2, centerZ + offset, WALL_T, WALL_H, doorwayCapDepth);
+    }
+    addDoorwayCaps(0, mazeGrid.entranceCell);
+    addDoorwayCaps(totalW, mazeGrid.exitCell);
+
+    function addFoldCaps(z, cell) {
+        if (!cell || doorwayCapDepth <= 0) return;
+        const centerX = cell.x * CELL + CELL / 2;
+        const offset = DOOR_W / 2 + doorwayCapDepth / 2;
+        addWall(centerX - offset, WALL_H / 2, z, doorwayCapDepth, WALL_H, WALL_T);
+        addWall(centerX + offset, WALL_H / 2, z, doorwayCapDepth, WALL_H, WALL_T);
+    }
+    if (mazeGrid.spaceFold) {
+        addFoldCaps(0, mazeGrid.spaceFold.north);
+        addFoldCaps(totalH, mazeGrid.spaceFold.south);
+    }
+
+    // Merge and add solid walls
+    if (solidGeoms.length > 0) {
+        const merged = BufferGeometryUtils.mergeGeometries(solidGeoms);
+        const solidMat = new THREE.MeshStandardMaterial({
+            color: wallColor,
+            roughness: 0.9,
+            metalness: 0.08
+        });
+        group.add(new THREE.Mesh(merged, solidMat));
+        const edgeGeometry = new THREE.EdgesGeometry(merged, 25);
+        const edgeMaterial = new THREE.LineBasicMaterial({
+            color: accent,
+            transparent: true,
+            opacity: 0.45,
+            depthWrite: false
+        });
+        group.add(new THREE.LineSegments(edgeGeometry, edgeMaterial));
+        solidGeoms.forEach(g => g.dispose());
+    }
+
+    if (mazeGrid.rotatingChamber) {
+        const chamber = mazeGrid.rotatingChamber;
+        const makeDynamicPanel = (a, b) => {
+            const panelGroup = new THREE.Group();
+            const horizontal = a.y !== b.y;
+            const x = horizontal ? a.x * CELL + CELL / 2 : Math.max(a.x, b.x) * CELL;
+            const z = horizontal ? Math.max(a.y, b.y) * CELL : a.y * CELL + CELL / 2;
+            const geometry = new THREE.BoxGeometry(horizontal ? CELL : WALL_T, WALL_H, horizontal ? WALL_T : CELL);
+            const material = new THREE.MeshStandardMaterial({color:wallColor, roughness:0.86, metalness:0.12});
+            const panel = new THREE.Mesh(geometry, material);
+            panel.position.set(x, WALL_H / 2, z);
+            panelGroup.add(panel);
+            const edges = new THREE.LineSegments(
+                new THREE.EdgesGeometry(geometry),
+                new THREE.LineBasicMaterial({color:GRUVBOX.yellow, transparent:true, opacity:0.72})
+            );
+            edges.position.copy(panel.position);
+            panelGroup.add(edges);
+            panelGroup.visible = a[mazeGrid.passageDirection(a, b)];
+            group.add(panelGroup);
+            return panelGroup;
+        };
+        chamber.entryPanel = makeDynamicPanel(chamber.entry, chamber.cell);
+        chamber.exitPanel = makeDynamicPanel(chamber.cell, chamber.exit);
+    }
+
+    // Floor
+    const floorGeom = new THREE.PlaneGeometry(totalW, totalH);
+    const floorMat = new THREE.MeshStandardMaterial({color: GRUVBOX.bgHard, roughness: 0.94, side: THREE.DoubleSide});
+    const floor = new THREE.Mesh(floorGeom, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.set(totalW / 2, 0, totalH / 2);
+    group.add(floor);
+
+    // Ceiling
+    const ceilGeom = new THREE.PlaneGeometry(totalW, totalH);
+    const ceilMat = new THREE.MeshStandardMaterial({color: GRUVBOX.bg, roughness: 0.94, side: THREE.DoubleSide});
+    const ceil = new THREE.Mesh(ceilGeom, ceilMat);
+    ceil.rotation.x = Math.PI / 2;
+    ceil.position.set(totalW / 2, WALL_H, totalH / 2);
+    group.add(ceil);
+
+    // Entrance marker (green glow)
+    const ec = mazeGrid.entranceCell;
+    if (ec) {
+        const eLight = new THREE.PointLight(GRUVBOX.green, 1.5, 8);
+        eLight.position.set(ec.x * CELL + CELL / 2, 1, ec.y * CELL + CELL / 2);
+        group.add(eLight);
+        const ePlane = new THREE.Mesh(
+            new THREE.PlaneGeometry(CELL * 0.6, CELL * 0.6),
+            new THREE.MeshBasicMaterial({color: GRUVBOX.green, transparent: true, opacity: 0.15, side: THREE.DoubleSide})
+        );
+        ePlane.rotation.x = -Math.PI / 2;
+        ePlane.position.set(ec.x * CELL + CELL / 2, 0.02, ec.y * CELL + CELL / 2);
+        group.add(ePlane);
+        const eLabel = makeFloorInscription(`BACK · ${srcRoom}`, '#b8bb26', {
+            size: 28,
+            worldWidth: 2.2,
+            worldHeight: 0.38,
+            plaque: true
+        });
+        eLabel.position.set(ec.x * CELL + CELL / 2, 0.055, ec.y * CELL + CELL / 2);
+        group.add(eLabel);
+    }
+
+    // Exit marker (gold glow)
+    const xc = mazeGrid.exitCell;
+    if (xc) {
+        const xLight = new THREE.PointLight(GRUVBOX.yellow, 2, 10);
+        xLight.position.set(xc.x * CELL + CELL / 2, 1, xc.y * CELL + CELL / 2);
+        group.add(xLight);
+        const xPlane = new THREE.Mesh(
+            new THREE.PlaneGeometry(CELL * 0.6, CELL * 0.6),
+            new THREE.MeshBasicMaterial({color: GRUVBOX.yellow, transparent: true, opacity: 0.2, side: THREE.DoubleSide})
+        );
+        xPlane.rotation.x = -Math.PI / 2;
+        xPlane.position.set(xc.x * CELL + CELL / 2, 0.02, xc.y * CELL + CELL / 2);
+        group.add(xPlane);
+        const xLabel = makeFloorInscription(`EXIT · ${dstRoom}`, '#fabd2f', {
+            size: 28,
+            worldWidth: 2.2,
+            worldHeight: 0.38,
+            plaque: true
+        });
+        xLabel.position.set(xc.x * CELL + CELL / 2, 0.055, xc.y * CELL + CELL / 2);
+        group.add(xLabel);
+
+        // Visual-only destination hub beyond the exit. The real state
+        // transition still happens at the threshold, keeping collision and
+        // interaction ownership with the current room.
+        const returnDir = findReturnDir(srcRoom, dstRoom);
+        if (returnDir) {
+            const previewHub = buildHub(dstRoom, {preview: true, openDirection: returnDir});
+            previewHub.position.set(totalW + HUB_APO, 0, xc.y * CELL + CELL / 2);
+            previewHub.rotation.y = DIR_ANGLES[returnDir] + Math.PI / 2;
+            group.add(previewHub);
+        }
+    }
+
+    // Paired boundary apertures. Passing through either edge returns through
+    // the other without rotating the player, making the topology legible.
+    if (mazeGrid.spaceFold) {
+        const foldColor = GRUVBOX.purple;
+        const addFoldMarker = (cell, label, edgeZ) => {
+            const x = cell.x * CELL + CELL / 2;
+            const z = cell.y * CELL + CELL / 2;
+            const light = new THREE.PointLight(foldColor, 1.4, 9);
+            light.position.set(x, 1, z);
+            group.add(light);
+            const ring = new THREE.Mesh(
+                new THREE.RingGeometry(0.48, 0.76, 32),
+                new THREE.MeshBasicMaterial({color:foldColor, transparent:true, opacity:0.8, side:THREE.DoubleSide})
+            );
+            ring.rotation.x = -Math.PI / 2;
+            ring.position.set(x, 0.03, edgeZ);
+            group.add(ring);
+            const foldLabel = makeFloorInscription(label, '#d3869b', {
+                size: 28,
+                worldWidth: 1.72,
+                worldHeight: 0.34,
+                plaque: true
+            });
+            foldLabel.position.set(x, 0.055, z);
+            group.add(foldLabel);
+        };
+        addFoldMarker(mazeGrid.spaceFold.north, 'FOLD α', 0.3);
+        addFoldMarker(mazeGrid.spaceFold.south, 'FOLD β', totalH - 0.3);
+    }
+
+    // One-way thresholds remain visually open. Floor arrows show the legal
+    // direction and small posts mark the collision plane without resembling a
+    // solid wall.
+    for (const gate of mazeGrid.oneWayGates) {
+        const gateColor = gate.required ? GRUVBOX.yellow : GRUVBOX.aqua;
+        const gateCss = gate.required ? '#fabd2f' : '#8ec07c';
+        const fromX = gate.from.x * CELL + CELL / 2;
+        const fromZ = gate.from.y * CELL + CELL / 2;
+        const toX = gate.to.x * CELL + CELL / 2;
+        const toZ = gate.to.y * CELL + CELL / 2;
+        const dx = toX - fromX, dz = toZ - fromZ;
+        const length = Math.hypot(dx, dz);
+        const ux = dx / length, uz = dz / length;
+        const px = -uz, pz = ux;
+        const mx = (fromX + toX) / 2, mz = (fromZ + toZ) / 2;
+        const tipX = mx + ux * 0.65, tipZ = mz + uz * 0.65;
+        const baseX = tipX - ux * 0.34, baseZ = tipZ - uz * 0.34;
+        const arrowPoints = [
+            new THREE.Vector3(mx - ux * 0.65, 0.06, mz - uz * 0.65),
+            new THREE.Vector3(tipX, 0.06, tipZ),
+            new THREE.Vector3(tipX, 0.06, tipZ),
+            new THREE.Vector3(baseX + px * 0.28, 0.06, baseZ + pz * 0.28),
+            new THREE.Vector3(tipX, 0.06, tipZ),
+            new THREE.Vector3(baseX - px * 0.28, 0.06, baseZ - pz * 0.28)
+        ];
+        const arrowGeometry = new THREE.BufferGeometry().setFromPoints(arrowPoints);
+        const arrowMaterial = new THREE.LineBasicMaterial({color:gateColor, transparent:true, opacity:0.95, depthWrite:false});
+        group.add(new THREE.LineSegments(arrowGeometry, arrowMaterial));
+
+        const postGeometry = new THREE.CylinderGeometry(0.04, 0.04, 0.75, 8);
+        const postMaterial = new THREE.MeshBasicMaterial({color:gateColor, transparent:true, opacity:0.75});
+        for (const side of [-1, 1]) {
+            const post = new THREE.Mesh(postGeometry.clone(), postMaterial.clone());
+            post.position.set(mx + px * 0.82 * side, 0.375, mz + pz * 0.82 * side);
+            group.add(post);
+        }
+        postGeometry.dispose();
+        postMaterial.dispose();
+
+        const gateLight = new THREE.PointLight(gateColor, gate.required ? 0.85 : 0.55, 4.5);
+        gateLight.position.set(mx, 0.5, mz);
+        group.add(gateLight);
+        if (gate.required) {
+            const gateLabel = makeFloorInscription('COMMIT', gateCss, {
+                size: 28,
+                worldWidth: 1.45,
+                worldHeight: 0.32,
+                plaque: true
+            });
+            gateLabel.position.set(mx - ux * 0.95, 0.075, mz - uz * 0.95);
+            group.add(gateLabel);
+        }
+    }
+
+    if (mazeGrid.spatialLoop) {
+        const loop = mazeGrid.spatialLoop;
+        const loopColor = loop.required ? GRUVBOX.yellow : GRUVBOX.blue;
+        const loopCss = loop.required ? '#fabd2f' : '#83a598';
+        const addLoopMarker = (cell, label) => {
+            const x = cell.x * CELL + CELL / 2, z = cell.y * CELL + CELL / 2;
+            const ring = new THREE.Mesh(
+                new THREE.RingGeometry(0.42, 0.72, 32),
+                new THREE.MeshBasicMaterial({color:loopColor, transparent:true, opacity:0.82, side:THREE.DoubleSide})
+            );
+            ring.rotation.x = -Math.PI / 2;
+            ring.position.set(x, 0.045, z);
+            group.add(ring);
+            const core = new THREE.Mesh(
+                new THREE.CircleGeometry(0.24, 24),
+                new THREE.MeshBasicMaterial({color:loopColor, transparent:true, opacity:0.25, side:THREE.DoubleSide})
+            );
+            core.rotation.x = -Math.PI / 2;
+            core.position.set(x, 0.04, z);
+            group.add(core);
+            const text = makeFloorInscription(label, loopCss, {
+                size: 46,
+                canvasWidth: 128,
+                canvasHeight: 128,
+                worldWidth: 0.36,
+                worldHeight: 0.36
+            });
+            text.position.set(x, 0.065, z);
+            group.add(text);
+            const light = new THREE.PointLight(loopColor, 0.8, 5.5);
+            light.position.set(x, 0.65, z);
+            group.add(light);
+        };
+        addLoopMarker(loop.a, 'α');
+        addLoopMarker(loop.b, 'β');
+    }
+
+    if (mazeGrid.rotatingChamber) {
+        const chamber = mazeGrid.rotatingChamber;
+        const x = chamber.cell.x * CELL + CELL / 2, z = chamber.cell.y * CELL + CELL / 2;
+        const plate = new THREE.Mesh(
+            new THREE.RingGeometry(0.42, 0.82, 32),
+            new THREE.MeshBasicMaterial({color:GRUVBOX.yellow, transparent:true, opacity:0.82, side:THREE.DoubleSide})
+        );
+        plate.rotation.x = -Math.PI / 2;
+        plate.position.set(x, 0.045, z);
+        group.add(plate);
+        const rotor = new THREE.Group();
+        rotor.position.set(x, 0.075, z);
+        const rotorGeometry = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(-0.62,0,0), new THREE.Vector3(0.62,0,0),
+            new THREE.Vector3(0,0,-0.62), new THREE.Vector3(0,0,0.62)
+        ]);
+        rotor.add(new THREE.LineSegments(rotorGeometry, new THREE.LineBasicMaterial({color:GRUVBOX.yellow, transparent:true, opacity:0.95})));
+        group.add(rotor);
+        chamber.visual = rotor;
+        const label = makeFloorInscription('ROTATE', '#fabd2f', {
+            size: 28,
+            worldWidth: 1.4,
+            worldHeight: 0.32,
+            plaque: true
+        });
+        label.position.set(x, 0.055, z + 1.05);
+        group.add(label);
+        const light = new THREE.PointLight(GRUVBOX.yellow, 0.9, 6);
+        light.position.set(x, 0.75, z);
+        group.add(light);
+    }
+
+    // Chambers
+    const chamberCenters = new Set();
+    for (const c of mazeGrid.cells) {
+        if (!c.chamber || !c.chamberCenter) continue;
+        const key = `${c.x},${c.y}`;
+        if (chamberCenters.has(key)) continue;
+        chamberCenters.add(key);
+
+        const ccx = c.x * CELL + CELL / 2, ccz = c.y * CELL + CELL / 2;
+
+        // Chamber floor highlight
+        const chFloor = new THREE.Mesh(
+            new THREE.PlaneGeometry(CELL * 0.8, CELL * 0.8),
+            new THREE.MeshBasicMaterial({color: GRUVBOX.bgHard, transparent: true, opacity: 0.3, side: THREE.DoubleSide})
+        );
+        chFloor.rotation.x = -Math.PI / 2;
+        chFloor.position.set(ccx, 0.01, ccz);
+        group.add(chFloor);
+
+        // Chamber light
+        const chLight = new THREE.PointLight(GRUVBOX.blue, 0.5, 6);
+        chLight.position.set(ccx, WALL_H - 0.3, ccz);
+        group.add(chLight);
+
+    }
+
+    // Traps
+    for (const c of mazeGrid.cells) {
+        if (!c.trap) continue;
+        const tcx = c.x * CELL + CELL / 2, tcz = c.y * CELL + CELL / 2;
+        // Glowing rune circle
+        const runeGeom = new THREE.RingGeometry(0.3, 0.5, 6);
+        const runeMat = new THREE.MeshBasicMaterial({color: GRUVBOX.red, transparent: true, opacity: 0.35, side: THREE.DoubleSide});
+        const rune = new THREE.Mesh(runeGeom, runeMat);
+        rune.rotation.x = -Math.PI / 2;
+        rune.position.set(tcx, 0.02, tcz);
+        group.add(rune);
+        // Inner dot
+        const dot = new THREE.Mesh(
+            new THREE.CircleGeometry(0.15, 8),
+            new THREE.MeshBasicMaterial({color: GRUVBOX.red, transparent: true, opacity: 0.2, side: THREE.DoubleSide})
+        );
+        dot.rotation.x = -Math.PI / 2;
+        dot.position.set(tcx, 0.02, tcz);
+        group.add(dot);
+    }
+
+    // Player light (follows camera, added to scene not group)
+    playerLight = new THREE.PointLight(GRUVBOX.fg, 1.15, 20);
+    playerLight.position.copy(playerPos);
+    scene.add(playerLight);
+
+    if (cheatMode) addCheatLine(group, mazeGrid);
+
+    return group;
+}
+
+// ===== ATTACHED MAZE STATE =====
+let attachedMazeGroup = null;
+let attachedMazeGrid = null;
+let attachedMazeParams = null;
+let attachedMazeDest = null;
+let attachedMazeDir = null;
+let playerInMaze = false;
+let minimapBase = null;
+let minimapLayout = null;
+
+// Find return direction: from destRoom, which dir goes back to srcRoom?
+function findReturnDir(srcRoom, destRoom) {
+    const nav = roomNavigation[destRoom] || {};
+    for (const [dir, room] of Object.entries(nav)) {
+        if (room === srcRoom) return dir;
+    }
+    return null;
+}
+
+// Transform between world coords and maze-local coords
+function worldToMazeLocal(wx, wz) {
+    if (!attachedMazeGroup) return {x: wx, z: wz};
+    const a = attachedMazeGroup.rotation.y;
+    const dx = wx - attachedMazeGroup.position.x;
+    const dz = wz - attachedMazeGroup.position.z;
+    return {
+        x: dx * Math.cos(a) - dz * Math.sin(a),
+        z: dx * Math.sin(a) + dz * Math.cos(a)
+    };
+}
+function mazeLocalToWorld(lx, lz) {
+    if (!attachedMazeGroup) return {x: lx, z: lz};
+    const a = attachedMazeGroup.rotation.y;
+    return {
+        x: lx * Math.cos(a) + lz * Math.sin(a) + attachedMazeGroup.position.x,
+        z: -lx * Math.sin(a) + lz * Math.cos(a) + attachedMazeGroup.position.z
+    };
+}
+
+// Preserve the player's position and view when the rendered destination-hub
+// preview becomes the real hub. Both use the same transform, so the scene can
+// change ownership without a visible teleport.
+function captureMazeExitPose() {
+    if (!attachedMazeGroup || !attachedMazeGrid || !attachedMazeDest) return null;
+    const returnDir = findReturnDir(currentRoomId, attachedMazeDest);
+    if (!returnDir) return null;
+
+    const local = worldToMazeLocal(playerPos.x, playerPos.z);
+    const exit = attachedMazeGrid.exitCell;
+    const previewAngle = DIR_ANGLES[returnDir] + Math.PI / 2;
+    const centerX = attachedMazeGrid.w * CELL + HUB_APO;
+    const centerZ = exit.y * CELL + CELL / 2;
+    const dx = local.x - centerX;
+    const dz = local.z - centerZ;
+    const cosPreview = Math.cos(previewAngle);
+    const sinPreview = Math.sin(previewAngle);
+
+    camera.getWorldDirection(moveForward);
+    const mazeAngle = attachedMazeGroup.rotation.y;
+    const mazeDirX = moveForward.x * Math.cos(mazeAngle) - moveForward.z * Math.sin(mazeAngle);
+    const mazeDirZ = moveForward.x * Math.sin(mazeAngle) + moveForward.z * Math.cos(mazeAngle);
+    const hubDirX = mazeDirX * cosPreview - mazeDirZ * sinPreview;
+    const hubDirZ = mazeDirX * sinPreview + mazeDirZ * cosPreview;
+
+    return {
+        x: dx * cosPreview - dz * sinPreview,
+        z: dx * sinPreview + dz * cosPreview,
+        pitch: camera.rotation.x,
+        yaw: Math.atan2(-hubDirX, -hubDirZ)
+    };
+}
+
+// ===== STATE MACHINE =====
+function enterHub(roomId, fromRoom, arrivalPose = null) {
+    // Find return direction before clearing state
+    let arrivalDir = null;
+    if (fromRoom) {
+        arrivalDir = findReturnDir(fromRoom, roomId);
+    }
+
+    clearScene();
+    detachMaze();
+
+    gameState = 'HUB';
+    currentRoomId = roomId;
+    playerInMaze = false;
+
+    if (roomId === '3.02') { enterWin(); return; }
+
+    currentGroup = buildHub(roomId);
+    scene.add(currentGroup);
+    scene.fog.far = 30;
+
+    if (arrivalPose) {
+        playerPos.set(arrivalPose.x, EYE_H, arrivalPose.z);
+        camera.rotation.set(arrivalPose.pitch, arrivalPose.yaw, 0, 'YXZ');
+    } else if (arrivalDir) {
+        // Arrived from a maze — spawn near the arrival door, facing center
+        const angle = DIR_ANGLES[arrivalDir];
+        const spawnDist = HUB_APO - 1.5;
+        playerPos.set(
+            Math.sin(angle) * spawnDist,
+            EYE_H,
+            -Math.cos(angle) * spawnDist
+        );
+        // Face inward (toward center = opposite of door direction)
+        camera.rotation.set(0, angle + Math.PI, 0, 'YXZ');
+    } else {
+        // Default spawn: center, looking north
+        playerPos.set(0, EYE_H, 0);
+        camera.rotation.set(0, 0, 0, 'YXZ');
+    }
+    camera.position.copy(playerPos);
+    updateHUD();
+}
+
+function attachMaze(dir) {
+    detachMaze();
+    const nav = roomNavigation[currentRoomId] || {};
+    const dest = nav[dir];
+    if (!dest) return;
+
+    const {grid, params} = generateMaze(masterSeed, currentRoomId, dest, {allFeatures:testMazeMode});
+    const mazeGroup = buildMazeScene(grid, currentRoomId, dest);
+
+    // Rotate maze so entrance aligns with the hub door
+    // Maze entrance faces west (-X). We need it to face back toward hub.
+    const angle = DIR_ANGLES[dir];
+    const rot = Math.PI / 2 - angle;
+    mazeGroup.rotation.y = rot;
+
+    // Position so entrance opening meets the door
+    const ec = grid.entranceCell;
+    const ecZ = ec.y * CELL + CELL / 2;
+    const doorDist = HUB_APO;
+    const doorX = Math.sin(angle) * doorDist;
+    const doorZ = -Math.cos(angle) * doorDist;
+    // Entrance center in maze-local is (0, 0, ecZ). After rotation:
+    const entrWorldX = 0 * Math.cos(rot) + ecZ * Math.sin(rot);
+    const entrWorldZ = -0 * Math.sin(rot) + ecZ * Math.cos(rot);
+    mazeGroup.position.x = doorX - entrWorldX;
+    mazeGroup.position.z = doorZ - entrWorldZ;
+
+    scene.add(mazeGroup);
+    scene.fog.far = params.fogFar;
+
+    attachedMazeGroup = mazeGroup;
+    attachedMazeGrid = grid;
+    attachedMazeParams = params;
+    attachedMazeDest = dest;
+    attachedMazeDir = dir;
+    buildMinimapBase(grid);
+
+    // Destination preview geometry is owned by the maze group.
+}
+
+function disposeGroup(g) {
+    if (!g) return;
+    scene.remove(g);
+    disposeObjectTree(g);
+}
+function detachMaze() {
+    if (attachedMazeGrid?.spatialLoop) attachedMazeGrid.spatialLoop.cooldown = null;
+    disposeGroup(attachedMazeGroup);
+    attachedMazeGroup = null;
+    attachedMazeGrid = null;
+    attachedMazeParams = null;
+    attachedMazeDest = null;
+    attachedMazeDir = null;
+    playerInMaze = false;
+    minimapBase = null;
+    minimapLayout = null;
+    scene.fog.far = 30;
+    if (playerLight) {
+        scene.remove(playerLight);
+        playerLight = null;
+    }
+}
+
+function enterWin() {
+    gameState = 'WIN';
+    controls.unlock();
+    const elapsedMs = elapsedPlayMs + (playStartedAt ? performance.now() - playStartedAt : 0);
+    const elapsed = Math.floor(elapsedMs / 1000);
+    const min = Math.floor(elapsed / 60);
+    const sec = elapsed % 60;
+    document.getElementById('winTime').textContent = `Time: ${min}:${sec.toString().padStart(2,'0')}`;
+    document.getElementById('winMazes').textContent = `Mazes traversed: ${mazeCount}`;
+    document.getElementById('win').style.display = 'flex';
+    document.getElementById('blocker').classList.add('hidden');
+    document.getElementById('hud').style.display = 'none';
+}
+
+function triggerToggle() {
+    if (gameState !== 'HUB' || playerInMaze) return;
+    const togDest = roomToggles[currentRoomId];
+    if (!togDest) return;
+    const dist = Math.sqrt(playerPos.x * playerPos.x + playerPos.z * playerPos.z);
+    if (dist < TOGGLE_RAD) {
+        enterHub(togDest);
+    }
+}
+
+let eventMessageTimer = null;
+function showEventMessage(text, duration = 1600) {
+    const message = document.getElementById('eventMessage');
+    clearTimeout(eventMessageTimer);
+    message.textContent = text;
+    message.classList.add('visible');
+    eventMessageTimer = setTimeout(() => { message.classList.remove('visible'); }, duration);
+}
+
+function triggerTrap(destRoom) {
+    const flash = document.getElementById('trap-flash');
+    const tess = TESSERACTS[getTess(destRoom)];
+    flash.style.opacity = '1';
+    showEventMessage(`DISPLACED → ${destRoom} (${tess.name})`, 2200);
+    setTimeout(() => { flash.style.opacity = '0'; }, 300);
+    enterHub(destRoom);
+}
+
+// ===== MOVEMENT + COLLISION =====
+function updateMovement(delta) {
+    if (gameState !== 'HUB') return;
+
+    const previousX = playerPos.x;
+    const previousZ = playerPos.z;
+
+    camera.getWorldDirection(moveForward);
+    moveForward.y = 0;
+    moveForward.normalize();
+    moveRight.crossVectors(moveForward, camera.up).normalize();
+
+    moveDirection.set(0, 0, 0);
+    if (moveState.forward) moveDirection.add(moveForward);
+    if (moveState.backward) moveDirection.sub(moveForward);
+    if (moveState.right) moveDirection.add(moveRight);
+    if (moveState.left) moveDirection.sub(moveRight);
+    if (moveDirection.lengthSq() > 0) {
+        moveDirection.normalize();
+        playerPos.x += moveDirection.x * MOVE_SPD * delta;
+        playerPos.z += moveDirection.z * MOVE_SPD * delta;
+    }
+    playerPos.y = EYE_H;
+
+    // Determine if player is past the open door (in the maze area)
+    const inMazeArea = isPlayerInMaze();
+
+    if (inMazeArea && attachedMazeGrid) {
+        if (!playerInMaze) {
+            playerInMaze = true;
+        }
+        // Maze collision in local coords
+        collideInMaze(previousX, previousZ);
+        checkRotatingChamber();
+        checkSpatialLoop();
+        checkMazeTraps();
+        if (checkMazeExit()) {
+            const destination = attachedMazeDest;
+            const source = currentRoomId;
+            const arrivalPose = captureMazeExitPose();
+            mazeCount++;
+            enterHub(destination, source, arrivalPose);
+            return;
+        }
+    } else {
+        if (playerInMaze) {
+            playerInMaze = false;
+        }
+        // Hub collision
+        collideWithHub();
+    }
+
+    camera.position.copy(playerPos);
+
+    // Update player light
+    if (playerLight) playerLight.position.copy(playerPos);
+}
+
+function checkRotatingChamber() {
+    const chamber = attachedMazeGrid?.rotatingChamber;
+    if (!chamber || chamber.activated) return;
+    const local = worldToMazeLocal(playerPos.x, playerPos.z);
+    const centerX = chamber.cell.x * CELL + CELL / 2;
+    const centerZ = chamber.cell.y * CELL + CELL / 2;
+    if (Math.hypot(local.x - centerX, local.z - centerZ) > 0.68) return;
+    if (!attachedMazeGrid.activateRotatingChamber()) return;
+    if (chamber.entryPanel) chamber.entryPanel.visible = true;
+    if (chamber.exitPanel) chamber.exitPanel.visible = false;
+    buildMinimapBase(attachedMazeGrid);
+    showEventMessage('CHAMBER ROTATED · EXIT OPEN');
+}
+
+function checkSpatialLoop() {
+    const loop = attachedMazeGrid?.spatialLoop;
+    if (!loop) return;
+    const local = worldToMazeLocal(playerPos.x, playerPos.z);
+    const center = cell => ({x:cell.x * CELL + CELL / 2, z:cell.y * CELL + CELL / 2});
+
+    if (loop.cooldown) {
+        const lockedCenter = center(loop.cooldown);
+        if (Math.hypot(local.x - lockedCenter.x, local.z - lockedCenter.z) < 0.9) return;
+        loop.cooldown = null;
+    }
+
+    const aCenter = center(loop.a), bCenter = center(loop.b);
+    const from = Math.hypot(local.x - aCenter.x, local.z - aCenter.z) < 0.5 ? loop.a
+        : Math.hypot(local.x - bCenter.x, local.z - bCenter.z) < 0.5 ? loop.b : null;
+    if (!from) return;
+    const to = from === loop.a ? loop.b : loop.a;
+    const fromCenter = from === loop.a ? aCenter : bCenter;
+    const toCenter = to === loop.a ? aCenter : bCenter;
+    const world = mazeLocalToWorld(
+        toCenter.x + (local.x - fromCenter.x),
+        toCenter.z + (local.z - fromCenter.z)
+    );
+    playerPos.x = world.x;
+    playerPos.z = world.z;
+    loop.cooldown = to;
+    showEventMessage(`SPATIAL LOOP ${from === loop.a ? 'α → β' : 'β → α'}`);
+}
+
+function isPlayerInMaze() {
+    if (!hubDoorOpen || !attachedMazeGroup) return false;
+    const angle = DIR_ANGLES[hubDoorOpen];
+    const nx = Math.sin(angle), nz = -Math.cos(angle);
+    const dot = playerPos.x * nx + playerPos.z * nz;
+    return dot > HUB_APO - 0.2;
+}
+
+function collideWithHub() {
+    const nav = roomNavigation[currentRoomId] || {};
+    for (const dir of DIRECTIONS) {
+        const angle = DIR_ANGLES[dir];
+        const nx = Math.sin(angle), nz = -Math.cos(angle);
+        const dot = playerPos.x * nx + playerPos.z * nz;
+        if (dot > HUB_APO - P_RAD) {
+            const isDoorOpen = (hubDoorOpen === dir && !!nav[dir]);
+            if (isDoorOpen) {
+                const tx = Math.cos(angle), tz = Math.sin(angle);
+                const tangent = Math.abs(playerPos.x * tx + playerPos.z * tz);
+                if (tangent < DOOR_W / 2 - P_RAD * 0.5) {
+                    continue; // allow through open door
+                }
+            }
+            const pushback = dot - (HUB_APO - P_RAD);
+            playerPos.x -= nx * pushback;
+            playerPos.z -= nz * pushback;
+        }
+    }
+}
+
+function collideInMaze(previousWorldX, previousWorldZ) {
+    const grid = attachedMazeGrid;
+    if (!grid) return;
+    let local = worldToMazeLocal(playerPos.x, playerPos.z);
+    const previous = worldToMazeLocal(previousWorldX, previousWorldZ);
+    const totalW = grid.w * CELL, totalH = grid.h * CELL;
+    const ec = grid.entranceCell, xc = grid.exitCell;
+    const openingHalfWidth = DOOR_W / 2 - P_RAD * 0.5;
+    const atEntrance = ec && Math.abs(local.z - (ec.y * CELL + CELL / 2)) < openingHalfWidth;
+    const atExit = xc && Math.abs(local.z - (xc.y * CELL + CELL / 2)) < openingHalfWidth;
+    const fold = grid.spaceFold;
+    const northCenterX = fold ? fold.north.x * CELL + CELL / 2 : 0;
+    const southCenterX = fold ? fold.south.x * CELL + CELL / 2 : 0;
+    const atNorthFold = fold && Math.abs(local.x - northCenterX) < openingHalfWidth;
+    const atSouthFold = fold && Math.abs(local.x - southCenterX) < openingHalfWidth;
+
+    // Boundary clamp (entrance/exit are open)
+    if (local.x < P_RAD && !atEntrance) local.x = P_RAD;
+    if (local.x > totalW - P_RAD && !atExit) local.x = totalW - P_RAD;
+    if (local.z < P_RAD && !atNorthFold) local.z = P_RAD;
+    if (local.z > totalH - P_RAD && !atSouthFold) local.z = totalH - P_RAD;
+
+    // Sweep from the previous cell before resolving proximity. Without this,
+    // crossing a wall within one frame places the player on its far side.
+    const previousGX = Math.floor(previous.x / CELL);
+    const previousGY = Math.floor(previous.z / CELL);
+    const previousCell = grid.cell(previousGX, previousGY);
+    if (previousCell) {
+        if (local.x > previous.x && (previousCell.E || previousCell.oneWayBlocked.E)) {
+            local.x = Math.min(local.x, (previousGX + 1) * CELL - P_RAD);
+        } else if (local.x < previous.x && (previousCell.W || previousCell.oneWayBlocked.W)) {
+            local.x = Math.max(local.x, previousGX * CELL + P_RAD);
+        }
+
+        const zCellX = Math.floor(local.x / CELL);
+        const zCell = grid.cell(zCellX, previousGY);
+        if (zCell) {
+            if (local.z > previous.z && (zCell.S || zCell.oneWayBlocked.S)) {
+                local.z = Math.min(local.z, (previousGY + 1) * CELL - P_RAD);
+            } else if (local.z < previous.z && (zCell.N || zCell.oneWayBlocked.N)) {
+                local.z = Math.max(local.z, previousGY * CELL + P_RAD);
+            }
+        }
+    }
+
+    // Axis-separated cell wall collision for sliding
+    const gx = Math.floor(local.x / CELL);
+    const gy = Math.floor(local.z / CELL);
+    const c = grid.cell(gx, gy);
+    if (c) {
+        const cx = local.x - gx * CELL;
+        const cz = local.z - gy * CELL;
+        // Clamp each axis independently — allows sliding along walls
+        if (c.W && cx < P_RAD) local.x = gx * CELL + P_RAD;
+        if (c.E && cx > CELL - P_RAD) local.x = (gx + 1) * CELL - P_RAD;
+        if (c.N && cz < P_RAD) local.z = gy * CELL + P_RAD;
+        if (c.S && cz > CELL - P_RAD) local.z = (gy + 1) * CELL - P_RAD;
+
+        // Corner check: if we're near a corner where two walls meet,
+        // check the diagonal neighbor to prevent clipping through
+        const cx2 = local.x - gx * CELL;
+        const cz2 = local.z - gy * CELL;
+        if (cx2 < P_RAD && cz2 < P_RAD) {
+            const diag = grid.cell(gx - 1, gy - 1);
+            if (!diag || (c.W && c.N)) { local.x = gx * CELL + P_RAD; local.z = gy * CELL + P_RAD; }
+        }
+        if (cx2 > CELL - P_RAD && cz2 < P_RAD) {
+            const diag = grid.cell(gx + 1, gy - 1);
+            if (!diag || (c.E && c.N)) { local.x = (gx + 1) * CELL - P_RAD; local.z = gy * CELL + P_RAD; }
+        }
+        if (cx2 < P_RAD && cz2 > CELL - P_RAD) {
+            const diag = grid.cell(gx - 1, gy + 1);
+            if (!diag || (c.W && c.S)) { local.x = gx * CELL + P_RAD; local.z = (gy + 1) * CELL - P_RAD; }
+        }
+        if (cx2 > CELL - P_RAD && cz2 > CELL - P_RAD) {
+            const diag = grid.cell(gx + 1, gy + 1);
+            if (!diag || (c.E && c.S)) { local.x = (gx + 1) * CELL - P_RAD; local.z = (gy + 1) * CELL - P_RAD; }
+        }
+    }
+
+    if (fold && local.z < 0 && atNorthFold) {
+        local.x = southCenterX + (local.x - northCenterX);
+        local.z = totalH - P_RAD - 0.05;
+        showEventMessage('SPACE FOLDS: α → β');
+    } else if (fold && local.z > totalH && atSouthFold) {
+        local.x = northCenterX + (local.x - southCenterX);
+        local.z = P_RAD + 0.05;
+        showEventMessage('SPACE FOLDS: β → α');
+    }
+
+    // Convert back to world
+    const world = mazeLocalToWorld(local.x, local.z);
+    playerPos.x = world.x;
+    playerPos.z = world.z;
+}
+
+function checkMazeTraps() {
+    const grid = attachedMazeGrid;
+    if (!grid) return;
+    const local = worldToMazeLocal(playerPos.x, playerPos.z);
+    const gx = Math.floor(local.x / CELL);
+    const gy = Math.floor(local.z / CELL);
+    const c = grid.cell(gx, gy);
+    if (!c || !c.trap) return;
+    const lx = local.x - gx * CELL - CELL / 2;
+    const lz = local.z - gy * CELL - CELL / 2;
+    if (Math.sqrt(lx * lx + lz * lz) < 0.6) {
+        c.trap = false;
+        triggerTrap(c.trapDest);
+    }
+}
+
+function checkMazeExit() {
+    if (!attachedMazeGrid) return false;
+    const local = worldToMazeLocal(playerPos.x, playerPos.z);
+    const xc = attachedMazeGrid.exitCell;
+    if (!xc) return false;
+    const atExitZ = Math.abs(local.z - (xc.y * CELL + CELL / 2)) < DOOR_W / 2 - P_RAD * 0.5;
+    return atExitZ && local.x > (xc.x + 1) * CELL + EXIT_HANDOFF_DEPTH;
+}
+
+// ===== HUD =====
+function updateHUD() {
+    const roomInfo = document.getElementById('roomInfo');
+    const tessInfo = document.getElementById('tessInfo');
+    const mazeLabel = document.getElementById('mazeLabel');
+    const hint = document.getElementById('hint');
+
+    if (gameState === 'HUB') {
+        const tess = TESSERACTS[getTess(currentRoomId)];
+        roomInfo.textContent = `${tess.emoji} ${currentRoomId}`;
+        const passageCount = distances[currentRoomId];
+        const passageText = Number.isFinite(passageCount)
+            ? (passageCount === 1 ? '1 passage' : `${passageCount} passages`)
+            : 'route unknown';
+        tessInfo.textContent = `${tess.name} Tesseract · ${passageText} to Entryway`;
+        mazeLabel.textContent = '';
+
+        const togDest = roomToggles[currentRoomId];
+        const dist = Math.sqrt(playerPos.x * playerPos.x + playerPos.z * playerPos.z);
+        if (togDest && dist < TOGGLE_RAD + 1) {
+            const dt = TESSERACTS[getTess(togDest)];
+            hint.textContent = `[CLICK / E] Warp to ${togDest} (${dt.name})`;
+            hint.classList.add('visible');
+        } else {
+            hint.classList.remove('visible');
+        }
+    }
+    // Show maze info when in maze area
+    if (playerInMaze && attachedMazeDest) {
+        const srcTess = TESSERACTS[getTess(currentRoomId)];
+        roomInfo.textContent = `${srcTess.emoji} ${currentRoomId} \u2192 ${attachedMazeDest}`;
+        const tier = ['Simple','Moderate','Complex','Labyrinthine'];
+        const tierName = attachedMazeParams ? tier[attachedMazeParams.tier] : '';
+        const featureNames = [];
+        if (attachedMazeGrid.spaceFold) featureNames.push('SPACE FOLD');
+        if (attachedMazeGrid.oneWayGates.length) featureNames.push(attachedMazeGrid.oneWayGates[0].required ? 'COMMITMENT GATE' : 'ONE WAY');
+        if (attachedMazeGrid.rotatingChamber) featureNames.push('ROTATING CHAMBER');
+        if (attachedMazeGrid.spatialLoop) featureNames.push(attachedMazeGrid.spatialLoop.required ? 'REQUIRED LOOP' : 'SPATIAL LOOP');
+        mazeLabel.textContent = [tierName, ...featureNames].join(' · ');
+        const local = worldToMazeLocal(playerPos.x, playerPos.z);
+        const nearbyGate = attachedMazeGrid.oneWayGates.find(gate => {
+            const x = (gate.from.x + gate.to.x + 1) * CELL / 2;
+            const z = (gate.from.y + gate.to.y + 1) * CELL / 2;
+            return Math.hypot(local.x - x, local.z - z) < 2.2;
+        });
+        const rotating = attachedMazeGrid.rotatingChamber;
+        const nearRotationPlate = rotating && !rotating.activated && Math.hypot(
+            local.x - (rotating.cell.x * CELL + CELL / 2),
+            local.z - (rotating.cell.y * CELL + CELL / 2)
+        ) < 2.2;
+        const loop = attachedMazeGrid.spatialLoop;
+        const nearLoop = loop && [loop.a, loop.b].some(cell => Math.hypot(
+            local.x - (cell.x * CELL + CELL / 2),
+            local.z - (cell.y * CELL + CELL / 2)
+        ) < 2.1);
+        if (nearRotationPlate) {
+            hint.textContent = 'ROTATION PLATE · CROSS THE CENTER';
+            hint.classList.add('visible');
+        } else if (nearLoop) {
+            hint.textContent = loop.required ? 'REQUIRED SPATIAL LOOP · ENTER THE RING' : 'SPATIAL LOOP · ENTER THE RING';
+            hint.classList.add('visible');
+        } else if (nearbyGate) {
+            hint.textContent = nearbyGate.required ? 'COMMITMENT GATE · NO RETURN' : 'ONE WAY · FOLLOW THE FLOOR ARROW';
+            hint.classList.add('visible');
+        } else {
+            hint.classList.remove('visible');
+        }
+    }
+}
+
+// ===== MINIMAP =====
+const minimapEl = document.getElementById('minimap');
+
+function buildMinimapBase(grid) {
+    const mw = 160, mh = 160;
+    const scale = Math.min((mw - 20) / grid.w, (mh - 20) / grid.h);
+    const ox = (mw - grid.w * scale) / 2;
+    const oz = (mh - grid.h * scale) / 2;
+    minimapBase = document.createElement('canvas');
+    minimapBase.width = mw;
+    minimapBase.height = mh;
+    minimapLayout = {scale, ox, oz};
+    const ctx = minimapBase.getContext('2d');
+
+    ctx.fillStyle = 'rgba(40,40,40,0.9)';
+    ctx.fillRect(0, 0, mw, mh);
+
+    // Draw cells
+    ctx.strokeStyle = 'rgba(235,219,178,0.18)';
+    ctx.lineWidth = 1;
+    for (let gy = 0; gy < grid.h; gy++) {
+        for (let gx = 0; gx < grid.w; gx++) {
+            const c = grid.cell(gx, gy);
+            const sx = ox + gx * scale, sy = oz + gy * scale;
+            if (c.N) { ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + scale, sy); ctx.stroke(); }
+            if (c.W) { ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy + scale); ctx.stroke(); }
+            if (gy === grid.h - 1 && c.S) { ctx.beginPath(); ctx.moveTo(sx, sy + scale); ctx.lineTo(sx + scale, sy + scale); ctx.stroke(); }
+            if (gx === grid.w - 1 && c.E) { ctx.beginPath(); ctx.moveTo(sx + scale, sy); ctx.lineTo(sx + scale, sy + scale); ctx.stroke(); }
+        }
+    }
+
+    // Chamber highlights
+    for (const c of grid.cells) {
+        if (!c.chamber) continue;
+        const sx = ox + c.x * scale, sy = oz + c.y * scale;
+        ctx.fillStyle = 'rgba(131,165,152,0.24)';
+        ctx.fillRect(sx + 1, sy + 1, scale - 2, scale - 2);
+    }
+
+    if (grid.rotatingChamber) {
+        const c = grid.rotatingChamber.cell;
+        const x = ox + (c.x + 0.5) * scale, y = oz + (c.y + 0.5) * scale;
+        ctx.strokeStyle = '#fabd2f';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.lineTo(x + 4, y); ctx.moveTo(x, y - 4); ctx.lineTo(x, y + 4); ctx.stroke();
+    }
+
+    // Trap markers
+    for (const c of grid.cells) {
+        if (!c.trap) continue;
+        const cx = ox + (c.x + 0.5) * scale, cy = oz + (c.y + 0.5) * scale;
+        ctx.fillStyle = 'rgba(255,100,83,0.55)';
+        ctx.beginPath(); ctx.arc(cx, cy, 2, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // One-way arrows
+    for (const gate of grid.oneWayGates) {
+        const fromX = ox + (gate.from.x + 0.5) * scale;
+        const fromY = oz + (gate.from.y + 0.5) * scale;
+        const toX = ox + (gate.to.x + 0.5) * scale;
+        const toY = oz + (gate.to.y + 0.5) * scale;
+        const dx = toX - fromX, dy = toY - fromY;
+        const length = Math.hypot(dx, dy);
+        const ux = dx / length, uy = dy / length;
+        const mx = (fromX + toX) / 2, my = (fromY + toY) / 2;
+        const tipX = mx + ux * 4, tipY = my + uy * 4;
+        ctx.save();
+        ctx.strokeStyle = gate.required ? '#fabd2f' : '#8ec07c';
+        ctx.fillStyle = gate.required ? '#fabd2f' : '#8ec07c';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(mx - ux * 4, my - uy * 4);
+        ctx.lineTo(tipX, tipY);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(tipX, tipY);
+        ctx.lineTo(tipX - ux * 3 - uy * 2.5, tipY - uy * 3 + ux * 2.5);
+        ctx.lineTo(tipX - ux * 3 + uy * 2.5, tipY - uy * 3 - ux * 2.5);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
+
+    if (grid.spatialLoop) {
+        const loop = grid.spatialLoop;
+        const aX = ox + (loop.a.x + 0.5) * scale, aY = oz + (loop.a.y + 0.5) * scale;
+        const bX = ox + (loop.b.x + 0.5) * scale, bY = oz + (loop.b.y + 0.5) * scale;
+        const color = loop.required ? '#fabd2f' : '#83a598';
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([3, 3]);
+        const bendX = (aX + bX) / 2 + (bY - aY) * 0.35;
+        const bendY = (aY + bY) / 2 - (bX - aX) * 0.35;
+        ctx.beginPath(); ctx.moveTo(aX, aY); ctx.quadraticCurveTo(bendX, bendY, bX, bY); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.font = 'bold 9px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        for (const [x, y, label] of [[aX,aY,'α'],[bX,bY,'β']]) {
+            ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#282828'; ctx.fillText(label, x, y + 0.5); ctx.fillStyle = color;
+        }
+        ctx.restore();
+    }
+
+    // Entrance marker
+    if (grid.entranceCell) {
+        const ex = ox + (grid.entranceCell.x + 0.5) * scale;
+        const ey = oz + (grid.entranceCell.y + 0.5) * scale;
+        ctx.fillStyle = '#b8bb26';
+        ctx.beginPath(); ctx.arc(ex, ey, 3, 0, Math.PI * 2); ctx.fill();
+    }
+    // Exit marker
+    if (grid.exitCell) {
+        const ex = ox + (grid.exitCell.x + 0.5) * scale;
+        const ey = oz + (grid.exitCell.y + 0.5) * scale;
+        ctx.fillStyle = '#fabd2f';
+        ctx.beginPath(); ctx.arc(ex, ey, 3, 0, Math.PI * 2); ctx.fill();
+    }
+
+
+    // Paired fold gates and their non-Euclidean connection.
+    if (grid.spaceFold) {
+        const northX = ox + (grid.spaceFold.north.x + 0.5) * scale;
+        const northY = oz + (grid.spaceFold.north.y + 0.5) * scale;
+        const southX = ox + (grid.spaceFold.south.x + 0.5) * scale;
+        const southY = oz + (grid.spaceFold.south.y + 0.5) * scale;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(211,134,155,0.55)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath(); ctx.moveTo(northX, northY); ctx.lineTo(southX, southY); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.strokeStyle = '#d3869b';
+        ctx.lineWidth = 2;
+        for (const [x, y] of [[northX, northY], [southX, southY]]) {
+            ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.stroke();
+        }
+        ctx.restore();
+    }
+}
+
+function drawMinimap() {
+    if (!playerInMaze || !attachedMazeGrid || !minimapBase || !minimapLayout) {
+        minimapEl.style.display = 'none';
+        return;
+    }
+    minimapEl.style.display = 'block';
+    const ctx = minimapEl.getContext('2d');
+    const {scale, ox, oz} = minimapLayout;
+    const local = worldToMazeLocal(playerPos.x, playerPos.z);
+    const px = local.x / CELL, pz = local.z / CELL;
+    ctx.clearRect(0, 0, minimapEl.width, minimapEl.height);
+    ctx.drawImage(minimapBase, 0, 0);
+
+    // Player dot
+    const ppx = ox + px * scale, ppz = oz + pz * scale;
+    ctx.fillStyle = '#8ec07c';
+    ctx.beginPath(); ctx.arc(ppx, ppz, 3.5, 0, Math.PI * 2); ctx.fill();
+
+    // Direction indicator — project camera forward into maze-local space
+    camera.getWorldDirection(minimapForward);
+    const mazeRot = attachedMazeGroup ? attachedMazeGroup.rotation.y : 0;
+    const localDirX = minimapForward.x * Math.cos(mazeRot) - minimapForward.z * Math.sin(mazeRot);
+    const localDirZ = minimapForward.x * Math.sin(mazeRot) + minimapForward.z * Math.cos(mazeRot);
+    const dirLen = 8;
+    ctx.strokeStyle = '#8ec07c';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(ppx, ppz);
+    ctx.lineTo(ppx + localDirX * dirLen, ppz + localDirZ * dirLen);
+    ctx.stroke();
+}
+
+// ===== EVENT HANDLERS =====
+function resumePlayTimer() {
+    if (!playStartedAt && gameState !== 'WIN') playStartedAt = performance.now();
+}
+
+function pausePlayTimer() {
+    if (!playStartedAt) return;
+    elapsedPlayMs += performance.now() - playStartedAt;
+    playStartedAt = 0;
+}
+
+function clearMovementState() {
+    moveState.forward = false;
+    moveState.backward = false;
+    moveState.left = false;
+    moveState.right = false;
+}
+
+function setupEvents() {
+    const blocker = document.getElementById('blocker');
+
+    blocker.addEventListener('click', event => {
+        if (event.target.closest('a')) return;
+        controls.lock();
+    });
+
+    controls.addEventListener('lock', () => {
+        resumePlayTimer();
+        blocker.classList.add('hidden');
+    });
+
+    document.addEventListener('click', () => {
+        if (controls.isLocked) onHubClick();
+    });
+
+    controls.addEventListener('unlock', () => {
+        pausePlayTimer();
+        clearMovementState();
+        if (gameState !== 'WIN') {
+            blocker.classList.remove('hidden');
+        }
+    });
+
+    window.addEventListener('blur', clearMovementState);
+
+    document.addEventListener('keydown', e => {
+        switch (e.code) {
+            case 'KeyW': case 'ArrowUp': moveState.forward = true; break;
+            case 'KeyS': case 'ArrowDown': moveState.backward = true; break;
+            case 'KeyA': case 'ArrowLeft': moveState.left = true; break;
+            case 'KeyD': case 'ArrowRight': moveState.right = true; break;
+            case 'KeyE':
+                if (!e.repeat) interactWithHub(true);
+                break;
+        }
+    });
+
+    document.addEventListener('keyup', e => {
+        switch (e.code) {
+            case 'KeyW': case 'ArrowUp': moveState.forward = false; break;
+            case 'KeyS': case 'ArrowDown': moveState.backward = false; break;
+            case 'KeyA': case 'ArrowLeft': moveState.left = false; break;
+            case 'KeyD': case 'ArrowRight': moveState.right = false; break;
+        }
+    });
+}
+
+// ===== ANIMATION =====
+let prevTime = 0;
+function animate(time) {
+    requestAnimationFrame(animate);
+    const delta = Math.min((time - prevTime) / 1000, 0.1);
+    prevTime = time;
+
+    if (controls.isLocked && gameState === 'HUB') {
+        updateMovement(delta);
+        updateHUD();
+    }
+
+    const rotating = attachedMazeGrid?.rotatingChamber;
+    if (rotating?.visual) {
+        const target = rotating.activated ? Math.PI / 2 : 0;
+        rotating.visual.rotation.y += (target - rotating.visual.rotation.y) * Math.min(1, delta * 5);
+    }
+
+    drawMinimap();
+    renderer.render(scene, camera);
+}
+
+// ===== INIT =====
+function localDateKey(now = new Date()) {
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function init() {
+    const params = new URLSearchParams(window.location.search);
+    const suppliedKey = params.get('key');
+    testMazeMode = params.get('test') === 'features';
+    activeKey = suppliedKey && suppliedKey.trim() ? suppliedKey.trim()
+        : testMazeMode ? 'feature-test' : localDateKey();
+    const isDaily = !suppliedKey || !suppliedKey.trim();
+
+    cheatMode = testMazeMode || params.get('cheat') === 'true';
+    masterSeed = String(fnv1a(activeKey));
+    const seedRng = new Rng(fnv1a(activeKey));
+    const startRoom = testMazeMode ? '5.13' : CONTROL_ROOMS[seedRng.nextInt(0, CONTROL_ROOMS.length - 1)];
+
+    const seedLabel = `${testMazeMode ? 'FEATURE TEST' : isDaily ? 'DAILY' : 'KEY'} ${activeKey}`;
+    document.getElementById('seedLine').textContent = seedLabel;
+    document.getElementById('seedInfo').textContent = seedLabel;
+
+    computeDistances();
+    setupThree();
+    setupEvents();
+
+    elapsedPlayMs = 0;
+    playStartedAt = 0;
+    mazeCount = 0;
+
+    enterHub(startRoom);
+
+    requestAnimationFrame(animate);
+}
+
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(init);
+else init();
+</script>
+</body>
+</html>
