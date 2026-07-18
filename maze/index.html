@@ -272,6 +272,21 @@ const DEFAULT_MAZE_LAW = Object.freeze({id:'space-fold', label:'SPACE FOLD', cha
 const TESSERACT_LAWS = Object.freeze({
     5: Object.freeze({id:'space-fold', label:'SPACE FOLD', chance:0.6})
 });
+
+// The Shade — the Loom's failsafe construct — stalks some maze segments.
+// Fauna is hunting ground; Soul is haunted. Keyed by destination tesseract.
+const HUNTER_BASE_CHANCE = 0.15;
+const HUNTER_TESSERACT_CHANCE = Object.freeze({1: 0.45, 9: 0.3});
+const HUNTER_SPEED_FACTOR = 0.8;
+const HUNTER_WAKE_DELAY_MS = 3500;
+
+// Mines scatter the player to a random room of the Engine. Never the
+// Entryway (3.02) or its antechamber (2.02) — a mine must never be able
+// to hand out the win, only chaos.
+function scatterPool(srcRoom, dstRoom) {
+    return Object.keys(roomNavigation).filter(r =>
+        r !== srcRoom && r !== dstRoom && r !== '3.02' && r !== '2.02');
+}
 function getTesseractLaw(roomId) {
     return TESSERACT_LAWS[getTess(roomId)] || DEFAULT_MAZE_LAW;
 }
@@ -373,6 +388,7 @@ class MazeGrid {
         this.rotatingChamber = null;
         this.spatialLoop = null;
         this.guidePath = null;
+        this.hunter = null;
     }
     cell(x, y) {
         if (x < 0 || x >= this.w || y < 0 || y >= this.h) return null;
@@ -779,12 +795,11 @@ class MazeGrid {
         }
     }
     placeTraps(count, srcRoom, dstRoom) {
-        const connected = new Set();
-        for (const d of Object.values(roomNavigation[srcRoom] || {})) connected.add(d);
-        for (const d of Object.values(roomNavigation[dstRoom] || {})) connected.add(d);
-        connected.delete(srcRoom); connected.delete(dstRoom);
-        const destPool = [...connected];
+        const destPool = scatterPool(srcRoom, dstRoom);
         if (destPool.length === 0) return;
+        // Mines are never a deliberate part of the solution: the guide path
+        // stays mine-free, so every segment is completable without one.
+        const pathCells = new Set(this.guidePath || this.findPath());
         const featureCells = new Set([
             ...this.oneWayGates.flatMap(gate => [gate.from, gate.to]),
             this.rotatingChamber?.entry,
@@ -797,7 +812,7 @@ class MazeGrid {
         ].filter(Boolean));
         const candidates = this.cells.filter(c =>
             !c.chamber && c !== this.entranceCell && c !== this.exitCell &&
-            !featureCells.has(c) &&
+            !featureCells.has(c) && !pathCells.has(c) &&
             c.x > 0 && c.x < this.w - 1 && c.y > 0 && c.y < this.h - 1
         );
         const shuffled = this.rng.shuffle(candidates);
@@ -805,6 +820,38 @@ class MazeGrid {
             shuffled[i].trap = true;
             shuffled[i].trapDest = this.rng.pick(destPool);
         }
+    }
+    spawnHunter() {
+        // BFS flood from the entrance over plain walls; the Shade wakes at
+        // the farthest reachable cell so the player gets a head start.
+        const dist = new Map([[this.entranceCell, 0]]);
+        const queue = [this.entranceCell];
+        const dirs = [{dx:0,dy:-1,w:'N'},{dx:1,dy:0,w:'E'},{dx:0,dy:1,w:'S'},{dx:-1,dy:0,w:'W'}];
+        while (queue.length) {
+            const cur = queue.shift();
+            for (const d of dirs) {
+                if (cur[d.w]) continue;
+                const next = this.cell(cur.x + d.dx, cur.y + d.dy);
+                if (!next || next.chamber || dist.has(next)) continue;
+                dist.set(next, dist.get(cur) + 1);
+                queue.push(next);
+            }
+        }
+        let best = null, bestD = -1;
+        for (const [c, d] of dist) {
+            if (c === this.entranceCell || c === this.exitCell || c.chamber) continue;
+            if (d > bestD) { best = c; bestD = d; }
+        }
+        if (!best) return false;
+        this.hunter = {
+            cell: best,
+            x: best.x * CELL + CELL / 2,
+            z: best.y * CELL + CELL / 2,
+            targetCell: null,
+            wakeAt: 0,
+            visual: null
+        };
+        return true;
     }
 }
 
@@ -855,6 +902,9 @@ function buildStandardMaze(p, roomA, roomB) {
     else if (p.structuralFeature === 'spatial-loop') grid.placeSpatialLoop(p.structuralRequired);
     if (!grid.guidePath) grid.guidePath = grid.findPath();
     grid.placeTraps(p.traps, roomA, roomB);
+    // Rolled last so earlier draws (and thus existing layouts) are unchanged.
+    const hunterChance = HUNTER_TESSERACT_CHANCE[getTess(roomB)] ?? HUNTER_BASE_CHANCE;
+    if (rng.next() < hunterChance) grid.spawnHunter();
     return {grid, params: p};
 }
 
@@ -902,6 +952,7 @@ function buildFeatureTestMaze(baseParams, roomA, roomB) {
         if (!grid.addSpaceFold()) continue;
         grid.placeTraps(p.traps, roomA, roomB);
         if (!grid.cells.some(cell => cell.trap)) continue;
+        if (!grid.spawnHunter()) continue;
         return {grid, params:p};
     }
 
@@ -1888,6 +1939,24 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
         group.add(dot);
     }
 
+    // The Shade
+    if (mazeGrid.hunter) {
+        const hunter = mazeGrid.hunter;
+        const shade = new THREE.Group();
+        const body = new THREE.Mesh(
+            new THREE.ConeGeometry(0.38, 1.9, 8),
+            new THREE.MeshBasicMaterial({color: 0x1d2021, transparent: true, opacity: 0.92})
+        );
+        body.position.y = 0.95;
+        shade.add(body);
+        const glow = new THREE.PointLight(GRUVBOX.red, 1.3, 8);
+        glow.position.y = 1.3;
+        shade.add(glow);
+        shade.position.set(hunter.x, 0, hunter.z);
+        group.add(shade);
+        hunter.visual = shade;
+    }
+
     // Player light (follows camera, added to scene not group)
     playerLight = new THREE.PointLight(GRUVBOX.fg, 1.15, 20);
     playerLight.position.copy(playerPos);
@@ -2164,11 +2233,11 @@ function showEventMessage(text, duration = 1600) {
     eventMessageTimer = setTimeout(() => { message.classList.remove('visible'); }, duration);
 }
 
-function triggerTrap(destRoom) {
+function triggerTrap(destRoom, verb = 'DISPLACED') {
     const flash = document.getElementById('trap-flash');
     const tess = TESSERACTS[getTess(destRoom)];
     flash.style.opacity = '1';
-    showEventMessage(`DISPLACED → ${destRoom} (${tess.name})`, 2200);
+    showEventMessage(`${verb} → ${destRoom} (${tess.name})`, 2200);
     setTimeout(() => { flash.style.opacity = '0'; }, 300);
     enterHub(destRoom);
 }
@@ -2203,6 +2272,11 @@ function updateMovement(delta) {
     if (inMazeArea && attachedMazeGrid) {
         if (!playerInMaze) {
             playerInMaze = true;
+            const hunter = attachedMazeGrid.hunter;
+            if (hunter && !hunter.wakeAt) {
+                hunter.wakeAt = performance.now() + HUNTER_WAKE_DELAY_MS;
+                showEventMessage('THE SHADE STIRS', 2600);
+            }
         }
         // Maze collision in local coords
         collideInMaze(previousX, previousZ);
@@ -2398,6 +2472,51 @@ function collideInMaze(previousWorldX, previousWorldZ) {
     const world = mazeLocalToWorld(local.x, local.z);
     playerPos.x = world.x;
     playerPos.z = world.z;
+}
+
+function updateHunter(delta) {
+    const grid = attachedMazeGrid;
+    const hunter = grid?.hunter;
+    if (!hunter || !hunter.visual || !playerInMaze) return;
+    const now = performance.now();
+    hunter.visual.position.y = Math.sin(now / 320) * 0.12;
+    if (!hunter.wakeAt || now < hunter.wakeAt) return;
+
+    const local = worldToMazeLocal(playerPos.x, playerPos.z);
+    const playerCell = grid.cell(Math.floor(local.x / CELL), Math.floor(local.z / CELL));
+
+    // Caught: scattered like a mine, never killed
+    const dx = local.x - hunter.x, dz = local.z - hunter.z;
+    if (Math.sqrt(dx * dx + dz * dz) < 0.75) {
+        const pool = scatterPool(currentRoomId, attachedMazeDest);
+        triggerTrap(grid.rng.pick(pool), 'SEIZED BY THE SHADE');
+        return;
+    }
+
+    // Advance toward the next waypoint; re-path on arrival or first move.
+    // The Shade ignores one-way gates but does not use loops or folds.
+    if (!hunter.targetCell) {
+        if (!playerCell) return;
+        const path = grid.findPath(hunter.cell, playerCell,
+            {respectOneWay: false, includeSpatialLoop: false, includeSpaceFold: false});
+        if (path.length < 2) return;
+        hunter.targetCell = path[1];
+    }
+    const tx = hunter.targetCell.x * CELL + CELL / 2;
+    const tz = hunter.targetCell.y * CELL + CELL / 2;
+    const mx = tx - hunter.x, mz = tz - hunter.z;
+    const md = Math.sqrt(mx * mx + mz * mz);
+    const step = MOVE_SPD * HUNTER_SPEED_FACTOR * delta;
+    if (md <= step) {
+        hunter.x = tx; hunter.z = tz;
+        hunter.cell = hunter.targetCell;
+        hunter.targetCell = null;
+    } else {
+        hunter.x += (mx / md) * step;
+        hunter.z += (mz / md) * step;
+    }
+    hunter.visual.position.x = hunter.x;
+    hunter.visual.position.z = hunter.z;
 }
 
 function checkMazeTraps() {
@@ -2658,6 +2777,14 @@ function drawMinimap() {
     ctx.fillStyle = '#8ec07c';
     ctx.beginPath(); ctx.arc(ppx, ppz, 3.5, 0, Math.PI * 2); ctx.fill();
 
+    // The Shade
+    const hunter = attachedMazeGrid.hunter;
+    if (hunter && hunter.wakeAt) {
+        const hx = ox + (hunter.x / CELL) * scale, hz = oz + (hunter.z / CELL) * scale;
+        ctx.fillStyle = '#ff6453';
+        ctx.beginPath(); ctx.arc(hx, hz, 3, 0, Math.PI * 2); ctx.fill();
+    }
+
     // Direction indicator — project camera forward into maze-local space
     camera.getWorldDirection(minimapForward);
     const mazeRot = attachedMazeGroup ? attachedMazeGroup.rotation.y : 0;
@@ -2785,6 +2912,7 @@ function animate(time) {
 
     if (controls.isLocked && gameState === 'HUB') {
         updateMovement(delta);
+        if (gameState === 'HUB') updateHunter(delta);
         updateHUD();
     }
 
