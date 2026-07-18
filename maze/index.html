@@ -824,8 +824,9 @@ class MazeGrid {
         }
     }
     spawnHunter() {
-        // BFS flood from the entrance over plain walls; the Shade wakes at
-        // the farthest reachable cell so the player gets a head start.
+        // BFS flood from the entrance over plain walls, then a SEEDED pick
+        // among the far band (>= 70% of max distance) — the lair is a fixed
+        // property of the maze's seed, and the player keeps a head start.
         const dist = new Map([[this.entranceCell, 0]]);
         const queue = [this.entranceCell];
         const dirs = [{dx:0,dy:-1,w:'N'},{dx:1,dy:0,w:'E'},{dx:0,dy:1,w:'S'},{dx:-1,dy:0,w:'W'}];
@@ -839,16 +840,23 @@ class MazeGrid {
                 queue.push(next);
             }
         }
-        let best = null, bestD = -1;
+        let maxD = 0;
         for (const [c, d] of dist) {
             if (c === this.entranceCell || c === this.exitCell || c.chamber) continue;
-            if (d > bestD) { best = c; bestD = d; }
+            if (d > maxD) maxD = d;
         }
-        if (!best) return false;
+        if (maxD < 2) return false;
+        const band = [];
+        for (const [c, d] of dist) {
+            if (c === this.entranceCell || c === this.exitCell || c.chamber) continue;
+            if (d >= Math.max(2, Math.floor(maxD * 0.7))) band.push(c);
+        }
+        if (band.length === 0) return false;
+        const lair = this.rng.pick(band);
         this.hunter = {
-            cell: best,
-            x: best.x * CELL + CELL / 2,
-            z: best.y * CELL + CELL / 2,
+            cell: lair,
+            x: lair.x * CELL + CELL / 2,
+            z: lair.y * CELL + CELL / 2,
             targetCell: null,
             wakeAt: 0,
             visual: null
@@ -2509,14 +2517,28 @@ function updateHunter(delta) {
         return;
     }
 
-    // Advance toward the next waypoint; re-path on arrival or first move.
-    // The Shade ignores one-way gates but does not use loops or folds.
+    // Re-path at every waypoint against the player's live cell: always the
+    // most efficient route the maze offers. The Shade ignores one-way gates
+    // and steps through spatial loops and space folds like any passage.
     if (!hunter.targetCell) {
         if (!playerCell) return;
         const path = grid.findPath(hunter.cell, playerCell,
-            {respectOneWay: false, includeSpatialLoop: false, includeSpaceFold: false});
+            {respectOneWay: false, includeSpatialLoop: true, includeSpaceFold: true});
         if (path.length < 2) return;
         hunter.targetCell = path[1];
+        // Fold/loop edges connect non-adjacent cells: the Shade crosses
+        // them instantly rather than gliding through walls.
+        const adj = Math.abs(hunter.targetCell.x - hunter.cell.x)
+                  + Math.abs(hunter.targetCell.y - hunter.cell.y);
+        if (adj !== 1) {
+            hunter.cell = hunter.targetCell;
+            hunter.x = hunter.cell.x * CELL + CELL / 2;
+            hunter.z = hunter.cell.y * CELL + CELL / 2;
+            hunter.targetCell = null;
+            hunter.visual.position.x = hunter.x;
+            hunter.visual.position.z = hunter.z;
+            return;
+        }
     }
     const tx = hunter.targetCell.x * CELL + CELL / 2;
     const tz = hunter.targetCell.y * CELL + CELL / 2;
