@@ -277,10 +277,11 @@ const TESSERACT_LAWS = Object.freeze({
 
 // The Shade — the Loom's failsafe construct — stalks some maze segments.
 // Fauna is hunting ground; Soul is haunted. Keyed by destination tesseract.
+// It matches player speed exactly: flight is a stalemate, hesitation is not.
 const HUNTER_BASE_CHANCE = 0.15;
 const HUNTER_TESSERACT_CHANCE = Object.freeze({1: 0.45, 9: 0.3});
-const HUNTER_SPEED_FACTOR = 0.8;
-const HUNTER_WAKE_DELAY_MS = 3500;
+const HUNTER_SPEED_FACTOR = 1.0;
+const HUNTER_WAKE_DELAY_MS = 1500;
 
 // Mines scatter the player to a random room of the Engine. Never the
 // Entryway (3.02) or its antechamber (2.02) — a mine must never be able
@@ -855,6 +856,7 @@ class MazeGrid {
         const lair = this.rng.pick(band);
         this.hunter = {
             cell: lair,
+            lair,
             x: lair.x * CELL + CELL / 2,
             z: lair.y * CELL + CELL / 2,
             targetCell: null,
@@ -2493,7 +2495,7 @@ function setShadeVeil(strength) {
 function updateHunter(delta) {
     const grid = attachedMazeGrid;
     const hunter = grid?.hunter;
-    if (!hunter || !hunter.visual || !playerInMaze) { setShadeVeil(0); return; }
+    if (!hunter || !hunter.visual) { setShadeVeil(0); return; }
     const now = performance.now();
     hunter.visual.position.y = Math.sin(now / 320) * 0.12;
     if (!hunter.wakeAt || now < hunter.wakeAt) { setShadeVeil(0); return; }
@@ -2501,28 +2503,40 @@ function updateHunter(delta) {
     const local = worldToMazeLocal(playerPos.x, playerPos.z);
     const playerCell = grid.cell(Math.floor(local.x / CELL), Math.floor(local.z / CELL));
 
-    // Caught: scattered like a mine, never killed
-    const dx = local.x - hunter.x, dz = local.z - hunter.z;
-    const shadeDist = Math.sqrt(dx * dx + dz * dz);
+    if (playerInMaze) {
+        // Caught: scattered like a mine, never killed
+        const dx = local.x - hunter.x, dz = local.z - hunter.z;
+        const shadeDist = Math.sqrt(dx * dx + dz * dz);
 
-    // The dark closes in as it nears — full veil ramp from 12 units out.
-    // Straight-line distance on purpose: darkness through walls means it is
-    // close even when you cannot see it.
-    setShadeVeil(0.78 * Math.min(1, Math.max(0, (12 - shadeDist) / 10.5)));
+        // The dark closes in as it nears — full veil ramp from 12 units out.
+        // Straight-line distance on purpose: darkness through walls means it
+        // is close even when you cannot see it.
+        setShadeVeil(0.78 * Math.min(1, Math.max(0, (12 - shadeDist) / 10.5)));
 
-    if (shadeDist < 0.75) {
+        if (shadeDist < 0.75) {
+            setShadeVeil(0);
+            const pool = scatterPool(currentRoomId, attachedMazeDest);
+            triggerTrap(grid.rng.pick(pool), 'SEIZED BY THE SHADE');
+            return;
+        }
+    } else {
+        // The hub is sanctuary: it loses the scent and stalks back to its
+        // lair. Once home it rests, and the next entry restarts the stir.
         setShadeVeil(0);
-        const pool = scatterPool(currentRoomId, attachedMazeDest);
-        triggerTrap(grid.rng.pick(pool), 'SEIZED BY THE SHADE');
-        return;
+        if (hunter.cell === hunter.lair && !hunter.targetCell) {
+            hunter.wakeAt = 0;
+            return;
+        }
     }
 
-    // Re-path at every waypoint against the player's live cell: always the
-    // most efficient route the maze offers. The Shade ignores one-way gates
-    // and steps through spatial loops and space folds like any passage.
+    // Re-path at every waypoint against the live goal — the player's cell,
+    // or the lair when the scent is lost. Always the most efficient route
+    // the maze offers: the Shade ignores one-way gates and steps through
+    // spatial loops and space folds like any passage.
     if (!hunter.targetCell) {
-        if (!playerCell) return;
-        const path = grid.findPath(hunter.cell, playerCell,
+        const goalCell = playerInMaze ? playerCell : hunter.lair;
+        if (!goalCell) return;
+        const path = grid.findPath(hunter.cell, goalCell,
             {respectOneWay: false, includeSpatialLoop: true, includeSpaceFold: true});
         if (path.length < 2) return;
         hunter.targetCell = path[1];
