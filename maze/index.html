@@ -25,11 +25,13 @@ canvas{display:block}
 #blocker p{color:var(--gb-fg2);font-size:0.9em}
 #blocker .sub{color:var(--gb-gray);margin-top:8px;font-size:0.75em}
 #blocker .seed{color:var(--gb-aqua);margin-top:18px;font-size:0.72em;letter-spacing:2px}
-#blocker .options{margin-top:22px;font-size:0.72em;letter-spacing:2px;color:var(--gb-fg3)}
+#blocker .options{margin-top:22px;font-size:0.72em;letter-spacing:2px;color:var(--gb-fg3);display:flex;flex-direction:column;gap:8px}
 #blocker .options label{display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 12px;border:1px solid rgba(235,219,178,0.16);border-radius:3px;transition:border-color .15s,color .15s}
 #blocker .options label:hover{border-color:var(--gb-yellow);color:var(--gb-yellow)}
 #blocker .options input{accent-color:var(--gb-yellow);cursor:pointer}
 #blocker .opt-desc{color:var(--gb-gray);letter-spacing:1px}
+#blocker .options input[type="date"]{background:var(--gb-bg1);border:1px solid rgba(235,219,178,0.16);border-radius:3px;color:var(--gb-fg2);font-family:inherit;font-size:1em;letter-spacing:1px;padding:3px 6px;color-scheme:dark;cursor:pointer}
+#blocker .options input[type="date"]:hover{border-color:var(--gb-yellow)}
 #blocker .journal-return{position:fixed;top:18px;left:18px;color:var(--gb-red);font-size:.75em;letter-spacing:1px;text-decoration:none;border-bottom:1px solid rgba(255,100,83,.4);cursor:pointer}
 #blocker .journal-return:hover{color:var(--gb-orange);border-bottom-color:var(--gb-orange)}
 #blocker .journal-return:focus-visible{outline:2px solid var(--gb-red);outline-offset:4px}
@@ -64,6 +66,8 @@ canvas{display:block}
     <p class="seed" id="seedLine"></p>
     <div class="options" id="options">
         <label><input type="checkbox" id="optHard"> HARD MODE <span class="opt-desc">— no minimap</span></label>
+        <label><input type="checkbox" id="optCheat"> CHEAT <span class="opt-desc">— show solutions &dagger;</span></label>
+        <label>DAILY <input type="date" id="optDate"> <span class="opt-desc">— replay any day</span></label>
     </div>
 </div>
 <div id="hud">
@@ -1044,6 +1048,7 @@ let lastShareText = '';
 let hardMode = false;
 let hardEntireRun = false;
 let runStarted = false;
+let cheatUsed = false;
 let testMazeMode = false;
 let playerLight = null;
 
@@ -2089,15 +2094,15 @@ function enterWin() {
     const elapsed = Math.floor(elapsedMs / 1000);
     const min = Math.floor(elapsed / 60);
     const sec = elapsed % 60;
-    const timeStr = `${min}:${sec.toString().padStart(2,'0')}${hardEntireRun ? '*' : ''}${cheatMode ? '†' : ''}`;
-    document.getElementById('winTime').textContent = `Time: ${timeStr}`;
-    document.getElementById('winMazes').textContent = `Mazes traversed: ${mazeCount}`;
+    const timeStr = `${min}:${sec.toString().padStart(2,'0')}${hardEntireRun ? '*' : ''}${cheatUsed ? '†' : ''}`;
     const glyphs = tesseractGlyphs();
     const roomsSeen = new Set(roomTrail).size;
+    document.getElementById('winTime').textContent = `Time: ${timeStr}`;
+    document.getElementById('winMazes').textContent = `Mazes traversed: ${mazeCount} · Rooms: ${roomsSeen}`;
     document.getElementById('winTrail').textContent = glyphs;
     lastShareText = [
         'THE DREADFUL ENGINE',
-        seedLabel,
+        seedLabel + (cheatUsed ? ' † CHEAT' : ''),
         glyphs,
         `${timeStr} · ${mazeCount} mazes · ${roomsSeen} rooms`,
         isDailyRun ? 'pknull.ai/maze' : `pknull.ai/maze?key=${encodeURIComponent(activeKey)}`,
@@ -2105,6 +2110,12 @@ function enterWin() {
     document.getElementById('win').style.display = 'flex';
     document.getElementById('blocker').classList.add('hidden');
     document.getElementById('hud').style.display = 'none';
+}
+
+function refreshSeedDisplay() {
+    const label = seedLabel + (cheatMode ? ' † CHEAT' : '');
+    document.getElementById('seedLine').textContent = label;
+    document.getElementById('seedInfo').textContent = label;
 }
 
 function shareResult() {
@@ -2694,8 +2705,30 @@ function setupEvents() {
         if (!hardMode) hardEntireRun = false;
     });
 
+    const cheatToggle = document.getElementById('optCheat');
+    cheatToggle.checked = cheatMode;
+    cheatToggle.addEventListener('change', () => {
+        cheatMode = cheatToggle.checked;
+        if (cheatMode && runStarted) cheatUsed = true;
+        refreshSeedDisplay();
+    });
+
+    const dateInput = document.getElementById('optDate');
+    const today = localDateKey();
+    dateInput.max = today;
+    dateInput.value = /^\d{4}-\d{2}-\d{2}$/.test(activeKey) ? activeKey : today;
+    dateInput.addEventListener('change', () => {
+        const v = dateInput.value;
+        if (!v || v === activeKey) return;
+        const params = new URLSearchParams();
+        if (v !== localDateKey()) params.set('key', v);
+        if (cheatMode) params.set('cheat', 'true');
+        const qs = params.toString();
+        location.href = location.pathname + (qs ? '?' + qs : '');
+    });
+
     controls.addEventListener('lock', () => {
-        if (!runStarted) { runStarted = true; hardEntireRun = hardMode; }
+        if (!runStarted) { runStarted = true; hardEntireRun = hardMode; if (cheatMode) cheatUsed = true; }
         resumePlayTimer();
         blocker.classList.add('hidden');
     });
@@ -2779,11 +2812,10 @@ function init() {
     const seedRng = new Rng(fnv1a(activeKey));
     const startRoom = testMazeMode ? '5.13' : CONTROL_ROOMS[seedRng.nextInt(0, CONTROL_ROOMS.length - 1)];
 
-    seedLabel = `${testMazeMode ? 'FEATURE TEST' : isDaily ? 'DAILY' : 'KEY'} ${activeKey}`;
-    if (cheatMode) seedLabel += ' † CHEAT';
+    const isDateKey = /^\d{4}-\d{2}-\d{2}$/.test(activeKey);
+    seedLabel = `${testMazeMode ? 'FEATURE TEST' : (isDaily || isDateKey) ? 'DAILY' : 'KEY'} ${activeKey}`;
     isDailyRun = isDaily;
-    document.getElementById('seedLine').textContent = seedLabel;
-    document.getElementById('seedInfo').textContent = seedLabel;
+    refreshSeedDisplay();
     document.getElementById('shareBtn').addEventListener('click', shareResult);
 
     computeDistances();
