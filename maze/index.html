@@ -103,9 +103,28 @@ import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
 
 // The import map shares the three.js module instance with the console, so
 // prototype patches there would reach our objects (issue #4). Frozen, the
-// patches silently no-op.
+// patches silently no-op. Preserve Three.js's deliberate prototype writes:
+// Vector3 resets its type marker, and Euler shadows its default callback.
 Object.freeze(THREE.Object3D.prototype);
+Object.defineProperty(THREE.Vector3.prototype, 'isVector3', {
+    get: () => true,
+    set: () => {},
+    configurable: false
+});
 Object.freeze(THREE.Vector3.prototype);
+const defaultEulerOnChange = THREE.Euler.prototype._onChangeCallback;
+Object.defineProperty(THREE.Euler.prototype, '_onChangeCallback', {
+    get: () => defaultEulerOnChange,
+    set(callback) {
+        if (this === THREE.Euler.prototype) return;
+        Object.defineProperty(this, '_onChangeCallback', {
+            value: callback,
+            writable: true,
+            configurable: true
+        });
+    },
+    configurable: false
+});
 Object.freeze(THREE.Euler.prototype);
 Object.freeze(THREE.PerspectiveCamera.prototype);
 
