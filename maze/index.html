@@ -282,6 +282,7 @@ const HUNTER_BASE_CHANCE = 0.15;
 const HUNTER_TESSERACT_CHANCE = Object.freeze({1: 0.45, 9: 0.3});
 const HUNTER_SPEED_FACTOR = 1.0;
 const HUNTER_WAKE_DELAY_MS = 1500;
+const SHADE_LAG_MS = 5000;
 
 // Mines scatter the player to a random room of the Engine. Never the
 // Entryway (3.02) or its antechamber (2.02) — a mine must never be able
@@ -1114,6 +1115,9 @@ let hardMode = false;
 let hardEntireRun = false;
 let runStarted = false;
 let cheatUsed = false;
+let activeShade = null;
+let lastArrivalDir = null;
+let shadeRng = null;
 let testMazeMode = false;
 let playerLight = null;
 
@@ -1951,19 +1955,10 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
         group.add(dot);
     }
 
-    // The Shade
-    if (mazeGrid.hunter) {
+    // Dormant lair apparition — only when no Shade is already loose in the run
+    if (mazeGrid.hunter && !activeShade) {
         const hunter = mazeGrid.hunter;
-        const shade = new THREE.Group();
-        const body = new THREE.Mesh(
-            new THREE.ConeGeometry(0.38, 1.9, 8),
-            new THREE.MeshBasicMaterial({color: 0x1d2021, transparent: true, opacity: 0.92})
-        );
-        body.position.y = 0.95;
-        shade.add(body);
-        const glow = new THREE.PointLight(GRUVBOX.red, 1.3, 8);
-        glow.position.y = 1.3;
-        shade.add(glow);
+        const shade = makeShadeVisual();
         shade.position.set(hunter.x, 0, hunter.z);
         group.add(shade);
         hunter.visual = shade;
@@ -2057,6 +2052,17 @@ function enterHub(roomId, fromRoom, arrivalPose = null) {
     let arrivalDir = null;
     if (fromRoom) {
         arrivalDir = findReturnDir(fromRoom, roomId);
+    }
+    lastArrivalDir = arrivalDir;
+
+    // An awake Shade follows through room transitions: pull its visual out
+    // before the scene is torn down and let it travel unseen.
+    if (activeShade && activeShade.mode !== 'lag') {
+        if (activeShade.visual) {
+            scene.remove(activeShade.visual);
+            disposeObjectTree(activeShade.visual);
+        }
+        activeShade = {mode: 'lag', lagUntil: performance.now() + SHADE_LAG_MS, grid: null, cell: null, targetCell: null, visual: null};
     }
 
     clearScene();
@@ -2172,7 +2178,7 @@ function tesseractGlyphs() {
 
 function enterWin() {
     gameState = 'WIN';
-    setShadeVeil(0);
+    destroyShade();
     controls.unlock();
     const elapsedMs = elapsedPlayMs + (playStartedAt ? performance.now() - playStartedAt : 0);
     const elapsed = Math.floor(elapsedMs / 1000);
@@ -2246,7 +2252,33 @@ function showEventMessage(text, duration = 1600) {
     eventMessageTimer = setTimeout(() => { message.classList.remove('visible'); }, duration);
 }
 
+function makeShadeVisual() {
+    const shade = new THREE.Group();
+    const body = new THREE.Mesh(
+        new THREE.ConeGeometry(0.38, 1.9, 8),
+        new THREE.MeshBasicMaterial({color: 0x1d2021, transparent: true, opacity: 0.92})
+    );
+    body.position.y = 0.95;
+    shade.add(body);
+    const glow = new THREE.PointLight(GRUVBOX.red, 1.3, 8);
+    glow.position.y = 1.3;
+    shade.add(glow);
+    return shade;
+}
+
+function destroyShade() {
+    if (activeShade?.visual) {
+        scene.remove(activeShade.visual);
+        disposeObjectTree(activeShade.visual);
+    }
+    activeShade = null;
+    setShadeVeil(0);
+}
+
 function triggerTrap(destRoom, verb = 'DISPLACED') {
+    // Displacement breaks pursuit: scattered across the Engine, the Shade
+    // loses you and returns to the Loom.
+    destroyShade();
     const flash = document.getElementById('trap-flash');
     const tess = TESSERACTS[getTess(destRoom)];
     flash.style.opacity = '1';
@@ -2286,7 +2318,7 @@ function updateMovement(delta) {
         if (!playerInMaze) {
             playerInMaze = true;
             const hunter = attachedMazeGrid.hunter;
-            if (hunter && !hunter.wakeAt) {
+            if (hunter && !hunter.wakeAt && !activeShade) {
                 hunter.wakeAt = performance.now() + HUNTER_WAKE_DELAY_MS;
                 showEventMessage('THE SHADE STIRS', 2600);
             }
@@ -2493,82 +2525,144 @@ function setShadeVeil(strength) {
 }
 
 function updateHunter(delta) {
-    const grid = attachedMazeGrid;
-    const hunter = grid?.hunter;
-    if (!hunter || !hunter.visual) { setShadeVeil(0); return; }
     const now = performance.now();
-    hunter.visual.position.y = Math.sin(now / 320) * 0.12;
-    if (!hunter.wakeAt || now < hunter.wakeAt) { setShadeVeil(0); return; }
 
-    const local = worldToMazeLocal(playerPos.x, playerPos.z);
-    const playerCell = grid.cell(Math.floor(local.x / CELL), Math.floor(local.z / CELL));
+    // Dormant lair apparition: bobs in its maze until the stir completes,
+    // then it is promoted to the run-level Shade that persists across
+    // rooms and mazes until a displacement breaks pursuit.
+    const spec = attachedMazeGrid?.hunter;
+    if (!activeShade) {
+        if (!spec || !spec.visual) { setShadeVeil(0); return; }
+        spec.visual.position.y = Math.sin(now / 320) * 0.12;
+        if (!spec.wakeAt || now < spec.wakeAt) { setShadeVeil(0); return; }
+        attachedMazeGroup.remove(spec.visual);
+        disposeObjectTree(spec.visual);
+        spec.visual = null;
+        const w = mazeLocalToWorld(spec.x, spec.z);
+        activeShade = {
+            mode: 'maze', grid: attachedMazeGrid,
+            cell: spec.cell, targetCell: null,
+            x: w.x, z: w.z, visual: makeShadeVisual()
+        };
+        activeShade.visual.position.set(w.x, 0, w.z);
+        scene.add(activeShade.visual);
+    }
+    const shade = activeShade;
+    const step = MOVE_SPD * HUNTER_SPEED_FACTOR * delta;
 
-    if (playerInMaze) {
-        // Caught: scattered like a mine, never killed
-        const dx = local.x - hunter.x, dz = local.z - hunter.z;
-        const shadeDist = Math.sqrt(dx * dx + dz * dz);
-
-        // The dark closes in as it nears — full veil ramp from 12 units out.
-        // Straight-line distance on purpose: darkness through walls means it
-        // is close even when you cannot see it.
-        setShadeVeil(0.78 * Math.min(1, Math.max(0, (12 - shadeDist) / 10.5)));
-
-        if (shadeDist < 0.75) {
-            setShadeVeil(0);
-            const pool = scatterPool(currentRoomId, attachedMazeDest);
-            triggerTrap(grid.rng.pick(pool), 'SEIZED BY THE SHADE');
-            return;
+    // Between rooms it travels unseen; the dark thickens before it arrives.
+    if (shade.mode === 'lag') {
+        const remain = shade.lagUntil - now;
+        setShadeVeil(0.3 * Math.min(1, Math.max(0, 1 - remain / SHADE_LAG_MS)));
+        if (remain > 0) return;
+        if (playerInMaze && attachedMazeGrid) {
+            const e = attachedMazeGrid.entranceCell;
+            const w = mazeLocalToWorld(e.x * CELL + CELL / 2, e.y * CELL + CELL / 2);
+            Object.assign(shade, {mode: 'maze', grid: attachedMazeGrid, cell: e, targetCell: null, x: w.x, z: w.z});
+        } else {
+            let ex = 0, ez = 0;
+            if (lastArrivalDir) {
+                const a = DIR_ANGLES[lastArrivalDir];
+                ex = Math.sin(a) * (HUB_APO - 0.8);
+                ez = -Math.cos(a) * (HUB_APO - 0.8);
+            }
+            Object.assign(shade, {mode: 'hub', grid: null, cell: null, targetCell: null, x: ex, z: ez});
         }
-    } else {
-        // The hub is sanctuary: it loses the scent and stalks back to its
-        // lair. Once home it rests, and the next entry restarts the stir.
-        setShadeVeil(0);
-        if (hunter.cell === hunter.lair && !hunter.targetCell) {
-            hunter.wakeAt = 0;
-            return;
-        }
+        if (!shade.visual) shade.visual = makeShadeVisual();
+        shade.visual.position.set(shade.x, 0, shade.z);
+        scene.add(shade.visual);
+        showEventMessage('IT CAME THROUGH', 2200);
     }
 
-    // Re-path at every waypoint against the live goal — the player's cell,
-    // or the lair when the scent is lost. Always the most efficient route
-    // the maze offers: the Shade ignores one-way gates and steps through
-    // spatial loops and space folds like any passage.
-    if (!hunter.targetCell) {
-        const goalCell = playerInMaze ? playerCell : hunter.lair;
+    shade.visual.position.y = Math.sin(now / 320) * 0.12;
+
+    // Veil + catch work in world coordinates, hub and maze alike. The ramp
+    // is straight-line on purpose: darkness through walls means it is close
+    // even when you cannot see it.
+    const dx = playerPos.x - shade.x, dz = playerPos.z - shade.z;
+    const dist = Math.sqrt(dx * dx + dz * dz);
+    setShadeVeil(0.78 * Math.min(1, Math.max(0, (12 - dist) / 10.5)));
+    if (dist < 0.75) {
+        const pool = scatterPool(currentRoomId, attachedMazeDest);
+        triggerTrap(shadeRng.pick(pool), 'SEIZED BY THE SHADE');
+        return;
+    }
+
+    if (shade.mode === 'hub') {
+        if (playerInMaze && attachedMazeGrid) {
+            // The player fled through the open door — make for the entrance.
+            const e = attachedMazeGrid.entranceCell;
+            const w = mazeLocalToWorld(e.x * CELL + CELL / 2, e.y * CELL + CELL / 2);
+            const mx = w.x - shade.x, mz = w.z - shade.z;
+            const md = Math.sqrt(mx * mx + mz * mz);
+            if (md <= step) {
+                Object.assign(shade, {mode: 'maze', grid: attachedMazeGrid, cell: e, targetCell: null, x: w.x, z: w.z});
+            } else {
+                shade.x += (mx / md) * step;
+                shade.z += (mz / md) * step;
+            }
+        } else if (dist > 0.01) {
+            // Open hub: straight pursuit.
+            shade.x += (dx / dist) * step;
+            shade.z += (dz / dist) * step;
+        }
+        shade.visual.position.x = shade.x;
+        shade.visual.position.z = shade.z;
+        return;
+    }
+
+    // Maze mode — BFS over the full graph (loops and folds included, one-way
+    // gates ignored), re-pathed at every waypoint against the live goal: the
+    // player's cell, or the doorway if the player stepped back into the hub.
+    const grid = shade.grid;
+    if (grid !== attachedMazeGrid) {
+        // Scene changed beneath it — travel between spaces instead.
+        if (shade.visual) { scene.remove(shade.visual); disposeObjectTree(shade.visual); }
+        Object.assign(shade, {mode: 'lag', lagUntil: now + SHADE_LAG_MS, grid: null, cell: null, targetCell: null, visual: null});
+        return;
+    }
+    const localPlayer = worldToMazeLocal(playerPos.x, playerPos.z);
+    const playerCell = grid.cell(Math.floor(localPlayer.x / CELL), Math.floor(localPlayer.z / CELL));
+    if (!playerInMaze && shade.cell === grid.entranceCell && !shade.targetCell) {
+        // At the doorway with the player outside: cross into the hub.
+        Object.assign(shade, {mode: 'hub', grid: null, cell: null});
+        return;
+    }
+    if (!shade.targetCell) {
+        const goalCell = playerInMaze ? playerCell : grid.entranceCell;
         if (!goalCell) return;
-        const path = grid.findPath(hunter.cell, goalCell,
+        const path = grid.findPath(shade.cell, goalCell,
             {respectOneWay: false, includeSpatialLoop: true, includeSpaceFold: true});
         if (path.length < 2) return;
-        hunter.targetCell = path[1];
+        shade.targetCell = path[1];
         // Fold/loop edges connect non-adjacent cells: the Shade crosses
         // them instantly rather than gliding through walls.
-        const adj = Math.abs(hunter.targetCell.x - hunter.cell.x)
-                  + Math.abs(hunter.targetCell.y - hunter.cell.y);
+        const adj = Math.abs(shade.targetCell.x - shade.cell.x)
+                  + Math.abs(shade.targetCell.y - shade.cell.y);
         if (adj !== 1) {
-            hunter.cell = hunter.targetCell;
-            hunter.x = hunter.cell.x * CELL + CELL / 2;
-            hunter.z = hunter.cell.y * CELL + CELL / 2;
-            hunter.targetCell = null;
-            hunter.visual.position.x = hunter.x;
-            hunter.visual.position.z = hunter.z;
+            shade.cell = shade.targetCell;
+            shade.targetCell = null;
+            const w = mazeLocalToWorld(shade.cell.x * CELL + CELL / 2, shade.cell.y * CELL + CELL / 2);
+            shade.x = w.x; shade.z = w.z;
+            shade.visual.position.x = w.x;
+            shade.visual.position.z = w.z;
             return;
         }
     }
-    const tx = hunter.targetCell.x * CELL + CELL / 2;
-    const tz = hunter.targetCell.y * CELL + CELL / 2;
-    const mx = tx - hunter.x, mz = tz - hunter.z;
+    const t = mazeLocalToWorld(shade.targetCell.x * CELL + CELL / 2, shade.targetCell.y * CELL + CELL / 2);
+    const mx = t.x - shade.x, mz = t.z - shade.z;
     const md = Math.sqrt(mx * mx + mz * mz);
-    const step = MOVE_SPD * HUNTER_SPEED_FACTOR * delta;
     if (md <= step) {
-        hunter.x = tx; hunter.z = tz;
-        hunter.cell = hunter.targetCell;
-        hunter.targetCell = null;
+        const w = mazeLocalToWorld(shade.targetCell.x * CELL + CELL / 2, shade.targetCell.y * CELL + CELL / 2);
+        shade.x = w.x; shade.z = w.z;
+        shade.cell = shade.targetCell;
+        shade.targetCell = null;
     } else {
-        hunter.x += (mx / md) * step;
-        hunter.z += (mz / md) * step;
+        shade.x += (mx / md) * step;
+        shade.z += (mz / md) * step;
     }
-    hunter.visual.position.x = hunter.x;
-    hunter.visual.position.z = hunter.z;
+    shade.visual.position.x = shade.x;
+    shade.visual.position.z = shade.z;
 }
 
 function checkMazeTraps() {
@@ -2830,9 +2924,9 @@ function drawMinimap() {
     ctx.beginPath(); ctx.arc(ppx, ppz, 3.5, 0, Math.PI * 2); ctx.fill();
 
     // The Shade — pulsing so it reads at a glance
-    const hunter = attachedMazeGrid.hunter;
-    if (hunter && hunter.wakeAt) {
-        const hx = ox + (hunter.x / CELL) * scale, hz = oz + (hunter.z / CELL) * scale;
+    if (activeShade && activeShade.mode === 'maze' && activeShade.grid === attachedMazeGrid) {
+        const sl = worldToMazeLocal(activeShade.x, activeShade.z);
+        const hx = ox + (sl.x / CELL) * scale, hz = oz + (sl.z / CELL) * scale;
         const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 180);
         ctx.fillStyle = '#ff6453';
         ctx.globalAlpha = 0.55 + 0.45 * pulse;
@@ -3017,6 +3111,9 @@ function init() {
     mazeCount = 0;
     roomTrail = [];
     lastShareText = '';
+    activeShade = null;
+    lastArrivalDir = null;
+    shadeRng = new Rng(fnv1a(activeKey + '|shade'));
 
     enterHub(startRoom);
 
