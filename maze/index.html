@@ -101,6 +101,14 @@ import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 
+// The import map shares the three.js module instance with the console, so
+// prototype patches there would reach our objects (issue #4). Frozen, the
+// patches silently no-op.
+Object.freeze(THREE.Object3D.prototype);
+Object.freeze(THREE.Vector3.prototype);
+Object.freeze(THREE.Euler.prototype);
+Object.freeze(THREE.PerspectiveCamera.prototype);
+
 // ===== PRNG =====
 function fnv1a(str) {
     let h = 0x811c9dc5;
@@ -979,17 +987,22 @@ function generateMaze(masterSeed, roomA, roomB, {allFeatures = false} = {}) {
 
 // ===== PATHFINDING =====
 let distances = {};
+let guideNext = {};
 function computeDistances() {
     distances = {};
+    guideNext = {};
     distances['3.02'] = 0;
     const deque = ['3.02'];
     while (deque.length > 0) {
         const room = deque.shift();
         const d = distances[room];
-        // Toggle edges (cost 0)
+        // Toggle edges (cost 0). The discovering room is recorded as the
+        // next step on a true shortest path — distances alone can't pick
+        // the warp, because toggle-paired rooms always tie (issue #3).
         const tog = roomToggles[room];
         if (tog && (distances[tog] === undefined || d < distances[tog])) {
             distances[tog] = d;
+            guideNext[tog] = room;
             deque.unshift(tog);
         }
         // Navigation edges (cost 1)
@@ -997,6 +1010,7 @@ function computeDistances() {
         for (const dest of Object.values(nav)) {
             if (distances[dest] === undefined || d + 1 < distances[dest]) {
                 distances[dest] = d + 1;
+                guideNext[dest] = room;
                 deque.push(dest);
             }
         }
@@ -1045,15 +1059,18 @@ function addCheatLine(group, grid) {
 }
 
 function addHubCheatLine(group, roomId) {
+    // Follow the BFS tree from computeDistances: guideNext[roomId] is the
+    // next room on a true shortest path to the Entryway. Greedy neighbor
+    // comparison oscillated on distance ties (issue #3).
+    const next = guideNext[roomId];
+    if (!next) return;
     const nav = roomNavigation[roomId] || {};
-    let bestDir = null, bestDist = Infinity;
+    let bestDir = null;
     for (const [dir, dest] of Object.entries(nav)) {
-        const d = distances[dest];
-        if (d !== undefined && d < bestDist) { bestDist = d; bestDir = dir; }
+        if (dest === next) { bestDir = dir; break; }
     }
-    // Check if toggle is better
     const tog = roomToggles[roomId];
-    if (tog && distances[tog] !== undefined && distances[tog] < bestDist) {
+    if (tog === next) {
         const ring = new THREE.Mesh(
             new THREE.TorusGeometry(1.38, 0.08, 8, 48),
             new THREE.MeshBasicMaterial({color: GRUVBOX.red, transparent: true, opacity: 0.8, depthWrite: false})
@@ -2098,7 +2115,9 @@ function enterHub(roomId, fromRoom, arrivalPose = null) {
         playerPos.set(0, EYE_H, 0);
         camera.rotation.set(0, 0, 0, 'YXZ');
     }
-    camera.position.copy(playerPos);
+    trackedPos.x = playerPos.x;
+    trackedPos.z = playerPos.z;
+    camera.position.set(playerPos.x, playerPos.y, playerPos.z);
     updateHUD();
 }
 
@@ -2288,8 +2307,18 @@ function triggerTrap(destRoom, verb = 'DISPLACED') {
 }
 
 // ===== MOVEMENT + COLLISION =====
+const trackedPos = {x: 0, z: 0};
 function updateMovement(delta) {
     if (gameState !== 'HUB') return;
+
+    // Nothing legitimate moves the player between frames — internal
+    // teleports sync trackedPos at their sites. A position written from
+    // outside the module snaps back before movement resolves (issue #4):
+    // the maze must be walked.
+    if (Math.hypot(playerPos.x - trackedPos.x, playerPos.z - trackedPos.z) > 0.25) {
+        playerPos.x = trackedPos.x;
+        playerPos.z = trackedPos.z;
+    }
 
     const previousX = playerPos.x;
     const previousZ = playerPos.z;
@@ -2344,10 +2373,13 @@ function updateMovement(delta) {
         collideWithHub();
     }
 
-    camera.position.copy(playerPos);
+    trackedPos.x = playerPos.x;
+    trackedPos.z = playerPos.z;
+    // Primitives across the boundary — no shared vector reference to capture
+    camera.position.set(playerPos.x, playerPos.y, playerPos.z);
 
     // Update player light
-    if (playerLight) playerLight.position.copy(playerPos);
+    if (playerLight) playerLight.position.set(playerPos.x, playerPos.y, playerPos.z);
 }
 
 function checkRotatingChamber() {
@@ -3016,7 +3048,8 @@ function setupEvents() {
         blocker.classList.add('hidden');
     });
 
-    document.addEventListener('click', () => {
+    document.addEventListener('click', e => {
+        if (!e.isTrusted) return;
         if (controls.isLocked) onHubClick();
     });
 
@@ -3031,6 +3064,7 @@ function setupEvents() {
     window.addEventListener('blur', clearMovementState);
 
     document.addEventListener('keydown', e => {
+        if (!e.isTrusted) return;
         switch (e.code) {
             case 'KeyW': case 'ArrowUp': moveState.forward = true; break;
             case 'KeyS': case 'ArrowDown': moveState.backward = true; break;
@@ -3043,6 +3077,7 @@ function setupEvents() {
     });
 
     document.addEventListener('keyup', e => {
+        if (!e.isTrusted) return;
         switch (e.code) {
             case 'KeyW': case 'ArrowUp': moveState.forward = false; break;
             case 'KeyS': case 'ArrowDown': moveState.backward = false; break;
