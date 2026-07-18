@@ -2089,7 +2089,7 @@ function enterWin() {
     const elapsed = Math.floor(elapsedMs / 1000);
     const min = Math.floor(elapsed / 60);
     const sec = elapsed % 60;
-    const timeStr = `${min}:${sec.toString().padStart(2,'0')}${hardEntireRun ? '*' : ''}`;
+    const timeStr = `${min}:${sec.toString().padStart(2,'0')}${hardEntireRun ? '*' : ''}${cheatMode ? '†' : ''}`;
     document.getElementById('winTime').textContent = `Time: ${timeStr}`;
     document.getElementById('winMazes').textContent = `Mazes traversed: ${mazeCount}`;
     const glyphs = tesseractGlyphs();
@@ -2780,6 +2780,7 @@ function init() {
     const startRoom = testMazeMode ? '5.13' : CONTROL_ROOMS[seedRng.nextInt(0, CONTROL_ROOMS.length - 1)];
 
     seedLabel = `${testMazeMode ? 'FEATURE TEST' : isDaily ? 'DAILY' : 'KEY'} ${activeKey}`;
+    if (cheatMode) seedLabel += ' † CHEAT';
     isDailyRun = isDaily;
     document.getElementById('seedLine').textContent = seedLabel;
     document.getElementById('seedInfo').textContent = seedLabel;
