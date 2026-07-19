@@ -204,6 +204,22 @@
       }
     ]
   },
+  "/images/2026-07-19_fog.jpg": {
+    "intrinsic_height": 655,
+    "intrinsic_width": 873,
+    "variants": [
+      {
+        "height": 360,
+        "url": "/images/2026-07-19_fog-480.webp",
+        "width": 480
+      },
+      {
+        "height": 655,
+        "url": "/images/2026-07-19_fog-1440.webp",
+        "width": 873
+      }
+    ]
+  },
   "/images/meta_headshot.webp": {
     "intrinsic_height": 1079,
     "intrinsic_width": 809,

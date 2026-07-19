@@ -2,18 +2,22 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://pknull.ai/</loc>
-    <lastmod>2026-06-09</lastmod>
+    <lastmod>2026-07-19</lastmod>
   </url>
   <url>
     <loc>https://pknull.ai/blog/</loc>
-    <lastmod>2026-06-09</lastmod>
+    <lastmod>2026-07-19</lastmod>
   </url>
   <url>
     <loc>https://pknull.ai/projects/</loc>
   </url>
   <url>
     <loc>https://pknull.ai/resume/</loc>
-    <lastmod>2026-06-09</lastmod>
+    <lastmod>2026-07-19</lastmod>
+  </url>
+  <url>
+    <loc>https://pknull.ai/post/2026-07-19/</loc>
+    <lastmod>2026-07-19</lastmod>
   </url>
   <url>
     <loc>https://pknull.ai/post/2026-06-09/</loc>

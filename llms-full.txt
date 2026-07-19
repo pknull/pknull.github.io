@@ -1,5 +1,5 @@
 # PKNULL.AI — Full Content Mirror
-> Single-file inlined-content mirror for agent crawlers. Generated 2026-07-19. Canonical HTML at https://pknull.ai/.
+> Single-file inlined-content mirror for agent crawlers. Generated 2026-07-20. Canonical HTML at https://pknull.ai/.
 > Per-page sources also available at /<path>/index.md (markdown) and /<path>/index.txt (plain text). See https://pknull.ai/llms.txt for the structured index.
 
 ## Site Overview
@@ -711,6 +711,44 @@ Archived. The source is public; I'm no longer adding to it.
 
 
 ## Posts (newest first)
+
+### 2026.07.19
+
+URL: https://pknull.ai/post/2026-07-19/
+Date: 2026-07-19
+
+2026.07.19
+https://pknull.ai/post/2026-07-19/
+
+Of all the objections on the menu against the AI industry (the scraping, the labor tucked behind the word "automation," the concentration of power in a few companies), water is the one that…
+
+Of all the objections on the menu against the AI industry (the scraping, the labor tucked behind the word "automation," the concentration of power in a few companies), water is the one that travels. And it travels with a number attached. That number is working two jobs. The visible one is measurement. The quieter one is telling you which side the speaker is on.
+
+Andy Masley spent months picking at (https://blog.andymasley.com/p/empire-of-ai-is-wildly-misleading) the water figures in circulation, and his headline example, by his analysis (https://www.wired.com/story/karen-hao-empire-of-ai-water-use-statistics/), comes from Karen Hao's Empire of AI: a claim about a proposed Google data center in Chile that was off by a factor of one thousand. A unit slip, cubic meters read as liters. Hao investigated, confirmed it, and revised the book (https://karendhao.com/20251217/empire-water-changes), and Masley praised her for engaging. Credit where due; that's the correction machinery working exactly as advertised. But three zeroes isn't a rounding error, and it rode through drafting, editing, and print wearing the full authority of a measurement. Fixing the arithmetic fixes the book. Whether it reaches everything the number was recruited to carry is a different question.
+
+Because "AI uses X liters of water" barely qualifies as a measurement in the first place. A DOE-supported review out of Berkeley Lab (https://www.osti.gov/pages/biblio/2572888) found water use across data-center workloads varying more than ten-thousand-fold, depending on server efficiency, utilization, cooling design, climate, and what the local grid burns. A per-prompt figure compresses all of that away and keeps the precision. The exactness survives the trip; the meaning doesn't.
+
+None of which means there's no water problem. There is one, and it deserves better company than the factoid. Berkeley Lab estimates (https://eta.lbl.gov/publications/2024-lbnl-data-center-energy-usage-report) US data centers consumed about 66 billion liters directly in 2023, mostly for cooling, and the buildout isn't slowing. A facility dropped into the wrong watershed, on a municipal contract nobody's allowed to read, during a drought: that's a real injury to a real place. The researchers who study this (https://journals.plos.org/water/article?id=10.1371/journal.pwat.0000500) keep landing on the same points: the impacts are local, the secrecy is a scandal in its own right, and much of the water footprint rides in through the electricity rather than the cooling loop. That problem has edges, and it has levers: disclosure, permits, allocation caps, restrictions when the reservoir drops. Boring paperwork, mostly, which is how you know it might accomplish something.
+
+The generalized complaint works differently. It treats AI's water use as a catastrophe in itself, indifferent to where the water comes from, whether it's potable, whether it's withdrawn or consumed, how much cycles straight back. Those distinctions decide every genuine water dispute, and they're the first things the factoid sheds.
+
+And the factoid rarely travels alone. The standard case against generative AI runs in three moves: it steals the art it trained on, it makes nothing genuinely new, and it burns absurd amounts of water producing the imitation. Theft, sterility, waste. The water charge only works because the first two already zeroed out the output. Once the machine is understood as laundering stolen work into slop, any resource it touches is waste by definition; a liter or a lake, doesn't matter. The number shows up after the verdict, like an expert witness hired by the sentencing judge.
+
+Water is unusually well cast for the role. Copyright drags you into fair-use doctrine; labor becomes a fight about automation and who keeps the gains; energy leads into grid math and comparisons with industries people happen to enjoy. Water skips the seminar. Water is life, corporations are taking it, done. It sits close to what Tetlock called a sacred value (https://www.cell.com/trends/cognitive-sciences/abstract/S1364-6613(03)00135-9), the kind of good people refuse to see traded against ordinary ones, where even running the cost-benefit arithmetic feels like a small confession. Frame the question as water for people or water for machines, and the answer is built into the sentence.
+
+Then repetition takes over. Kuran and Sunstein called it an availability cascade (https://sites.duke.edu/timurkuran/files/2016/10/availability-cascades-1.original.pdf): a claim gets easier to believe partly by getting easier to recall, and everyone repeating it looks like an independent source while reading off the same card. The platforms lean on the scale: moral-emotional language travels farther (https://www.pnas.org/doi/10.1073/pnas.1618923114) inside ideological networks, and people whose outrage gets rewarded produce more of it (https://www.science.org/doi/10.1126/sciadv.abe5641). None of that machinery selects for careful watershed analysis. It selects for a harm and a villain and someone visibly standing against both.
+
+That's the signaling function, and it doesn't need a liar anywhere in the chain. You can believe the figure completely and still collect the moral yield of repeating it. Sincerity describes what the speaker believes; signaling describes what the statement does for them. The two coexist fine, which is what makes the pattern durable.
+
+It's also why "too much" never resolves into a quantity. Too much relative to what? If the output is worth zero, any water is too much, and whatever number surfaces will confirm it, gaining or losing zeroes as needed. The conclusion sets the acceptable figure. The figure never gets a vote.
+
+I want to be careful with the cynicism, though, because people aren't actually immune to facts. The fact-checking research (https://link.springer.com/article/10.1007/s11109-019-09528-x) mostly finds corrections work: people update the specific belief, even about their own candidate, while their feelings about him don't measurably move. The arithmetic updates; the allegiance holds. I'd expect the water numbers to behave the same way. The liter count gets fixed. The villain keeps the job.
+
+And my own hands belong in the frame. Diagnosing other people's virtue signaling is itself a comfortable position; the guy who saw through the performance is still performing, just for a drier audience. So this argument gets held to its own standard: if the measurements show a facility damaging a watershed, my conclusion has to move, or I'm running the same script with the polarity flipped.
+
+That's the test worth keeping. One water argument changes with the location, the cooling design, and the meter readings. The other arrives at the same verdict no matter how many zeroes come or go. If a data center is draining a town, regulate the data center; that's a problem with evidence, remedies, and an end state. When none of those details can touch the conclusion, the water was never the subject. The number might be there to measure something. It might be there to show which side you're on. What happens to it when it's wrong tells you which.
+
+Withdrawn, not consumed.
 
 ### 2026.06.09
 
