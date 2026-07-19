@@ -1,0 +1,32 @@
+name: Maze smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'maze/**'
+      - 'fonts/JetBrainsMonoMaze-Regular.woff2'
+      - 'tests/maze-smoke.mjs'
+      - '.github/workflows/maze-smoke.yml'
+  pull_request:
+    paths:
+      - 'maze/**'
+      - 'fonts/JetBrainsMonoMaze-Regular.woff2'
+      - 'tests/maze-smoke.mjs'
+      - '.github/workflows/maze-smoke.yml'
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Verify maze startup
+        run: node tests/maze-smoke.mjs
