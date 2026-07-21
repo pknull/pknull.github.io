@@ -168,6 +168,10 @@ const WALL_T = 0.15;
 const EYE_H = 1.6;
 const P_RAD = 0.35;
 const MOVE_SPD = 5;
+// Jump tuning: apex = JUMP_SPD² / (2 · GRAVITY) ≈ 0.82 — well under
+// WALL_H, so a jump can never see or clear a wall.
+const JUMP_SPD = 6;
+const GRAVITY = 22;
 const HUB_APO = 5;
 const HUB_RAD = HUB_APO / Math.cos(Math.PI / 8);
 const HUB_H = 5;
@@ -199,6 +203,8 @@ export {
     EYE_H,
     P_RAD,
     MOVE_SPD,
+    JUMP_SPD,
+    GRAVITY,
     HUB_APO,
     HUB_RAD,
     HUB_H,

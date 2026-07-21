@@ -10,12 +10,14 @@ import {
     DOOR_W,
     EYE_H,
     EXIT_HANDOFF_DEPTH,
+    GRAVITY,
     GRUVBOX,
     HUB_APO,
     HUB_H,
     HUB_RAD,
     HUNTER_SPEED_FACTOR,
     HUNTER_WAKE_DELAY_MS,
+    JUMP_SPD,
     MOVE_SPD,
     P_RAD,
     SHADE_LAG_MS,
@@ -218,6 +220,8 @@ function addHubCheatLine(group, roomId) {
 let scene, camera, renderer, controls;
 const playerPos = new THREE.Vector3();
 const moveState = {forward:false, backward:false, left:false, right:false};
+let jumpHeight = 0;
+let jumpVelocity = 0;
 const moveForward = new THREE.Vector3();
 const moveRight = new THREE.Vector3();
 const moveDirection = new THREE.Vector3();
@@ -1429,7 +1433,15 @@ function updateMovement(delta) {
         playerPos.x += moveDirection.x * MOVE_SPD * delta;
         playerPos.z += moveDirection.z * MOVE_SPD * delta;
     }
-    playerPos.y = EYE_H;
+    // Jumping is cosmetic: collision and every trigger (traps, loops,
+    // exit, Shade contact) measure in XZ, so airtime never changes an
+    // outcome (issue #9).
+    if (jumpHeight > 0 || jumpVelocity > 0) {
+        jumpVelocity -= GRAVITY * delta;
+        jumpHeight = Math.max(0, jumpHeight + jumpVelocity * delta);
+        if (jumpHeight === 0) jumpVelocity = 0;
+    }
+    playerPos.y = EYE_H + jumpHeight;
 
     // Determine if player is past the open door (in the maze area)
     const inMazeArea = isPlayerInMaze();
@@ -2158,6 +2170,13 @@ function setupEvents() {
             case 'KeyD': case 'ArrowRight': moveState.right = true; break;
             case 'KeyE':
                 if (!e.repeat) interactWithHub(true);
+                break;
+            case 'Space':
+                // Only while locked — Space must keep toggling the
+                // entry-screen checkboxes for keyboard users.
+                if (!controls.isLocked) break;
+                e.preventDefault();
+                if (!e.repeat && jumpHeight === 0) jumpVelocity = JUMP_SPD;
                 break;
         }
     });
