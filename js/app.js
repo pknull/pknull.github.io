@@ -371,6 +371,15 @@
 
   var fetchCache = {};
 
+  function jsonSessionKey(url) { return 'pk-json:' + url + '?v=' + CACHE_VERSION; }
+
+  function readJsonSession(url) {
+    try {
+      var raw = sessionStorage.getItem(jsonSessionKey(url));
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
   function fetchJson(url) {
     var key = url + '?v=' + CACHE_VERSION;
     if (fetchCache[key]) return Promise.resolve(fetchCache[key]);
@@ -381,6 +390,7 @@
       })
       .then(function(data) {
         fetchCache[key] = data;
+        try { sessionStorage.setItem(jsonSessionKey(url), JSON.stringify(data)); } catch (e) {}
         return data;
       });
   }
@@ -516,43 +526,40 @@
     });
   }
 
-  function initNowStrip() {
+  var nowWeatherRequested = false;
+
+  function renderNowStrip(meta, posts, reading, gaming, coding) {
     var nowEl = document.getElementById('now-val-now');
     var readingEl = document.getElementById('now-val-reading');
     var gamingEl = document.getElementById('now-val-gaming');
     var buildingEl = document.getElementById('now-val-building');
     if (!nowEl && !readingEl && !gamingEl && !buildingEl) return;
 
-    Promise.all([
-      fetchJson('/meta.json').catch(function() { return {}; }),
-      fetchJson('/posts.json').catch(function() { return []; }),
-      fetchJson('/reading.json').catch(function() { return null; }),
-      fetchJson('/gaming.json').catch(function() { return null; }),
-      fetchJson('/coding.json').catch(function() { return null; })
-    ]).then(function(arr) {
-      var meta = arr[0] || {};
-      var posts = arr[1] || [];
-      var reading = arr[2];
-      var gaming = arr[3];
-      var coding = arr[4];
+    {
+      meta = meta || {};
+      posts = posts || [];
       var now = meta.now || {};
 
       if (readingEl) {
         var title = (reading && reading.title) || now.reading || '';
         var url = reading && reading.url;
         if (title) {
-          readingEl.innerHTML = '';
-          var em = document.createElement('em');
-          em.textContent = title;
-          if (url) {
-            var link = document.createElement('a');
-            link.href = normalizeInternalHref(url);
-            link.target = '_blank';
-            link.rel = 'noopener noreferrer';
-            link.appendChild(em);
-            readingEl.appendChild(link);
-          } else {
-            readingEl.appendChild(em);
+          var readingSig = 'r|' + title + '|' + (url || '');
+          if (readingEl.dataset.sig !== readingSig) {
+            readingEl.innerHTML = '';
+            var em = document.createElement('em');
+            em.textContent = title;
+            if (url) {
+              var link = document.createElement('a');
+              link.href = normalizeInternalHref(url);
+              link.target = '_blank';
+              link.rel = 'noopener noreferrer';
+              link.appendChild(em);
+              readingEl.appendChild(link);
+            } else {
+              readingEl.appendChild(em);
+            }
+            readingEl.dataset.sig = readingSig;
           }
         }
       }
@@ -561,16 +568,20 @@
         var gamingLabel = (gaming && gaming.label) || (now.gaming && now.gaming.label) || '';
         var gamingRawHref = (gaming && gaming.href) || (now.gaming && now.gaming.href) || '';
         if (gamingLabel) {
-          var gamingLink = document.createElement('a');
           var gamingHref = normalizeInternalHref(gamingRawHref || '#');
-          gamingLink.href = gamingHref;
-          if (/^https?:\/\//i.test(gamingHref)) {
-            gamingLink.target = '_blank';
-            gamingLink.rel = 'noopener noreferrer';
+          var gamingSig = 'g|' + gamingLabel + '|' + gamingHref;
+          if (gamingEl.dataset.sig !== gamingSig) {
+            var gamingLink = document.createElement('a');
+            gamingLink.href = gamingHref;
+            if (/^https?:\/\//i.test(gamingHref)) {
+              gamingLink.target = '_blank';
+              gamingLink.rel = 'noopener noreferrer';
+            }
+            gamingLink.textContent = gamingLabel;
+            gamingEl.innerHTML = '';
+            gamingEl.appendChild(gamingLink);
+            gamingEl.dataset.sig = gamingSig;
           }
-          gamingLink.textContent = gamingLabel;
-          gamingEl.innerHTML = '';
-          gamingEl.appendChild(gamingLink);
         }
       }
 
@@ -578,16 +589,20 @@
         var buildingLabel = (coding && coding.label) || (now.building && now.building.label) || '';
         var buildingRawHref = (coding && coding.href) || (now.building && now.building.href) || '';
         if (buildingLabel) {
-          var buildingLink = document.createElement('a');
           var buildingHref = normalizeInternalHref(buildingRawHref || '#');
-          buildingLink.href = buildingHref;
-          if (/^https?:\/\//i.test(buildingHref)) {
-            buildingLink.target = '_blank';
-            buildingLink.rel = 'noopener noreferrer';
+          var buildingSig = 'b|' + buildingLabel + '|' + buildingHref;
+          if (buildingEl.dataset.sig !== buildingSig) {
+            var buildingLink = document.createElement('a');
+            buildingLink.href = buildingHref;
+            if (/^https?:\/\//i.test(buildingHref)) {
+              buildingLink.target = '_blank';
+              buildingLink.rel = 'noopener noreferrer';
+            }
+            buildingLink.textContent = buildingLabel;
+            buildingEl.innerHTML = '';
+            buildingEl.appendChild(buildingLink);
+            buildingEl.dataset.sig = buildingSig;
           }
-          buildingLink.textContent = buildingLabel;
-          buildingEl.innerHTML = '';
-          buildingEl.appendChild(buildingLink);
         }
       }
 
@@ -602,18 +617,54 @@
           bits.push(weather.temp + '°F' + (weather.label ? ' ' + weather.label : ''));
         }
         if (age) bits.push('last entry ' + age);
-        nowEl.textContent = bits.join(' · ');
+        var str = bits.join(' · ');
+        if (nowEl.textContent !== str) nowEl.textContent = str;
       }
 
       var cachedWeather = readCachedWeather(now.coords);
       paint(cachedWeather);
-      if (!cachedWeather && now.coords && now.coords.length === 2) {
+      if (!cachedWeather && now.coords && now.coords.length === 2 && !nowWeatherRequested) {
+        nowWeatherRequested = true;
         afterFirstInteraction(function() {
           fetchWeather(now.coords, now.timezone).then(paint);
         });
       }
+    }
+  }
+
+  // Paint instantly from the session cache (no `…` flash, no refetch on nav).
+  function seedNowStrip() {
+    var meta = readJsonSession('/meta.json');
+    var posts = readJsonSession('/posts.json');
+    if (!meta && !posts) return;
+    renderNowStrip(
+      meta, posts,
+      readJsonSession('/reading.json'),
+      readJsonSession('/gaming.json'),
+      readJsonSession('/coding.json')
+    );
+  }
+
+  // Refresh from network, persist to session, repaint silently (idempotent).
+  function initNowStrip() {
+    var nowEl = document.getElementById('now-val-now');
+    var readingEl = document.getElementById('now-val-reading');
+    var gamingEl = document.getElementById('now-val-gaming');
+    var buildingEl = document.getElementById('now-val-building');
+    if (!nowEl && !readingEl && !gamingEl && !buildingEl) return;
+
+    Promise.all([
+      fetchJson('/meta.json').catch(function() { return {}; }),
+      fetchJson('/posts.json').catch(function() { return []; }),
+      fetchJson('/reading.json').catch(function() { return null; }),
+      fetchJson('/gaming.json').catch(function() { return null; }),
+      fetchJson('/coding.json').catch(function() { return null; })
+    ]).then(function(arr) {
+      renderNowStrip(arr[0], arr[1], arr[2], arr[3], arr[4]);
     });
   }
+
+  seedNowStrip();
 
   document.addEventListener('DOMContentLoaded', function() {
     var mainEl = document.getElementById('main');

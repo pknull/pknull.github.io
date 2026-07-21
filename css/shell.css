@@ -275,6 +275,11 @@ tbody tr:hover{ background: var(--stripe); }
   background: #4a7c2a;
   box-shadow: 0 0 0 3px rgba(74,124,42,.18);
   display: inline-block;
+  animation: live-pulse 2.4s ease-in-out infinite;
+}
+@keyframes live-pulse{
+  0%, 100%{ box-shadow: 0 0 0 3px rgba(74,124,42,.18); }
+  50%{ box-shadow: 0 0 0 5px rgba(74,124,42,.06); }
 }
 
 /* mode toggle button — sits in .nb-meta */
@@ -904,12 +909,16 @@ tbody tr:hover{ background: var(--stripe); }
   gap: var(--s-5);
   align-items: start;
 }
+.about-portrait{
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}
 .about-portrait img{
   width: 100%;
   height: auto;
   display: block;
-  border: 1px solid var(--rule);
-  border-radius: 2px;
+  filter: saturate(.92) contrast(1.02);
 }
 .about-bio p{ margin: 0 0 .75em; }
 .about-bio p:last-child{ margin-bottom: 0; }
@@ -1237,6 +1246,37 @@ pre.expanded .code-toolbar{ right: var(--s-5); }
   border: 1px solid var(--rule);
   border-radius: 4px;
   overflow-x: auto;
+}
+
+/* ── Hover micro-effects ─────────────────────────────────────── */
+
+/* Featured-post thumbnails + the About portrait: slight zoom and a
+   saturation lift on hover. Both clip inside their framed container. */
+.post-feat-img img,
+.about-portrait img{ transition: transform .45s ease, filter .45s ease; }
+.post-feat-link:hover .post-feat-img img,
+.about-portrait:hover img{ transform: scale(1.04); filter: saturate(1) contrast(1.03); }
+
+/* Nav underline draws in from the left on hover. Sits on the border
+   baseline (bottom:-1px), and skips the active page — which already
+   carries a static underline — so hovering it never doubles the line. */
+.nb-nav a{ position: relative; }
+.nb-nav a::after{
+  content: "";
+  position: absolute; left: 0; right: 0; bottom: -1px;
+  height: 1px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform .2s ease;
+}
+.nb-nav a:hover::after{ transform: scaleX(1); }
+.nb-nav a.on::after{ content: none; }
+
+@media (prefers-reduced-motion: reduce){
+  .post-feat-link:hover .post-feat-img img,
+  .about-portrait:hover img{ transform: none; }
+  .nb-nav a::after{ transition: none; }
 }
 
 /* ── Reduced motion ──────────────────────────────────────────── */
