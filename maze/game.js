@@ -908,15 +908,17 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
         group.add(cap);
 
         const orbY = WALL_H - 0.38;
-        const orb = new THREE.Mesh(
-            new THREE.SphereGeometry(0.22, 20, 20),
-            new THREE.MeshStandardMaterial({
-                color, emissive:new THREE.Color(color), emissiveIntensity:0.8,
-                metalness:0.3, roughness:0.2
-            })
-        );
-        orb.position.set(center.x, orbY, center.z);
-        group.add(orb);
+        if (room.kind !== 'entrance') {
+            const orb = new THREE.Mesh(
+                new THREE.SphereGeometry(0.22, 20, 20),
+                new THREE.MeshStandardMaterial({
+                    color, emissive:new THREE.Color(color), emissiveIntensity:0.8,
+                    metalness:0.3, roughness:0.2
+                })
+            );
+            orb.position.set(center.x, orbY, center.z);
+            group.add(orb);
+        }
         const light = new THREE.PointLight(color, 1.5, 10);
         light.position.set(center.x, orbY, center.z);
         group.add(light);
@@ -928,17 +930,7 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
         ring.position.set(center.x, 0.025, center.z);
         group.add(ring);
 
-        if (room.kind === 'entrance') {
-            const plaque = makeTextPanel(label, tessColor, {
-                size:30, worldWidth:1.72, worldHeight:0.34
-            });
-            const midpoint = edgeMidpoint(room.panelEdge);
-            plaque.position.set(midpoint.x - normal.x * 0.055, 2.35,
-                midpoint.z - normal.z * 0.055);
-            plaque.rotation.y = rotation;
-            group.add(plaque);
-            return;
-        }
+        if (room.kind === 'entrance') return;
 
         // The closed lattice wall remains behind this room-side assembly, so
         // the neighboring corridor still sees and collides with a solid wall.
