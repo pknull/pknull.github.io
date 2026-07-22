@@ -130,8 +130,12 @@ for (const tessellation of ['delta', 'sigma']) {
 
         const path = grid.findPath(grid.entranceCell, grid.exitCell, {respectOneWay:true});
         assert.ok(path.length > 0, `${tessellation} seed ${seed} has no directed entrance-exit path`);
-        assert.ok(path.length - 1 >= DOOR_MIN_DIST_FACTOR * (grid.w + grid.h),
+        assert.ok(path.length - 1 >= grid.doorFloor,
             `${tessellation} seed ${seed} violates the door distance floor`);
+        const nominalFloor = Math.ceil(DOOR_MIN_DIST_FACTOR * (grid.w + grid.h));
+        if (!grid.doorDistanceRelaxed) assert.equal(grid.doorFloor, nominalFloor);
+        assert.equal(grid.doorDistanceRelaxed, false,
+            `${tessellation} seed ${seed} unexpectedly relaxed the door distance floor`);
 
         const features = featureCells(grid);
         assertDoorRoom(grid, grid.entranceDoorRoom, 'entrance', features);
@@ -153,10 +157,55 @@ for (const tessellation of ['delta', 'sigma']) {
                 (tessellation === 'delta' ? Math.PI * 2 / 3 : Math.PI / 3)) < 1e-12);
             assert.equal(grid.activateRotatingChamber(), true,
                 `${tessellation} seed ${seed} has a nonfunctional rotating chamber`);
-            assert.ok(grid.findPath().length - 1 >= DOOR_MIN_DIST_FACTOR * (grid.w + grid.h),
+            assert.ok(grid.findPath().length - 1 >= grid.doorFloor,
                 `${tessellation} seed ${seed} rotation violates the door distance floor`);
         }
     }
 }
 
-console.log('maze generation invariants passed (200 seeds per tessellation)');
+const fallbackStats = {};
+for (const tessellation of ['delta', 'sigma']) {
+    const achieved = [];
+    for (let seed = 0; seed < 3; seed++) {
+        const args = [`generation-fallback-${seed}`, '1.07', '5.03', {
+            tessellation,
+            allFeatures:true,
+            doorDistFactorOverride:99
+        }];
+        const first = generateMaze(...args);
+        const second = generateMaze(...args);
+        const {grid, params} = first;
+        const path = grid.findPath(grid.entranceCell, grid.exitCell, {respectOneWay:false});
+
+        assert.ok(path.length > 0, `${tessellation} fallback seed ${seed} has no entrance-exit path`);
+        assert.equal(grid.reachableFrom(grid.entranceCell, {respectOneWay:false}).size, grid.cells.length,
+            `${tessellation} fallback seed ${seed} leaves unreachable cells`);
+        assert.equal(grid.doorDistanceRelaxed, true,
+            `${tessellation} fallback seed ${seed} did not exercise rung 2`);
+        assert.equal(grid.doorFloor, path.length - 1,
+            `${tessellation} fallback seed ${seed} did not retain its achieved distance`);
+        assert.ok(grid.doorFloor < grid.doorDistanceFloor(),
+            `${tessellation} fallback seed ${seed} did not relax an unreachable nominal floor`);
+        assert.equal(stableLayout(grid, params), stableLayout(second.grid, second.params),
+            `${tessellation} fallback seed ${seed} is not deterministic`);
+
+        const features = featureCells(grid);
+        assertDoorRoom(grid, grid.entranceDoorRoom, 'entrance', features);
+        assertDoorRoom(grid, grid.exitDoorRoom, 'exit', features);
+        if (grid.rotatingChamber) {
+            assert.equal(grid.activateRotatingChamber(), true,
+                `${tessellation} fallback seed ${seed} has a nonfunctional rotating chamber`);
+            assert.ok(grid.findPath().length - 1 >= grid.doorFloor,
+                `${tessellation} fallback seed ${seed} rotation violates the effective floor`);
+        }
+        achieved.push(grid.doorFloor);
+    }
+    fallbackStats[tessellation] = {
+        min:Math.min(...achieved),
+        max:Math.max(...achieved),
+        values:achieved
+    };
+}
+
+console.log('maze generation invariants passed (200 seeds per tessellation; standard floor never relaxed)');
+console.log('forced rung-2 achieved distances:', fallbackStats);

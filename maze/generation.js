@@ -207,6 +207,8 @@ class MazeGrid {
         this.spatialLoop = null;
         this.guidePath = null;
         this.hunter = null;
+        this.doorFloor = null;
+        this.doorDistanceRelaxed = false;
     }
 
     cell(x, y) {
@@ -341,11 +343,11 @@ class MazeGrid {
     }
 
     doorDistanceFloor() {
-        return Math.ceil(DOOR_MIN_DIST_FACTOR * (this.w + this.h));
+        return Math.ceil((this.doorDistFactorOverride ?? DOOR_MIN_DIST_FACTOR) * (this.w + this.h));
     }
 
     meetsDoorDistance() {
-        return this.findPath().length - 1 >= this.doorDistanceFloor();
+        return this.findPath().length - 1 >= this.doorFloor;
     }
 
     tryOpen(edge) {
@@ -739,16 +741,25 @@ function installDoorPair(grid, first, second, rng) {
     grid.exitDoorRoom = makeDoorRoom(grid, second, 'exit', rng);
     grid.entranceCell = grid.entranceDoorRoom.corridorEdge.cell;
     grid.exitCell = grid.exitDoorRoom.corridorEdge.cell;
+    grid.doorFloor = grid.doorDistanceFloor();
+    grid.doorDistanceRelaxed = false;
 }
 
 function makePreparedGrid(params, tessellation) {
     const doorsRng = new Rng(fnv1a(`${params.seed}|doors`));
-    for (let attempt = 0; attempt < 64; attempt++) {
+    const makeGrid = (w = params.w, h = params.h) => {
         const lattice = tessellation === 'sigma'
-            ? buildSigmaLattice(params.w, params.h, SIGMA_EDGE_LEN)
-            : buildDeltaLattice(params.w, params.h, DELTA_EDGE_LEN);
+            ? buildSigmaLattice(w, h, SIGMA_EDGE_LEN)
+            : buildDeltaLattice(w, h, DELTA_EDGE_LEN);
         const grid = new MazeGrid(lattice, new Rng(params.seed));
-        const candidates = tessellation === 'sigma' ? sigmaDoorCandidates(grid) : deltaDoorCandidates(grid);
+        grid.doorDistFactorOverride = params.doorDistFactorOverride;
+        return grid;
+    };
+    const doorCandidates = grid => tessellation === 'sigma'
+        ? sigmaDoorCandidates(grid) : deltaDoorCandidates(grid);
+    for (let attempt = 0; attempt < 64; attempt++) {
+        const grid = makeGrid();
+        const candidates = doorCandidates(grid);
         if (candidates.length < 2) continue;
         const first = doorsRng.pick(candidates);
         const possible = candidates.filter(candidate => !candidatesTouch(first, candidate));
@@ -770,11 +781,83 @@ function makePreparedGrid(params, tessellation) {
         if (!grid.meetsDoorDistance()) continue;
         return grid;
     }
-    throw new Error(`Unable to place ${tessellation} door rooms at distance floor for seed ${params.seed}`);
+
+    const candidateIds = candidate => candidate.cells.map(cell => cell.id).sort((a, b) => a - b);
+    const compareIds = (a, b) => {
+        for (let i = 0; i < Math.min(a.length, b.length); i++) {
+            if (a[i] !== b[i]) return a[i] - b[i];
+        }
+        return a.length - b.length;
+    };
+    const comparePairsByIds = (a, b) => compareIds(a.ids[0], b.ids[0]) || compareIds(a.ids[1], b.ids[1]);
+    let w = params.w, h = params.h;
+    for (;;) {
+        const probeCandidates = doorCandidates(makeGrid(w, h));
+        if (probeCandidates.length < 2) {
+            w++;
+            h++;
+            continue;
+        }
+        let pairs = [];
+        for (let i = 0; i < probeCandidates.length; i++) {
+            for (let j = i + 1; j < probeCandidates.length; j++) {
+                if (candidatesTouch(probeCandidates[i], probeCandidates[j])) continue;
+                const ids = [candidateIds(probeCandidates[i]), candidateIds(probeCandidates[j])]
+                    .sort(compareIds);
+                pairs.push({i, j, ids, separation:Math.hypot(
+                    probeCandidates[i].center.x - probeCandidates[j].center.x,
+                    probeCandidates[i].center.z - probeCandidates[j].center.z
+                )});
+            }
+        }
+        if (!pairs.length) {
+            for (let i = 0; i < probeCandidates.length; i++) {
+                for (let j = i + 1; j < probeCandidates.length; j++) {
+                    const ids = [candidateIds(probeCandidates[i]), candidateIds(probeCandidates[j])]
+                        .sort(compareIds);
+                    pairs.push({i, j, ids, separation:Math.hypot(
+                        probeCandidates[i].center.x - probeCandidates[j].center.x,
+                        probeCandidates[i].center.z - probeCandidates[j].center.z
+                    )});
+                }
+            }
+        }
+        pairs.sort((a, b) => b.separation - a.separation || comparePairsByIds(a, b));
+
+        let best = null;
+        for (const pair of pairs.slice(0, 32)) {
+            const grid = makeGrid(w, h);
+            const candidates = doorCandidates(grid);
+            const doorsState = doorsRng.state;
+            installDoorPair(grid, candidates[pair.i], candidates[pair.j], doorsRng);
+            grid.generate(params.bias);
+            if (grid.reachableFrom(grid.entranceCell, {respectOneWay:false}).size !== grid.cells.length) continue;
+            const achievedDistance = grid.findPath().length - 1;
+            if (!best || achievedDistance > best.achievedDistance ||
+                (achievedDistance === best.achievedDistance && comparePairsByIds(pair, best.pair) < 0))
+                best = {pair, doorsState, achievedDistance};
+        }
+        if (!best) {
+            w++;
+            h++;
+            continue;
+        }
+
+        doorsRng.state = best.doorsState;
+        const grid = makeGrid(w, h);
+        const candidates = doorCandidates(grid);
+        installDoorPair(grid, candidates[best.pair.i], candidates[best.pair.j], doorsRng);
+        grid.generate(params.bias);
+        const achievedDistance = grid.findPath().length - 1;
+        grid.doorFloor = Math.min(grid.doorFloor, achievedDistance);
+        grid.doorDistanceRelaxed = true;
+        return grid;
+    }
 }
 
 // ===== KEY PROCESSING =====
-function getMazeParams(masterSeed, roomA, roomB, tessellation = MAZE_TESSELLATION) {
+function getMazeParams(masterSeed, roomA, roomB, tessellation = MAZE_TESSELLATION,
+    doorDistFactorOverride = undefined) {
     const canonical = [roomA, roomB].sort().join('|');
     const seed = fnv1a(masterSeed + canonical);
     const rng = new Rng(seed);
@@ -802,7 +885,7 @@ function getMazeParams(masterSeed, roomA, roomB, tessellation = MAZE_TESSELLATIO
     const edgeLen = tessellation === 'sigma' ? SIGMA_EDGE_LEN : DELTA_EDGE_LEN;
     return {
         w, h, bias, loops, rooms, traps, fogFar, seed, tier, law,
-        structuralFeature, structuralRequired, tessellation, edgeLen
+        structuralFeature, structuralRequired, tessellation, edgeLen, doorDistFactorOverride
     };
 }
 
@@ -831,11 +914,12 @@ function buildMaze(params, roomA, roomB, allFeatures) {
 
 function generateMaze(masterSeed, roomA, roomB, {
     allFeatures = false,
-    tessellation = MAZE_TESSELLATION
+    tessellation = MAZE_TESSELLATION,
+    doorDistFactorOverride = undefined
 } = {}) {
     if (tessellation !== 'delta' && tessellation !== 'sigma')
         throw new RangeError(`Unknown maze tessellation: ${tessellation}`);
-    const params = getMazeParams(masterSeed, roomA, roomB, tessellation);
+    const params = getMazeParams(masterSeed, roomA, roomB, tessellation, doorDistFactorOverride);
     return buildMaze(params, roomA, roomB, allFeatures);
 }
 
