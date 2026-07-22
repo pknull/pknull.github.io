@@ -67,6 +67,24 @@ function assertDoorRoom(grid, room, kind, features) {
     assert.ok(room.corridorEdge.neighbor);
     assert.ok(!room.cells.includes(room.corridorEdge.neighbor));
     assert.ok(Number.isFinite(room.panelNormal.x) && Number.isFinite(room.panelNormal.z));
+    if (kind === 'entrance') {
+        assert.equal(room.panelEdge.neighbor, null,
+            'entrance panel edge must be on the lattice boundary');
+        assert.ok(grid.boundaryEdges.includes(room.panelEdge));
+        assert.equal(grid.entranceCell, room.panelCell,
+            'entranceCell must be the cell immediately inside the doorway');
+        const [a, b] = room.panelEdge.segment;
+        const midpoint = {x:(a.x + b.x) / 2, z:(a.z + b.z) / 2};
+        for (const cell of grid.cells) {
+            const side = (cell.center.x - midpoint.x) * room.panelNormal.x +
+                (cell.center.z - midpoint.z) * room.panelNormal.z;
+            assert.ok(side < -1e-8,
+                `${grid.tessellation} cell ${cell.id} is not strictly behind the entrance plane`);
+        }
+    } else {
+        assert.ok(room.panelEdge.neighbor,
+            'exit panel edge must remain inside the lattice');
+    }
 
     const roomCells = new Set(room.cells);
     let corridorCount = 0;

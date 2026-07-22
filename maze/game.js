@@ -183,6 +183,19 @@ function doorRoomThreshold(room) {
     return {frame, rear, tangent, normal, depth:DOOR_FRAME_OFFSET - rearOffset};
 }
 
+function pointInEntranceOpening(point, room) {
+    if (!room) return false;
+    const [a, b] = room.panelEdge.segment;
+    const dx = b.x - a.x, dz = b.z - a.z;
+    const length = Math.hypot(dx, dz);
+    const midpoint = edgeMidpoint(room.panelEdge);
+    const tangentDistance = Math.abs(
+        (point.x - midpoint.x) * dx / length +
+        (point.z - midpoint.z) * dz / length
+    );
+    return tangentDistance < DOOR_W / 2 - P_RAD * 0.5;
+}
+
 function addCheatLine(group, grid) {
     const path = solveMaze(grid);
     if (path.length < 2) return;
@@ -704,7 +717,7 @@ function interactWithHub(allowNearbyInteraction = false) {
         }
         if (allowNearbyInteraction && attachedMazeGrid) {
             const local = worldToMazeLocal(playerPos.x, playerPos.z);
-            const nearby = [attachedMazeGrid.entranceDoorRoom, attachedMazeGrid.exitDoorRoom]
+            const nearby = [attachedMazeGrid.exitDoorRoom]
                 .filter(room => room && !room.panelOpen)
                 .filter(room => distanceToMazeDoor(room, local) <= DOOR_INTERACT_RANGE)
                 .sort((a, b) => distanceToMazeDoor(a, local) - distanceToMazeDoor(b, local))[0];
@@ -771,6 +784,38 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
         return mesh;
     }
 
+    function addEntranceDoorwayWall(edge, edgeMaterial) {
+        const [a, b] = edge.segment;
+        const dx = b.x - a.x, dz = b.z - a.z;
+        const length = Math.hypot(dx, dz);
+        const tx = dx / length, tz = dz / length;
+        const midpoint = edgeMidpoint(edge);
+        const capLength = Math.max(0, (length - DOOR_W) / 2);
+        for (const side of [-1, 1]) {
+            if (capLength <= 0.001) continue;
+            const inner = {
+                x:midpoint.x + tx * side * DOOR_W / 2,
+                z:midpoint.z + tz * side * DOOR_W / 2
+            };
+            const outer = {
+                x:midpoint.x + tx * side * length / 2,
+                z:midpoint.z + tz * side * length / 2
+            };
+            addWallSegment({segment:[inner, outer]}, wallMaterial, edgeMaterial);
+        }
+        const lintelHeight = WALL_H - DOOR_H;
+        if (lintelHeight > 0.001) {
+            const lintel = new THREE.Mesh(
+                new THREE.BoxGeometry(DOOR_W, lintelHeight, WALL_T),
+                wallMaterial
+            );
+            lintel.position.set(midpoint.x, DOOR_H + lintelHeight / 2, midpoint.z);
+            lintel.rotation.y = -Math.atan2(dz, dx);
+            group.add(lintel);
+            addWallEdges(lintel, edgeMaterial);
+        }
+    }
+
     function polygonGeometry(cell) {
         const shape = new THREE.Shape();
         cell.vertices.forEach((point, index) => {
@@ -826,6 +871,10 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
             if (staticWalls.has(key)) continue;
             staticWalls.add(key);
             const doorRoom = cell.doorRoom || edge.neighbor?.doorRoom;
+            if (edge === mazeGrid.entranceDoorRoom?.panelEdge) {
+                addEntranceDoorwayWall(edge, doorRoomEdgeMaterials.entrance);
+                continue;
+            }
             addWallSegment(edge, wallMaterial,
                 doorRoom ? doorRoomEdgeMaterials[doorRoom.kind] : wallEdgeMaterial);
         }
@@ -851,7 +900,7 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
         const frameEdgeMaterial = new THREE.LineBasicMaterial({
             color, transparent:true, opacity:0.72, depthWrite:false
         });
-        room.panelOpen = false;
+        room.panelOpen = room.kind === 'entrance';
 
         const cap = new THREE.Mesh(roomFootprintGeometry(room), roomCapMaterial);
         cap.rotation.x = Math.PI / 2;
@@ -878,6 +927,18 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
         ring.rotation.x = -Math.PI / 2;
         ring.position.set(center.x, 0.025, center.z);
         group.add(ring);
+
+        if (room.kind === 'entrance') {
+            const plaque = makeTextPanel(label, tessColor, {
+                size:30, worldWidth:1.72, worldHeight:0.34
+            });
+            const midpoint = edgeMidpoint(room.panelEdge);
+            plaque.position.set(midpoint.x - normal.x * 0.055, 2.35,
+                midpoint.z - normal.z * 0.055);
+            plaque.rotation.y = rotation;
+            group.add(plaque);
+            return;
+        }
 
         // The closed lattice wall remains behind this room-side assembly, so
         // the neighboring corridor still sees and collides with a solid wall.
@@ -1323,43 +1384,33 @@ function attachMaze(dir) {
         activeShade = {mode:'lag', lagUntil:performance.now() + SHADE_LAG_MS,
             grid:null, cell:null, targetCell:null, visual:null};
     }
-    clearScene();
     const mazeGroup = buildMazeScene(grid, currentRoomId, dest);
-    mazeGroup.position.x = -(grid.bounds.minX + grid.bounds.maxX) / 2;
-    mazeGroup.position.z = -(grid.bounds.minZ + grid.bounds.maxZ) / 2;
+
+    const angle = DIR_ANGLES[dir];
+    const hubNormal = {x:Math.sin(angle), z:-Math.cos(angle)};
+    const entrance = grid.entranceDoorRoom;
+    const entranceMid = edgeMidpoint(entrance.panelEdge);
+    const targetNormal = {x:-hubNormal.x, z:-hubNormal.z};
+    const rotation = Math.atan2(entrance.panelNormal.z, entrance.panelNormal.x) -
+        Math.atan2(targetNormal.z, targetNormal.x);
+    mazeGroup.rotation.y = rotation;
+    const rotatedMid = {
+        x:entranceMid.x * Math.cos(rotation) + entranceMid.z * Math.sin(rotation),
+        z:-entranceMid.x * Math.sin(rotation) + entranceMid.z * Math.cos(rotation)
+    };
+    mazeGroup.position.x = hubNormal.x * HUB_APO - rotatedMid.x;
+    mazeGroup.position.z = hubNormal.z * HUB_APO - rotatedMid.z;
 
     scene.add(mazeGroup);
-    scene.fog.far = params.fogFar;
+    scene.fog.far = Math.max(30, params.fogFar);
 
     attachedMazeGroup = mazeGroup;
     attachedMazeGrid = grid;
     attachedMazeParams = params;
     attachedMazeDest = dest;
-    mazeSpaceActive = true;
-    playerInMaze = true;
+    mazeSpaceActive = false;
+    playerInMaze = false;
     buildMinimapBase(grid);
-
-    const entrance = grid.entranceDoorRoom;
-    const spawn = mazeLocalToWorld(entrance.center.x, entrance.center.z);
-    const corridorTarget = entrance.corridorEdge.neighbor?.center ||
-        edgeMidpoint(entrance.corridorEdge);
-    const dx = corridorTarget.x - entrance.center.x;
-    const dz = corridorTarget.z - entrance.center.z;
-    playerPos.set(spawn.x, EYE_H, spawn.z);
-    camera.rotation.set(0, Math.atan2(-dx, -dz), 0, 'YXZ');
-    verticalVelocity = 0;
-    // Door-room fold is an out-of-frame teleport, so hardening state must
-    // move with the player rather than letting the next frame snap it back.
-    trackedPos.x = playerPos.x;
-    trackedPos.z = playerPos.z;
-    camera.position.set(playerPos.x, playerPos.y, playerPos.z);
-    if (playerLight) playerLight.position.set(playerPos.x, playerPos.y, playerPos.z);
-
-    const hunter = grid.hunter;
-    if (hunter && !hunter.wakeAt && !activeShade) {
-        hunter.wakeAt = performance.now() + HUNTER_WAKE_DELAY_MS;
-        showEventMessage('THE SHADE STIRS', 2600);
-    }
     updateHUD();
 }
 
@@ -1548,14 +1599,19 @@ function updateMovement(delta) {
     }
 
     // Determine if player is past the open door (in the maze area)
+    const wasPlayerInMaze = playerInMaze;
     const inMazeArea = isPlayerInMaze();
+    playerInMaze = inMazeArea;
 
     if (inMazeArea && attachedMazeGrid) {
-        const doorCrossing = checkMazeExit(previousX, previousZ);
-        if (doorCrossing === 'entrance') {
-            enterHub(currentRoomId);
-            return;
+        if (!wasPlayerInMaze) {
+            const hunter = attachedMazeGrid.hunter;
+            if (hunter && !hunter.wakeAt && !activeShade) {
+                hunter.wakeAt = performance.now() + HUNTER_WAKE_DELAY_MS;
+                showEventMessage('THE SHADE STIRS', 2600);
+            }
         }
+        const doorCrossing = checkMazeExit(previousX, previousZ);
         if (doorCrossing === 'exit') {
             const destination = attachedMazeDest;
             const source = currentRoomId;
@@ -1624,6 +1680,13 @@ function checkSpatialLoop() {
 }
 
 function isPlayerInMaze() {
+    if (!hubDoorOpen || !attachedMazeGroup) {
+        mazeSpaceActive = false;
+        return false;
+    }
+    const angle = DIR_ANGLES[hubDoorOpen];
+    const nx = Math.sin(angle), nz = -Math.cos(angle);
+    mazeSpaceActive = playerPos.x * nx + playerPos.z * nz > HUB_APO - 0.2;
     return mazeSpaceActive;
 }
 
@@ -1664,12 +1727,32 @@ function collideInMaze(previousWorldX, previousWorldZ) {
                     `${point.x.toFixed(5)},${point.z.toFixed(5)}`).sort().join('|');
                 if (seen.has(key)) continue;
                 seen.add(key);
+                if (edge === grid.entranceDoorRoom?.panelEdge) {
+                    const [a, b] = edge.segment;
+                    const dx = b.x - a.x, dz = b.z - a.z;
+                    const length = Math.hypot(dx, dz);
+                    const midpoint = edgeMidpoint(edge);
+                    const tangent = {x:dx / length, z:dz / length};
+                    for (const side of [-1, 1]) {
+                        grid._closedWallCache.push({
+                            edge:{segment:[
+                                side < 0 ? a : b,
+                                {
+                                    x:midpoint.x + tangent.x * side * DOOR_W / 2,
+                                    z:midpoint.z + tangent.z * side * DOOR_W / 2
+                                }
+                            ]},
+                            owner:cell
+                        });
+                    }
+                    continue;
+                }
                 grid._closedWallCache.push({edge, owner:cell});
             }
         }
         // A sealed panel blocks the frame plane. The short sides keep
         // off-center approaches out of the jambs before an open-door fold.
-        for (const room of [grid.entranceDoorRoom, grid.exitDoorRoom]) {
+        for (const room of [grid.exitDoorRoom]) {
             if (!room) continue;
             const {frame, rear, tangent} = doorRoomThreshold(room);
             if (!room.panelOpen) {
@@ -1758,7 +1841,8 @@ function collideInMaze(previousWorldX, previousWorldZ) {
 
     // Preserve the old final fallback: if relaxation found the exterior,
     // keep the last trusted position rather than accepting a clipped frame.
-    if (!grid.cellContainingPoint(local.x, local.z)) local = previous;
+    if (!grid.cellContainingPoint(local.x, local.z) &&
+        !pointInEntranceOpening(local, grid.entranceDoorRoom)) local = previous;
 
     // Convert back to world
     const world = mazeLocalToWorld(local.x, local.z);
@@ -1989,10 +2073,9 @@ function checkMazeExit(previousWorldX, previousWorldZ) {
     if (!attachedMazeGrid) return null;
     const previous = worldToMazeLocal(previousWorldX, previousWorldZ);
     const current = worldToMazeLocal(playerPos.x, playerPos.z);
-    for (const room of [attachedMazeGrid.entranceDoorRoom, attachedMazeGrid.exitDoorRoom]) {
-        if (room?.panelOpen && crossesEdgePlane(previous, current, room.panelEdge, room.center,
-            DOOR_FRAME_OFFSET, DOOR_W / 2 - P_RAD)) return room.kind;
-    }
+    const room = attachedMazeGrid.exitDoorRoom;
+    if (room?.panelOpen && crossesEdgePlane(previous, current, room.panelEdge, room.center,
+        DOOR_FRAME_OFFSET, DOOR_W / 2 - P_RAD)) return room.kind;
     return null;
 }
 
@@ -2051,7 +2134,7 @@ function updateHUD() {
             local.x - cell.center.x,
             local.z - cell.center.z
         ) < 2.1);
-        const nearbyDoor = [attachedMazeGrid.entranceDoorRoom, attachedMazeGrid.exitDoorRoom]
+        const nearbyDoor = [attachedMazeGrid.exitDoorRoom]
             .find(room => room && !room.panelOpen &&
                 distanceToMazeDoor(room, local) <= DOOR_INTERACT_RANGE);
         if (nearbyDoor) {
