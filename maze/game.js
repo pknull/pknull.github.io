@@ -246,6 +246,9 @@ let scene, camera, renderer, controls;
 const playerPos = new THREE.Vector3();
 const trackedPos = {x: 0, z: 0};
 const moveState = {forward:false, backward:false, left:false, right:false};
+const JUMP_VELOCITY = 3.2;
+const GRAVITY = 9.8;
+let verticalVelocity = 0;
 const moveForward = new THREE.Vector3();
 const moveRight = new THREE.Vector3();
 const moveDirection = new THREE.Vector3();
@@ -1249,6 +1252,7 @@ function enterHub(roomId, fromRoom, arrivalPose = null) {
         playerPos.set(0, EYE_H, 0);
         camera.rotation.set(0, 0, 0, 'YXZ');
     }
+    verticalVelocity = 0;
     trackedPos.x = playerPos.x;
     trackedPos.z = playerPos.z;
     camera.position.set(playerPos.x, playerPos.y, playerPos.z);
@@ -1469,7 +1473,12 @@ function updateMovement(delta) {
         playerPos.x += moveDirection.x * MOVE_SPD * delta;
         playerPos.z += moveDirection.z * MOVE_SPD * delta;
     }
-    playerPos.y = EYE_H;
+    playerPos.y += verticalVelocity * delta - 0.5 * GRAVITY * delta * delta;
+    verticalVelocity -= GRAVITY * delta;
+    if (playerPos.y <= EYE_H) {
+        playerPos.y = EYE_H;
+        verticalVelocity = 0;
+    }
 
     // Determine if player is past the open door (in the maze area)
     const inMazeArea = isPlayerInMaze();
@@ -2203,6 +2212,11 @@ function setupEvents() {
             case 'KeyS': case 'ArrowDown': moveState.backward = true; break;
             case 'KeyA': case 'ArrowLeft': moveState.left = true; break;
             case 'KeyD': case 'ArrowRight': moveState.right = true; break;
+            case 'Space':
+                if (!e.repeat && gameState === 'HUB' && playerPos.y === EYE_H) {
+                    verticalVelocity = JUMP_VELOCITY;
+                }
+                break;
             case 'KeyE':
                 if (!e.repeat) interactWithHub(true);
                 break;
