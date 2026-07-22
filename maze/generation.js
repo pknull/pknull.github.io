@@ -5,6 +5,7 @@ import {
     DOOR_MIN_DIST_FACTOR,
     HUNTER_BASE_CHANCE,
     HUNTER_TESSERACT_CHANCE,
+    HUB_APO,
     MAZE_TESSELLATION,
     SIGMA_EDGE_LEN,
     SIGMA_TIER_RANGES,
@@ -12,6 +13,10 @@ import {
     getTesseractLaw,
     scatterPool
 } from './maze-data.js';
+
+const EXTERIOR_HUB_MARGIN = 1;
+const EXTERIOR_HUB_CLEARANCE = 2 *
+    (HUB_APO / Math.cos(Math.PI / 8) + EXTERIOR_HUB_MARGIN);
 
 // ===== PRNG =====
 function fnv1a(str) {
@@ -701,24 +706,14 @@ function hullEdges(grid, candidate) {
     });
 }
 
-function deltaDoorCandidates(grid) {
-    return deltaDoorFootprints(grid).filter(candidate =>
-        outerEdges(candidate).every(edge => edge.neighbor));
-}
-
-function deltaEntranceCandidates(grid) {
+function deltaHullDoorCandidates(grid) {
     return deltaDoorFootprints(grid).map(candidate => ({
         ...candidate,
         panelEdges:hullEdges(grid, candidate)
     })).filter(candidate => candidate.panelEdges.length > 0);
 }
 
-function sigmaDoorCandidates(grid) {
-    return grid.cells.filter(cell => cell.edges.every(edge => edge.neighbor))
-        .map(cell => ({center:{...cell.center}, cells:[cell]}));
-}
-
-function sigmaEntranceCandidates(grid) {
+function sigmaHullDoorCandidates(grid) {
     return grid.cells.filter(cell => cell.edges.some(edge => !edge.neighbor))
         .map(cell => ({center:{...cell.center}, cells:[cell]}))
         .map(candidate => ({...candidate, panelEdges:hullEdges(grid, candidate)}))
@@ -730,7 +725,21 @@ function candidatesTouch(a, b) {
     return a.cells.some(cell => bCells.has(cell) || cell.edges.some(edge => bCells.has(edge.neighbor)));
 }
 
-function makeDoorRoom(grid, candidate, kind, rng) {
+function exteriorDoorwayPairs(first, second) {
+    const pairs = [];
+    for (const entranceEdge of first.panelEdges) {
+        const entranceMid = midpoint(entranceEdge);
+        for (const exitEdge of second.panelEdges) {
+            const exitMid = midpoint(exitEdge);
+            const separation = Math.hypot(exitMid.x - entranceMid.x, exitMid.z - entranceMid.z);
+            if (separation >= EXTERIOR_HUB_CLEARANCE)
+                pairs.push({entranceEdge, exitEdge, separation});
+        }
+    }
+    return pairs;
+}
+
+function makeDoorRoom(grid, candidate, kind, panelEdge) {
     const roomCells = new Set(candidate.cells);
     const connectedOuterEdges = [];
     for (const cell of candidate.cells) {
@@ -749,39 +758,19 @@ function makeDoorRoom(grid, candidate, kind, rng) {
             }
         }
     }
-    let corridorEdge, panelEdge;
-    if (kind === 'entrance') {
-        panelEdge = rng.pick(candidate.panelEdges);
-        const panelMid = midpoint(panelEdge);
-        const panelDirection = normalize({
-            x:panelMid.x - candidate.center.x,
-            z:panelMid.z - candidate.center.z
-        });
-        corridorEdge = connectedOuterEdges.reduce((best, edge) => {
-            const point = midpoint(edge);
-            const direction = normalize({x:point.x - candidate.center.x, z:point.z - candidate.center.z});
-            const score = direction.x * panelDirection.x + direction.z * panelDirection.z;
-            return !best || score < best.score ? {edge, score} : best;
-        }, null).edge;
-    } else {
-        corridorEdge = rng.pick(connectedOuterEdges);
-    }
+    const panelMid = midpoint(panelEdge);
+    const panelDirection = normalize({
+        x:panelMid.x - candidate.center.x,
+        z:panelMid.z - candidate.center.z
+    });
+    const corridorEdge = connectedOuterEdges.reduce((best, edge) => {
+        const point = midpoint(edge);
+        const direction = normalize({x:point.x - candidate.center.x, z:point.z - candidate.center.z});
+        const score = direction.x * panelDirection.x + direction.z * panelDirection.z;
+        return !best || score < best.score ? {edge, score} : best;
+    }, null).edge;
     corridorEdge.hardClosed = false;
     corridorEdge.reverse.hardClosed = false;
-    if (!panelEdge) {
-        const corridorMid = midpoint(corridorEdge);
-        const corridorDirection = normalize({
-            x:corridorMid.x - candidate.center.x,
-            z:corridorMid.z - candidate.center.z
-        });
-        panelEdge = connectedOuterEdges.filter(edge => edge !== corridorEdge).reduce((best, edge) => {
-            const point = midpoint(edge);
-            const direction = normalize({x:point.x - candidate.center.x, z:point.z - candidate.center.z});
-            const score = direction.x * corridorDirection.x + direction.z * corridorDirection.z;
-            return !best || score < best.score ? {edge, score} : best;
-        }, null).edge;
-    }
-    const panelMid = midpoint(panelEdge);
     const room = {
         kind,
         cells:[...candidate.cells],
@@ -797,12 +786,16 @@ function makeDoorRoom(grid, candidate, kind, rng) {
 }
 
 function installDoorPair(grid, first, second, rng) {
-    grid.entranceDoorRoom = makeDoorRoom(grid, first, 'entrance', rng);
-    grid.exitDoorRoom = makeDoorRoom(grid, second, 'exit', rng);
+    const doorwayPairs = exteriorDoorwayPairs(first, second);
+    if (!doorwayPairs.length) return false;
+    const {entranceEdge, exitEdge} = rng.pick(doorwayPairs);
+    grid.entranceDoorRoom = makeDoorRoom(grid, first, 'entrance', entranceEdge);
+    grid.exitDoorRoom = makeDoorRoom(grid, second, 'exit', exitEdge);
     grid.entranceCell = grid.entranceDoorRoom.panelCell;
-    grid.exitCell = grid.exitDoorRoom.corridorEdge.cell;
+    grid.exitCell = grid.exitDoorRoom.panelCell;
     grid.doorFloor = grid.doorDistanceFloor();
     grid.doorDistanceRelaxed = false;
+    return true;
 }
 
 function makePreparedGrid(params, tessellation) {
@@ -815,21 +808,19 @@ function makePreparedGrid(params, tessellation) {
         grid.doorDistFactorOverride = params.doorDistFactorOverride;
         return grid;
     };
-    const exitCandidates = grid => tessellation === 'sigma'
-        ? sigmaDoorCandidates(grid) : deltaDoorCandidates(grid);
-    const entranceCandidates = grid => tessellation === 'sigma'
-        ? sigmaEntranceCandidates(grid) : deltaEntranceCandidates(grid);
+    const doorCandidates = grid => tessellation === 'sigma'
+        ? sigmaHullDoorCandidates(grid) : deltaHullDoorCandidates(grid);
     for (let attempt = 0; attempt < 64; attempt++) {
         const grid = makeGrid();
-        const entrances = entranceCandidates(grid);
-        const exits = exitCandidates(grid);
-        if (!entrances.length || !exits.length) continue;
-        const first = doorsRng.pick(entrances);
-        const possible = exits.filter(candidate => !candidatesTouch(first, candidate));
+        const candidates = doorCandidates(grid);
+        if (candidates.length < 2) continue;
+        const first = doorsRng.pick(candidates);
+        const possible = candidates.filter(candidate => !candidatesTouch(first, candidate) &&
+            exteriorDoorwayPairs(first, candidate).length > 0);
         if (!possible.length) continue;
         possible.sort((a, b) => {
-            const ad = Math.hypot(a.center.x - first.center.x, a.center.z - first.center.z);
-            const bd = Math.hypot(b.center.x - first.center.x, b.center.z - first.center.z);
+            const ad = Math.max(...exteriorDoorwayPairs(first, a).map(pair => pair.separation));
+            const bd = Math.max(...exteriorDoorwayPairs(first, b).map(pair => pair.separation));
             return bd - ad;
         });
         // Prefer the farthest quartile first. The final sixteen bounded
@@ -838,7 +829,7 @@ function makePreparedGrid(params, tessellation) {
             ? possible.slice(0, Math.max(1, Math.ceil(possible.length / 4)))
             : possible;
         const second = doorsRng.pick(secondPool);
-        installDoorPair(grid, first, second, doorsRng);
+        if (!installDoorPair(grid, first, second, doorsRng)) continue;
         grid.generate(params.bias);
         if (grid.reachableFrom(grid.entranceCell, {respectOneWay:false}).size !== grid.cells.length) continue;
         if (!grid.meetsDoorDistance()) continue;
@@ -856,44 +847,35 @@ function makePreparedGrid(params, tessellation) {
     let w = params.w, h = params.h;
     for (;;) {
         const probeGrid = makeGrid(w, h);
-        const probeEntrances = entranceCandidates(probeGrid);
-        const probeExits = exitCandidates(probeGrid);
-        if (!probeEntrances.length || !probeExits.length) {
+        const probeCandidates = doorCandidates(probeGrid);
+        if (probeCandidates.length < 2) {
             w++;
             h++;
             continue;
         }
-        let pairs = [];
-        for (let i = 0; i < probeEntrances.length; i++) {
-            for (let j = 0; j < probeExits.length; j++) {
-                if (candidatesTouch(probeEntrances[i], probeExits[j])) continue;
-                const ids = [candidateIds(probeEntrances[i]), candidateIds(probeExits[j])];
-                pairs.push({i, j, ids, separation:Math.hypot(
-                    probeEntrances[i].center.x - probeExits[j].center.x,
-                    probeEntrances[i].center.z - probeExits[j].center.z
-                )});
+        const pairs = [];
+        for (let i = 0; i < probeCandidates.length; i++) {
+            for (let j = 0; j < probeCandidates.length; j++) {
+                if (candidatesTouch(probeCandidates[i], probeCandidates[j])) continue;
+                const doorwayPairs = exteriorDoorwayPairs(probeCandidates[i], probeCandidates[j]);
+                if (!doorwayPairs.length) continue;
+                const ids = [candidateIds(probeCandidates[i]), candidateIds(probeCandidates[j])];
+                pairs.push({i, j, ids, separation:Math.max(...doorwayPairs.map(pair => pair.separation))});
             }
         }
         if (!pairs.length) {
-            for (let i = 0; i < probeEntrances.length; i++) {
-                for (let j = 0; j < probeExits.length; j++) {
-                    const ids = [candidateIds(probeEntrances[i]), candidateIds(probeExits[j])];
-                    pairs.push({i, j, ids, separation:Math.hypot(
-                        probeEntrances[i].center.x - probeExits[j].center.x,
-                        probeEntrances[i].center.z - probeExits[j].center.z
-                    )});
-                }
-            }
+            w++;
+            h++;
+            continue;
         }
         pairs.sort((a, b) => b.separation - a.separation || comparePairsByIds(a, b));
 
         let best = null;
         for (const pair of pairs.slice(0, 32)) {
             const grid = makeGrid(w, h);
-            const entrances = entranceCandidates(grid);
-            const exits = exitCandidates(grid);
+            const candidates = doorCandidates(grid);
             const doorsState = doorsRng.state;
-            installDoorPair(grid, entrances[pair.i], exits[pair.j], doorsRng);
+            if (!installDoorPair(grid, candidates[pair.i], candidates[pair.j], doorsRng)) continue;
             grid.generate(params.bias);
             if (grid.reachableFrom(grid.entranceCell, {respectOneWay:false}).size !== grid.cells.length) continue;
             const achievedDistance = grid.findPath().length - 1;
@@ -909,9 +891,8 @@ function makePreparedGrid(params, tessellation) {
 
         doorsRng.state = best.doorsState;
         const grid = makeGrid(w, h);
-        const entrances = entranceCandidates(grid);
-        const exits = exitCandidates(grid);
-        installDoorPair(grid, entrances[best.pair.i], exits[best.pair.j], doorsRng);
+        const candidates = doorCandidates(grid);
+        installDoorPair(grid, candidates[best.pair.i], candidates[best.pair.j], doorsRng);
         grid.generate(params.bias);
         const achievedDistance = grid.findPath().length - 1;
         grid.doorFloor = Math.min(grid.doorFloor, achievedDistance);
@@ -991,6 +972,7 @@ function generateMaze(masterSeed, roomA, roomB, {
 export {
     MazeGrid,
     Rng,
+    EXTERIOR_HUB_CLEARANCE,
     buildDeltaLattice,
     buildSigmaLattice,
     fnv1a,

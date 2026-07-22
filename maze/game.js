@@ -27,9 +27,6 @@ import {
 } from './maze-data.js';
 import { Rng, fnv1a, generateMaze } from './generation.js';
 
-const DOOR_VESTIBULE_DEPTH = 0.46;
-const DOOR_BACKPLANE_GAP = 0.01;
-const DOOR_FRAME_OFFSET = WALL_T / 2 + DOOR_VESTIBULE_DEPTH;
 const DOOR_INTERACT_RANGE = 3;
 
 // The import map shares the three.js module instance with the console, so
@@ -170,20 +167,11 @@ function doorRoomThreshold(room) {
     const length = Math.hypot(dx, dz);
     const tangent = {x:dx / length, z:dz / length};
     const normal = room.panelNormal;
-    const midpoint = edgeMidpoint(room.panelEdge);
-    const rearOffset = WALL_T / 2 + DOOR_BACKPLANE_GAP;
-    const frame = {
-        x:midpoint.x - normal.x * DOOR_FRAME_OFFSET,
-        z:midpoint.z - normal.z * DOOR_FRAME_OFFSET
-    };
-    const rear = {
-        x:midpoint.x - normal.x * rearOffset,
-        z:midpoint.z - normal.z * rearOffset
-    };
-    return {frame, rear, tangent, normal, depth:DOOR_FRAME_OFFSET - rearOffset};
+    const frame = edgeMidpoint(room.panelEdge);
+    return {frame, tangent, normal};
 }
 
-function pointInEntranceOpening(point, room) {
+function pointInDoorwayOpening(point, room) {
     if (!room) return false;
     const [a, b] = room.panelEdge.segment;
     const dx = b.x - a.x, dz = b.z - a.z;
@@ -419,7 +407,7 @@ const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2(0, 0); // center of screen
 
 // ===== HUB BUILDER =====
-function buildHub(roomId) {
+function buildHub(roomId, {preview = false, openDirection = null} = {}) {
     const group = new THREE.Group();
     const tessNum = getTess(roomId);
     const tess = TESSERACTS[tessNum];
@@ -427,9 +415,11 @@ function buildHub(roomId) {
     const nav = roomNavigation[roomId] || {};
     const isControl = CONTROL_ROOMS.includes(roomId);
 
-    hubDoorOpen = null;
-    hubDoorPanels = {};
-    hubClickables = [];
+    if (!preview) {
+        hubDoorOpen = null;
+        hubDoorPanels = {};
+        hubClickables = [];
+    }
 
     // Materials
     const wallSolid = new THREE.MeshStandardMaterial({color: GRUVBOX.bg2, side: THREE.DoubleSide, roughness: 0.88});
@@ -466,7 +456,8 @@ function buildHub(roomId) {
     // Walls
     for (const dir of DIRECTIONS) {
         const angle = DIR_ANGLES[dir];
-        const hasDoor = !!nav[dir];
+        const isPreviewOpening = preview && dir === openDirection;
+        const hasDoor = !!nav[dir] || isPreviewOpening;
         const nx = Math.sin(angle), nz = -Math.cos(angle);
         const wx = nx * HUB_APO, wz = nz * HUB_APO;
         const wallLen = 2 * HUB_RAD * Math.sin(Math.PI / 8);
@@ -505,58 +496,62 @@ function buildHub(roomId) {
                 addWallEdges(tg, tm);
             }
 
-            // Sealed door panel (blocks the opening until clicked)
-            const dest = nav[dir];
-            const dt = TESSERACTS[getTess(dest)];
-            const doorColor = new THREE.Color(dt.color);
-            const doorMat = new THREE.MeshStandardMaterial({
-                map: getDoorTexture(getTess(dest), dt.color),
-                color: GRUVBOX.fg,
-                emissive: doorColor,
-                emissiveIntensity: 0.07,
-                metalness: 0.35,
-                roughness: 0.72,
-                side: THREE.DoubleSide
-            });
-            const doorGeom = new THREE.BoxGeometry(DOOR_W, DOOR_H, 0.08);
-            const doorPanel = new THREE.Mesh(doorGeom, doorMat);
-            doorPanel.position.set(wx, DOOR_H / 2, wz);
-            doorPanel.rotation.y = -angle;
-            doorPanel.userData = {isDoor: true, direction: dir, destination: dest};
-            group.add(doorPanel);
-            hubDoorPanels[dir] = doorPanel;
-            hubClickables.push(doorPanel);
+            if (!isPreviewOpening) {
+                // Sealed door panel (blocks the opening until clicked)
+                const dest = nav[dir];
+                const dt = TESSERACTS[getTess(dest)];
+                const doorColor = new THREE.Color(dt.color);
+                const doorMat = new THREE.MeshStandardMaterial({
+                    map: getDoorTexture(getTess(dest), dt.color),
+                    color: GRUVBOX.fg,
+                    emissive: doorColor,
+                    emissiveIntensity: 0.07,
+                    metalness: 0.35,
+                    roughness: 0.72,
+                    side: THREE.DoubleSide
+                });
+                const doorGeom = new THREE.BoxGeometry(DOOR_W, DOOR_H, 0.08);
+                const doorPanel = new THREE.Mesh(doorGeom, doorMat);
+                doorPanel.position.set(wx, DOOR_H / 2, wz);
+                doorPanel.rotation.y = -angle;
+                doorPanel.userData = {isDoor: true, direction: dir, destination: dest};
+                group.add(doorPanel);
+                if (!preview) {
+                    hubDoorPanels[dir] = doorPanel;
+                    hubClickables.push(doorPanel);
+                }
 
-            // Wireframe on door panel
-            const doorWireGeom = new THREE.EdgesGeometry(doorGeom);
-            const doorWireMat = new THREE.LineBasicMaterial({color: doorColor, transparent: true, opacity: 0.6});
-            const doorWire = new THREE.LineSegments(doorWireGeom, doorWireMat);
-            doorWire.position.copy(doorPanel.position);
-            doorWire.rotation.copy(doorPanel.rotation);
-            doorPanel._wire = doorWire;
-            group.add(doorWire);
+                // Wireframe on door panel
+                const doorWireGeom = new THREE.EdgesGeometry(doorGeom);
+                const doorWireMat = new THREE.LineBasicMaterial({color: doorColor, transparent: true, opacity: 0.6});
+                const doorWire = new THREE.LineSegments(doorWireGeom, doorWireMat);
+                doorWire.position.copy(doorPanel.position);
+                doorWire.rotation.copy(doorPanel.rotation);
+                doorPanel._wire = doorWire;
+                group.add(doorWire);
 
-            // Destination and interaction text are plaques fixed to the door,
-            // rather than camera-facing labels suspended in the room.
-            const label = makeTextPanel(`${dest} · ${dt.name.toUpperCase()}`, dt.color, {
-                size: 30,
-                worldWidth: 1.72,
-                worldHeight: 0.34
-            });
-            label.position.set(wx - nx * 0.055, 2.35, wz - nz * 0.055);
-            label.rotation.y = -angle;
-            doorPanel._label = label;
-            group.add(label);
+                // Destination and interaction text are plaques fixed to the door,
+                // rather than camera-facing labels suspended in the room.
+                const label = makeTextPanel(`${dest} · ${dt.name.toUpperCase()}`, dt.color, {
+                    size: 30,
+                    worldWidth: 1.72,
+                    worldHeight: 0.34
+                });
+                label.position.set(wx - nx * 0.055, 2.35, wz - nz * 0.055);
+                label.rotation.y = -angle;
+                doorPanel._label = label;
+                group.add(label);
 
-            const sigil = makeTextPanel('OPEN · CLICK / E', dt.color, {
-                size: 25,
-                worldWidth: 1.62,
-                worldHeight: 0.3
-            });
-            sigil.position.set(wx - nx * 0.058, 1.25, wz - nz * 0.058);
-            sigil.rotation.y = -angle;
-            doorPanel._sigil = sigil;
-            group.add(sigil);
+                const sigil = makeTextPanel('OPEN · CLICK / E', dt.color, {
+                    size: 25,
+                    worldWidth: 1.62,
+                    worldHeight: 0.3
+                });
+                sigil.position.set(wx - nx * 0.058, 1.25, wz - nz * 0.058);
+                sigil.rotation.y = -angle;
+                doorPanel._sigil = sigil;
+                group.add(sigil);
+            }
 
         } else {
             // Solid wall (no door)
@@ -598,7 +593,7 @@ function buildHub(roomId) {
         warpTarget.position.y = 0.08;
         warpTarget.userData = {isWarp: true, destination: togDest};
         group.add(warpTarget);
-        hubClickables.push(warpTarget);
+        if (!preview) hubClickables.push(warpTarget);
     }
 
     // Central orb (near ceiling, main light source — matches original FPS)
@@ -611,7 +606,7 @@ function buildHub(roomId) {
     orb.position.set(0, orbY, 0);
     if (togDest) orb.userData = {isWarp: true, destination: togDest};
     group.add(orb);
-    if (togDest) hubClickables.push(orb);
+    if (togDest && !preview) hubClickables.push(orb);
     const orbLight = new THREE.PointLight(color, 3.5, 22);
     orbLight.position.set(0, orbY, 0);
     group.add(orbLight);
@@ -659,7 +654,7 @@ function buildHub(roomId) {
     roomLabel.position.set(0, 0.075, 2.0);
     group.add(roomLabel);
 
-    if (cheatMode) addHubCheatLine(group, roomId);
+    if (cheatMode && !preview) addHubCheatLine(group, roomId);
 
     return group;
 }
@@ -695,6 +690,7 @@ function openMazeDoor(room) {
     if (panel) {
         panel.visible = false;
         if (panel._wire) panel._wire.visible = false;
+        if (panel._label) panel._label.visible = false;
         if (panel._sigil) panel._sigil.visible = false;
     }
     attachedMazeGrid._closedWallCache = null;
@@ -871,8 +867,10 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
             if (staticWalls.has(key)) continue;
             staticWalls.add(key);
             const doorRoom = cell.doorRoom || edge.neighbor?.doorRoom;
-            if (edge === mazeGrid.entranceDoorRoom?.panelEdge) {
-                addEntranceDoorwayWall(edge, doorRoomEdgeMaterials.entrance);
+            if (edge === mazeGrid.entranceDoorRoom?.panelEdge ||
+                edge === mazeGrid.exitDoorRoom?.panelEdge) {
+                const kind = edge === mazeGrid.entranceDoorRoom?.panelEdge ? 'entrance' : 'exit';
+                addEntranceDoorwayWall(edge, doorRoomEdgeMaterials[kind]);
                 continue;
             }
             addWallSegment(edge, wallMaterial,
@@ -894,12 +892,9 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
         if (!room) return;
         const center = room.center;
         const threshold = doorRoomThreshold(room);
-        const {frame, rear, tangent, normal, depth} = threshold;
+        const {frame, tangent, normal} = threshold;
         const rotation = -Math.atan2(tangent.z, tangent.x);
         const tessColor = TESSERACTS[textureTess].color;
-        const frameEdgeMaterial = new THREE.LineBasicMaterial({
-            color, transparent:true, opacity:0.72, depthWrite:false
-        });
         room.panelOpen = room.kind === 'entrance';
 
         const cap = new THREE.Mesh(roomFootprintGeometry(room), roomCapMaterial);
@@ -931,66 +926,6 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
         group.add(ring);
 
         if (room.kind === 'entrance') return;
-
-        // The closed lattice wall remains behind this room-side assembly, so
-        // the neighboring corridor still sees and collides with a solid wall.
-        // These two tunnel sides end as the frame jambs at the open threshold.
-        for (const side of [-1, 1]) {
-            const jamb = new THREE.Mesh(
-                new THREE.BoxGeometry(WALL_T, DOOR_H, depth),
-                wallMaterial
-            );
-            jamb.position.set(
-                (frame.x + rear.x) / 2 + tangent.x * side * (DOOR_W + WALL_T) / 2,
-                DOOR_H / 2,
-                (frame.z + rear.z) / 2 + tangent.z * side * (DOOR_W + WALL_T) / 2
-            );
-            jamb.rotation.y = rotation;
-            group.add(jamb);
-            addWallEdges(jamb, frameEdgeMaterial);
-        }
-
-        const lintel = new THREE.Mesh(
-            new THREE.BoxGeometry(DOOR_W + WALL_T * 2, WALL_T, depth),
-            wallMaterial
-        );
-        lintel.position.set((frame.x + rear.x) / 2, DOOR_H - WALL_T / 2,
-            (frame.z + rear.z) / 2);
-        lintel.rotation.y = rotation;
-        group.add(lintel);
-        addWallEdges(lintel, frameEdgeMaterial);
-
-        const voidMaterial = new THREE.MeshStandardMaterial({
-            color:GRUVBOX.bgHard,
-            emissive:new THREE.Color(tessColor),
-            emissiveIntensity:0.22,
-            roughness:1,
-            side:THREE.DoubleSide
-        });
-        const backplane = new THREE.Mesh(
-            new THREE.PlaneGeometry(DOOR_W, DOOR_H - WALL_T),
-            voidMaterial
-        );
-        backplane.position.set(rear.x, (DOOR_H - WALL_T) / 2, rear.z);
-        backplane.rotation.y = rotation;
-        group.add(backplane);
-
-        const glow = new THREE.Mesh(
-            new THREE.RingGeometry(0.52, 0.68, 32),
-            new THREE.MeshBasicMaterial({
-                color:tessColor, transparent:true, opacity:0.38,
-                side:THREE.DoubleSide, depthWrite:false
-            })
-        );
-        glow.position.set(rear.x - normal.x * 0.008, 1.35,
-            rear.z - normal.z * 0.008);
-        glow.rotation.y = rotation;
-        group.add(glow);
-
-        const thresholdLight = new THREE.PointLight(tessColor, 0.7, 3);
-        thresholdLight.position.set(rear.x - normal.x * 0.12, 1.35,
-            rear.z - normal.z * 0.12);
-        group.add(thresholdLight);
 
         const doorMaterial = new THREE.MeshStandardMaterial({
             map:getDoorTexture(textureTess, tessColor),
@@ -1041,6 +976,25 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
     addDoorRoom(mazeGrid.entranceDoorRoom, `BACK · ${srcRoom}`, GRUVBOX.green, getTess(srcRoom));
     addDoorRoom(mazeGrid.exitDoorRoom, `EXIT · ${dstRoom}`,
         TESSERACTS[getTess(dstRoom)].color, getTess(dstRoom));
+
+    const exitRoom = mazeGrid.exitDoorRoom;
+    if (exitRoom) {
+        const returnDir = findReturnDir(srcRoom, dstRoom) || DIRECTIONS[0];
+        const exitMid = edgeMidpoint(exitRoom.panelEdge);
+        const returnAngle = DIR_ANGLES[returnDir];
+        const returnNormal = {x:Math.sin(returnAngle), z:-Math.cos(returnAngle)};
+        const targetNormal = {x:-exitRoom.panelNormal.x, z:-exitRoom.panelNormal.z};
+        const preview = buildHub(dstRoom, {preview:true, openDirection:returnDir});
+        preview.position.set(
+            exitMid.x + exitRoom.panelNormal.x * HUB_APO,
+            0,
+            exitMid.z + exitRoom.panelNormal.z * HUB_APO
+        );
+        preview.rotation.y = Math.atan2(returnNormal.z, returnNormal.x) -
+            Math.atan2(targetNormal.z, targetNormal.x);
+        group.add(preview);
+        mazeGrid.exitPreview = preview;
+    }
 
     // Boundary edges stay physically sealed; a fold crosses their plane and
     // reappears at its pair without placing geometry outside maze space.
@@ -1298,6 +1252,32 @@ function mazeLocalToWorld(lx, lz) {
     return {
         x: lx * Math.cos(a) + lz * Math.sin(a) + attachedMazeGroup.position.x,
         z: -lx * Math.sin(a) + lz * Math.cos(a) + attachedMazeGroup.position.z
+    };
+}
+
+function captureMazeExitPose() {
+    const preview = attachedMazeGrid?.exitPreview;
+    if (!attachedMazeGroup || !preview) return null;
+
+    const local = worldToMazeLocal(playerPos.x, playerPos.z);
+    const dx = local.x - preview.position.x;
+    const dz = local.z - preview.position.z;
+    const previewAngle = preview.rotation.y;
+    const cosPreview = Math.cos(previewAngle);
+    const sinPreview = Math.sin(previewAngle);
+
+    camera.getWorldDirection(moveForward);
+    const mazeAngle = attachedMazeGroup.rotation.y;
+    const mazeDirX = moveForward.x * Math.cos(mazeAngle) - moveForward.z * Math.sin(mazeAngle);
+    const mazeDirZ = moveForward.x * Math.sin(mazeAngle) + moveForward.z * Math.cos(mazeAngle);
+    const hubDirX = mazeDirX * cosPreview - mazeDirZ * sinPreview;
+    const hubDirZ = mazeDirX * sinPreview + mazeDirZ * cosPreview;
+
+    return {
+        x:dx * cosPreview - dz * sinPreview,
+        z:dx * sinPreview + dz * cosPreview,
+        pitch:camera.rotation.x,
+        yaw:Math.atan2(-hubDirX, -hubDirZ)
     };
 }
 
@@ -1607,8 +1587,9 @@ function updateMovement(delta) {
         if (doorCrossing === 'exit') {
             const destination = attachedMazeDest;
             const source = currentRoomId;
+            const arrivalPose = captureMazeExitPose();
             mazeCount++;
-            enterHub(destination, source);
+            enterHub(destination, source, arrivalPose);
             return;
         }
         if (!checkSpaceFold(previousX, previousZ)) collideInMaze(previousX, previousZ);
@@ -1719,7 +1700,8 @@ function collideInMaze(previousWorldX, previousWorldZ) {
                     `${point.x.toFixed(5)},${point.z.toFixed(5)}`).sort().join('|');
                 if (seen.has(key)) continue;
                 seen.add(key);
-                if (edge === grid.entranceDoorRoom?.panelEdge) {
+                if (edge === grid.entranceDoorRoom?.panelEdge ||
+                    edge === grid.exitDoorRoom?.panelEdge) {
                     const [a, b] = edge.segment;
                     const dx = b.x - a.x, dz = b.z - a.z;
                     const length = Math.hypot(dx, dz);
@@ -1742,26 +1724,16 @@ function collideInMaze(previousWorldX, previousWorldZ) {
                 grid._closedWallCache.push({edge, owner:cell});
             }
         }
-        // A sealed panel blocks the frame plane. The short sides keep
-        // off-center approaches out of the jambs before an open-door fold.
+        // The split hull wall supplies the jamb collision. While sealed, the
+        // panel itself fills the doorway gap at the boundary plane.
         for (const room of [grid.exitDoorRoom]) {
             if (!room) continue;
-            const {frame, rear, tangent} = doorRoomThreshold(room);
+            const {frame, tangent} = doorRoomThreshold(room);
             if (!room.panelOpen) {
                 grid._closedWallCache.push({
                     edge:{segment:[
                         {x:frame.x - tangent.x * DOOR_W / 2, z:frame.z - tangent.z * DOOR_W / 2},
                         {x:frame.x + tangent.x * DOOR_W / 2, z:frame.z + tangent.z * DOOR_W / 2}
-                    ]},
-                    owner:room.panelCell
-                });
-            }
-            for (const side of [-1, 1]) {
-                const offset = side * DOOR_W / 2;
-                grid._closedWallCache.push({
-                    edge:{segment:[
-                        {x:frame.x + tangent.x * offset, z:frame.z + tangent.z * offset},
-                        {x:rear.x + tangent.x * offset, z:rear.z + tangent.z * offset}
                     ]},
                     owner:room.panelCell
                 });
@@ -1833,8 +1805,10 @@ function collideInMaze(previousWorldX, previousWorldZ) {
 
     // Preserve the old final fallback: if relaxation found the exterior,
     // keep the last trusted position rather than accepting a clipped frame.
+    const inOpenExit = grid.exitDoorRoom?.panelOpen &&
+        pointInDoorwayOpening(local, grid.exitDoorRoom);
     if (!grid.cellContainingPoint(local.x, local.z) &&
-        !pointInEntranceOpening(local, grid.entranceDoorRoom)) local = previous;
+        !pointInDoorwayOpening(local, grid.entranceDoorRoom) && !inOpenExit) local = previous;
 
     // Convert back to world
     const world = mazeLocalToWorld(local.x, local.z);
@@ -2067,7 +2041,7 @@ function checkMazeExit(previousWorldX, previousWorldZ) {
     const current = worldToMazeLocal(playerPos.x, playerPos.z);
     const room = attachedMazeGrid.exitDoorRoom;
     if (room?.panelOpen && crossesEdgePlane(previous, current, room.panelEdge, room.center,
-        DOOR_FRAME_OFFSET, DOOR_W / 2 - P_RAD)) return room.kind;
+        -(P_RAD + 0.04), DOOR_W / 2 - P_RAD)) return room.kind;
     return null;
 }
 

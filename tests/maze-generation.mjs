@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 
 import {
+    EXTERIOR_HUB_CLEARANCE,
     buildDeltaLattice,
     buildSigmaLattice,
     generateMaze
@@ -67,23 +68,18 @@ function assertDoorRoom(grid, room, kind, features) {
     assert.ok(room.corridorEdge.neighbor);
     assert.ok(!room.cells.includes(room.corridorEdge.neighbor));
     assert.ok(Number.isFinite(room.panelNormal.x) && Number.isFinite(room.panelNormal.z));
-    if (kind === 'entrance') {
-        assert.equal(room.panelEdge.neighbor, null,
-            'entrance panel edge must be on the lattice boundary');
-        assert.ok(grid.boundaryEdges.includes(room.panelEdge));
-        assert.equal(grid.entranceCell, room.panelCell,
-            'entranceCell must be the cell immediately inside the doorway');
-        const [a, b] = room.panelEdge.segment;
-        const midpoint = {x:(a.x + b.x) / 2, z:(a.z + b.z) / 2};
-        for (const cell of grid.cells) {
-            const side = (cell.center.x - midpoint.x) * room.panelNormal.x +
-                (cell.center.z - midpoint.z) * room.panelNormal.z;
-            assert.ok(side < -1e-8,
-                `${grid.tessellation} cell ${cell.id} is not strictly behind the entrance plane`);
-        }
-    } else {
-        assert.ok(room.panelEdge.neighbor,
-            'exit panel edge must remain inside the lattice');
+    assert.equal(room.panelEdge.neighbor, null,
+        `${kind} panel edge must be on the lattice boundary`);
+    assert.ok(grid.boundaryEdges.includes(room.panelEdge));
+    assert.equal(grid[`${kind}Cell`], room.panelCell,
+        `${kind}Cell must be the cell immediately inside the doorway`);
+    const [a, b] = room.panelEdge.segment;
+    const midpoint = {x:(a.x + b.x) / 2, z:(a.z + b.z) / 2};
+    for (const cell of grid.cells) {
+        const side = (cell.center.x - midpoint.x) * room.panelNormal.x +
+            (cell.center.z - midpoint.z) * room.panelNormal.z;
+        assert.ok(side < -1e-8,
+            `${grid.tessellation} cell ${cell.id} is not strictly behind the ${kind} plane`);
     }
 
     const roomCells = new Set(room.cells);
@@ -99,6 +95,18 @@ function assertDoorRoom(grid, room, kind, features) {
         }
     }
     assert.equal(corridorCount, 1, `${kind} room must have one corridor`);
+}
+
+function assertExteriorHubClearance(grid) {
+    const midpoint = room => {
+        const [a, b] = room.panelEdge.segment;
+        return {x:(a.x + b.x) / 2, z:(a.z + b.z) / 2};
+    };
+    const entrance = midpoint(grid.entranceDoorRoom);
+    const exit = midpoint(grid.exitDoorRoom);
+    assert.ok(Math.hypot(exit.x - entrance.x, exit.z - entrance.z) >=
+        EXTERIOR_HUB_CLEARANCE - 1e-9,
+        `doorway midpoints violate exterior hub clearance ${EXTERIOR_HUB_CLEARANCE}`);
 }
 
 function stableLayout(grid, params) {
@@ -158,6 +166,7 @@ for (const tessellation of ['delta', 'sigma']) {
         const features = featureCells(grid);
         assertDoorRoom(grid, grid.entranceDoorRoom, 'entrance', features);
         assertDoorRoom(grid, grid.exitDoorRoom, 'exit', features);
+        assertExteriorHubClearance(grid);
         assert.equal(new Set([...grid.entranceDoorRoom.cells, ...grid.exitDoorRoom.cells]).size,
             grid.entranceDoorRoom.cells.length + grid.exitDoorRoom.cells.length);
 
@@ -210,6 +219,7 @@ for (const tessellation of ['delta', 'sigma']) {
         const features = featureCells(grid);
         assertDoorRoom(grid, grid.entranceDoorRoom, 'entrance', features);
         assertDoorRoom(grid, grid.exitDoorRoom, 'exit', features);
+        assertExteriorHubClearance(grid);
         if (grid.rotatingChamber) {
             assert.equal(grid.activateRotatingChamber(), true,
                 `${tessellation} fallback seed ${seed} has a nonfunctional rotating chamber`);
