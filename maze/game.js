@@ -749,12 +749,7 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
     const wallMaterial = new THREE.MeshStandardMaterial({color:wallColor, roughness:0.9, metalness:0.08});
     const floorMaterial = new THREE.MeshStandardMaterial({color:GRUVBOX.bgHard, roughness:0.94, side:THREE.DoubleSide});
     const ceilingMaterial = new THREE.MeshStandardMaterial({color:GRUVBOX.bg, roughness:0.94, side:THREE.DoubleSide});
-    const roomCapMaterial = new THREE.MeshStandardMaterial({color:GRUVBOX.bg1, roughness:0.92, side:THREE.DoubleSide});
     const wallEdgeMaterial = new THREE.LineBasicMaterial({color:accent, transparent:true, opacity:0.45, depthWrite:false});
-    const doorRoomEdgeMaterials = {
-        entrance:new THREE.LineBasicMaterial({color:GRUVBOX.green, transparent:true, opacity:0.45, depthWrite:false}),
-        exit:new THREE.LineBasicMaterial({color:accent, transparent:true, opacity:0.45, depthWrite:false})
-    };
 
     mazeDoorClickables = [];
 
@@ -780,7 +775,7 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
         return mesh;
     }
 
-    function addEntranceDoorwayWall(edge, edgeMaterial) {
+    function addEntranceDoorwayWall(edge) {
         const [a, b] = edge.segment;
         const dx = b.x - a.x, dz = b.z - a.z;
         const length = Math.hypot(dx, dz);
@@ -797,7 +792,7 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
                 x:midpoint.x + tx * side * length / 2,
                 z:midpoint.z + tz * side * length / 2
             };
-            addWallSegment({segment:[inner, outer]}, wallMaterial, edgeMaterial);
+            addWallSegment({segment:[inner, outer]});
         }
         const lintelHeight = WALL_H - DOOR_H;
         if (lintelHeight > 0.001) {
@@ -808,36 +803,13 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
             lintel.position.set(midpoint.x, DOOR_H + lintelHeight / 2, midpoint.z);
             lintel.rotation.y = -Math.atan2(dz, dx);
             group.add(lintel);
-            addWallEdges(lintel, edgeMaterial);
+            addWallEdges(lintel);
         }
     }
 
     function polygonGeometry(cell) {
         const shape = new THREE.Shape();
         cell.vertices.forEach((point, index) => {
-            if (index === 0) shape.moveTo(point.x, point.z);
-            else shape.lineTo(point.x, point.z);
-        });
-        shape.closePath();
-        return new THREE.ShapeGeometry(shape);
-    }
-
-    function roomFootprintGeometry(room) {
-        const roomCells = new Set(room.cells);
-        const vertices = new Map();
-        for (const cell of room.cells) {
-            for (const edge of cell.edges) {
-                if (roomCells.has(edge.neighbor)) continue;
-                for (const point of edge.segment) {
-                    vertices.set(`${point.x.toFixed(5)},${point.z.toFixed(5)}`, point);
-                }
-            }
-        }
-        const points = [...vertices.values()].sort((a, b) =>
-            Math.atan2(a.z - room.center.z, a.x - room.center.x) -
-            Math.atan2(b.z - room.center.z, b.x - room.center.x));
-        const shape = new THREE.Shape();
-        points.forEach((point, index) => {
             if (index === 0) shape.moveTo(point.x, point.z);
             else shape.lineTo(point.x, point.z);
         });
@@ -866,15 +838,12 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
             const key = segmentKey(edge);
             if (staticWalls.has(key)) continue;
             staticWalls.add(key);
-            const doorRoom = cell.doorRoom || edge.neighbor?.doorRoom;
             if (edge === mazeGrid.entranceDoorRoom?.panelEdge ||
                 edge === mazeGrid.exitDoorRoom?.panelEdge) {
-                const kind = edge === mazeGrid.entranceDoorRoom?.panelEdge ? 'entrance' : 'exit';
-                addEntranceDoorwayWall(edge, doorRoomEdgeMaterials[kind]);
+                addEntranceDoorwayWall(edge);
                 continue;
             }
-            addWallSegment(edge, wallMaterial,
-                doorRoom ? doorRoomEdgeMaterials[doorRoom.kind] : wallEdgeMaterial);
+            addWallSegment(edge);
         }
     }
 
@@ -897,25 +866,15 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
         const tessColor = TESSERACTS[textureTess].color;
         room.panelOpen = room.kind === 'entrance';
 
-        const cap = new THREE.Mesh(roomFootprintGeometry(room), roomCapMaterial);
-        cap.rotation.x = Math.PI / 2;
-        cap.position.y = WALL_H;
-        group.add(cap);
-
-        const orbY = WALL_H - 0.38;
-        if (room.kind !== 'entrance') {
-            const orb = new THREE.Mesh(
-                new THREE.SphereGeometry(0.22, 20, 20),
-                new THREE.MeshStandardMaterial({
-                    color, emissive:new THREE.Color(color), emissiveIntensity:0.8,
-                    metalness:0.3, roughness:0.2
-                })
-            );
-            orb.position.set(center.x, orbY, center.z);
-            group.add(orb);
+        for (const cell of room.cells) {
+            const cap = new THREE.Mesh(polygonGeometry(cell), ceilingMaterial);
+            cap.rotation.x = Math.PI / 2;
+            cap.position.y = WALL_H;
+            group.add(cap);
         }
-        const light = new THREE.PointLight(color, 1.5, 10);
-        light.position.set(center.x, orbY, center.z);
+
+        const light = new THREE.PointLight(color, 1.0, 4.5);
+        light.position.set(center.x, WALL_H - 0.38, center.z);
         group.add(light);
         const ring = new THREE.Mesh(
             new THREE.RingGeometry(0.42, Math.min(1.05, mazeGrid.edgeLen * 0.32), 6),
