@@ -7,12 +7,14 @@ on:
     paths:
       - 'maze/**'
       - 'fonts/JetBrainsMonoMaze-Regular.woff2'
+      - 'tests/maze-generation.mjs'
       - 'tests/maze-smoke.mjs'
       - '.github/workflows/maze-smoke.yml'
   pull_request:
     paths:
       - 'maze/**'
       - 'fonts/JetBrainsMonoMaze-Regular.woff2'
+      - 'tests/maze-generation.mjs'
       - 'tests/maze-smoke.mjs'
       - '.github/workflows/maze-smoke.yml'
 
@@ -27,6 +29,9 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: '24'
+
+      - name: Verify maze generation
+        run: node tests/maze-generation.mjs
 
       - name: Verify maze startup
         run: node tests/maze-smoke.mjs

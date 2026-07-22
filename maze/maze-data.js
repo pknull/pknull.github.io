@@ -162,7 +162,14 @@ function getTesseractLaw(roomId) {
 }
 
 // ===== CONSTANTS =====
-const CELL = 3;
+// Delta is the default playtest lattice. Sigma uses flat-top hexagons.
+const MAZE_TESSELLATION = 'delta';
+const DELTA_EDGE_LEN = 3.6;
+const SIGMA_EDGE_LEN = 2.4;
+const EDGE_LEN = MAZE_TESSELLATION === 'delta' ? DELTA_EDGE_LEN : SIGMA_EDGE_LEN;
+const DOOR_MIN_DIST_FACTOR = 1.5;
+const DELTA_TIER_RANGES = Object.freeze([[6,7],[8,9],[11,12],[13,14]]);
+const SIGMA_TIER_RANGES = Object.freeze([[8,10],[10,14],[14,18],[18,20]]);
 const WALL_H = 3;
 const WALL_T = 0.15;
 const EYE_H = 1.6;
@@ -174,7 +181,6 @@ const HUB_H = 5;
 const DOOR_W = 2;
 const DOOR_H = 3;
 const TOGGLE_RAD = 3;
-const EXIT_HANDOFF_DEPTH = 1;
 
 export {
     GRUVBOX,
@@ -193,7 +199,13 @@ export {
     SHADE_LAG_MS,
     scatterPool,
     getTesseractLaw,
-    CELL,
+    MAZE_TESSELLATION,
+    DELTA_EDGE_LEN,
+    SIGMA_EDGE_LEN,
+    EDGE_LEN,
+    DOOR_MIN_DIST_FACTOR,
+    DELTA_TIER_RANGES,
+    SIGMA_TIER_RANGES,
     WALL_H,
     WALL_T,
     EYE_H,
@@ -204,6 +216,5 @@ export {
     HUB_H,
     DOOR_W,
     DOOR_H,
-    TOGGLE_RAD,
-    EXIT_HANDOFF_DEPTH
+    TOGGLE_RAD
 };

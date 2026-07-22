@@ -1,15 +1,12 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import {
-    CELL,
     CONTROL_ROOMS,
     DIRECTIONS,
     DIR_ANGLES,
     DOOR_H,
     DOOR_W,
     EYE_H,
-    EXIT_HANDOFF_DEPTH,
     GRUVBOX,
     HUB_APO,
     HUB_H,
@@ -157,16 +154,16 @@ function solveMaze(grid) {
     return grid.guidePath || grid.findPath();
 }
 
+function edgeMidpoint(edge) {
+    const [a, b] = edge.segment;
+    return {x:(a.x + b.x) / 2, z:(a.z + b.z) / 2};
+}
+
 function addCheatLine(group, grid) {
     const path = solveMaze(grid);
     if (path.length < 2) return;
     const mat = new THREE.LineBasicMaterial({color: GRUVBOX.red, transparent: true, opacity: 0.5, depthWrite: false});
-    const centerPoint = cell => new THREE.Vector3(cell.x * CELL + CELL / 2, 0.1, cell.y * CELL + CELL / 2);
-    const foldPoint = cell => new THREE.Vector3(
-        cell.x * CELL + CELL / 2,
-        0.1,
-        cell === grid.spaceFold?.north ? 0.3 : grid.h * CELL - 0.3
-    );
+    const centerPoint = cell => new THREE.Vector3(cell.center.x, 0.1, cell.center.z);
     let segment = [centerPoint(path[0])];
     const flush = () => {
         if (segment.length < 2) { segment = []; return; }
@@ -175,17 +172,12 @@ function addCheatLine(group, grid) {
     };
     for (let i = 0; i < path.length - 1; i++) {
         const from = path[i], to = path[i + 1];
-        if (Math.abs(from.x - to.x) + Math.abs(from.y - to.y) === 1) {
+        if (grid.areAdjacent(from, to)) {
             segment.push(centerPoint(to));
             continue;
         }
-        const foldJump = grid.spaceFold && (
-            (from === grid.spaceFold.north && to === grid.spaceFold.south) ||
-            (from === grid.spaceFold.south && to === grid.spaceFold.north)
-        );
-        if (foldJump) segment.push(foldPoint(from));
         flush();
-        segment = foldJump ? [foldPoint(to), centerPoint(to)] : [centerPoint(to)];
+        segment = [centerPoint(to)];
     }
     flush();
     mat.dispose();
@@ -389,7 +381,7 @@ const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2(0, 0); // center of screen
 
 // ===== HUB BUILDER =====
-function buildHub(roomId, {preview = false, openDirection = null} = {}) {
+function buildHub(roomId) {
     const group = new THREE.Group();
     const tessNum = getTess(roomId);
     const tess = TESSERACTS[tessNum];
@@ -397,11 +389,9 @@ function buildHub(roomId, {preview = false, openDirection = null} = {}) {
     const nav = roomNavigation[roomId] || {};
     const isControl = CONTROL_ROOMS.includes(roomId);
 
-    if (!preview) {
-        hubDoorOpen = null;
-        hubDoorPanels = {};
-        hubClickables = [];
-    }
+    hubDoorOpen = null;
+    hubDoorPanels = {};
+    hubClickables = [];
 
     // Materials
     const wallSolid = new THREE.MeshStandardMaterial({color: GRUVBOX.bg2, side: THREE.DoubleSide, roughness: 0.88});
@@ -497,10 +487,8 @@ function buildHub(roomId, {preview = false, openDirection = null} = {}) {
             doorPanel.rotation.y = -angle;
             doorPanel.userData = {isDoor: true, direction: dir, destination: dest};
             group.add(doorPanel);
-            if (!preview) {
-                hubDoorPanels[dir] = doorPanel;
-                hubClickables.push(doorPanel);
-            }
+            hubDoorPanels[dir] = doorPanel;
+            hubClickables.push(doorPanel);
 
             // Wireframe on door panel
             const doorWireGeom = new THREE.EdgesGeometry(doorGeom);
@@ -533,12 +521,6 @@ function buildHub(roomId, {preview = false, openDirection = null} = {}) {
             doorPanel._sigil = sigil;
             group.add(sigil);
 
-            if (preview && dir === openDirection) {
-                doorPanel.visible = false;
-                doorWire.visible = false;
-                label.visible = false;
-                sigil.visible = false;
-            }
         } else {
             // Solid wall (no door)
             const wg = new THREE.BoxGeometry(wallLen, HUB_H, WALL_T);
@@ -580,7 +562,7 @@ function buildHub(roomId, {preview = false, openDirection = null} = {}) {
         warpTarget.position.y = 0.08;
         warpTarget.userData = {isWarp: true, destination: togDest};
         group.add(warpTarget);
-        if (!preview) hubClickables.push(warpTarget);
+        hubClickables.push(warpTarget);
     }
 
     // Central orb (near ceiling, main light source — matches original FPS)
@@ -593,7 +575,7 @@ function buildHub(roomId, {preview = false, openDirection = null} = {}) {
     orb.position.set(0, orbY, 0);
     if (togDest) orb.userData = {isWarp: true, destination: togDest};
     group.add(orb);
-    if (togDest && !preview) hubClickables.push(orb);
+    if (togDest) hubClickables.push(orb);
     const orbLight = new THREE.PointLight(color, 3.5, 22);
     orbLight.position.set(0, orbY, 0);
     group.add(orbLight);
@@ -641,7 +623,7 @@ function buildHub(roomId, {preview = false, openDirection = null} = {}) {
     roomLabel.position.set(0, 0.075, 2.0);
     group.add(roomLabel);
 
-    if (cheatMode && !preview) addHubCheatLine(group, roomId);
+    if (cheatMode) addHubCheatLine(group, roomId);
 
     return group;
 }
@@ -696,227 +678,124 @@ function onHubClick() {
 // ===== MAZE BUILDER =====
 function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
     const group = new THREE.Group();
-    const {w, h} = mazeGrid;
-    const totalW = w * CELL, totalH = h * CELL;
     const accent = new THREE.Color(TESSERACTS[getTess(dstRoom)].color);
     const wallColor = new THREE.Color(GRUVBOX.bg1).lerp(accent, 0.1);
+    const wallMaterial = new THREE.MeshStandardMaterial({color:wallColor, roughness:0.9, metalness:0.08});
+    const floorMaterial = new THREE.MeshStandardMaterial({color:GRUVBOX.bgHard, roughness:0.94, side:THREE.DoubleSide});
+    const ceilingMaterial = new THREE.MeshStandardMaterial({color:GRUVBOX.bg, roughness:0.94, side:THREE.DoubleSide});
+    const wallEdgeMaterial = new THREE.LineBasicMaterial({color:accent, transparent:true, opacity:0.45, depthWrite:false});
 
-    // Collect unit wall segments by grid line, then collapse consecutive
-    // segments into long runs. This avoids outlining every cell as a panel.
-    const solidGeoms = [];
-    const horizontalWalls = new Map();
-    const verticalWalls = new Map();
-
-    function addWall(x, y, z, wid, hei, dep) {
-        const g = new THREE.BoxGeometry(wid, hei, dep);
-        g.translate(x, y, z);
-        solidGeoms.push(g);
+    function segmentKey(edge) {
+        const pointKey = point => `${point.x.toFixed(5)},${point.z.toFixed(5)}`;
+        return edge.segment.map(pointKey).sort().join('|');
     }
 
-    function markWall(map, fixedAxis, unit) {
-        if (!map.has(fixedAxis)) map.set(fixedAxis, []);
-        map.get(fixedAxis).push(unit);
+    function addWallEdges(mesh, colorMaterial = wallEdgeMaterial) {
+        const lines = new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry, 25), colorMaterial);
+        mesh.add(lines);
     }
 
-    function buildWallRuns(map, horizontal) {
-        for (const [fixedAxis, units] of map) {
-            units.sort((a, b) => a - b);
-            let start = units[0];
-            let end = units[0];
-            const flush = () => {
-                const length = (end - start + 1) * CELL;
-                const center = (start + end + 1) * CELL / 2;
-                if (horizontal) addWall(center, WALL_H / 2, fixedAxis * CELL, length, WALL_H, WALL_T);
-                else addWall(fixedAxis * CELL, WALL_H / 2, center, WALL_T, WALL_H, length);
-            };
-            for (let i = 1; i < units.length; i++) {
-                if (units[i] === end + 1) {
-                    end = units[i];
-                } else {
-                    flush();
-                    start = end = units[i];
-                }
-            }
-            flush();
-        }
+    function addWallSegment(edge, material = wallMaterial, edgeMaterial = wallEdgeMaterial) {
+        const [a, b] = edge.segment;
+        const dx = b.x - a.x, dz = b.z - a.z;
+        const length = Math.hypot(dx, dz);
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(length, WALL_H, WALL_T), material);
+        mesh.position.set((a.x + b.x) / 2, WALL_H / 2, (a.z + b.z) / 2);
+        mesh.rotation.y = -Math.atan2(dz, dx);
+        group.add(mesh);
+        addWallEdges(mesh, edgeMaterial);
+        return mesh;
     }
 
-    function isRotatingEdge(a, b) {
-        const chamber = mazeGrid.rotatingChamber;
-        if (!chamber || !a || !b) return false;
-        return (a === chamber.entry && b === chamber.cell) ||
-            (a === chamber.cell && b === chamber.entry) ||
-            (a === chamber.cell && b === chamber.exit) ||
-            (a === chamber.exit && b === chamber.cell);
-    }
-
-    // Catalogue each physical wall once using south/east cell faces plus the
-    // north/west outer boundaries.
-    for (let gy = 0; gy < h; gy++) {
-        for (let gx = 0; gx < w; gx++) {
-            const c = mazeGrid.cell(gx, gy);
-            if (gy === 0 && c.N) markWall(horizontalWalls, gy, gx);
-            if (gx === 0 && c.W) markWall(verticalWalls, gx, gy);
-            const south = mazeGrid.cell(gx, gy + 1);
-            const east = mazeGrid.cell(gx + 1, gy);
-            if (c.S && !isRotatingEdge(c, south)) markWall(horizontalWalls, gy + 1, gx);
-            if (c.E && !isRotatingEdge(c, east)) markWall(verticalWalls, gx + 1, gy);
-        }
-    }
-    buildWallRuns(horizontalWalls, true);
-    buildWallRuns(verticalWalls, false);
-
-    // Maze cells are wider than hub doors. Close the unused portion of each
-    // boundary cell so both sides meet at the same 2 m opening.
-    const doorwayCapDepth = (CELL - DOOR_W) / 2;
-    function addDoorwayCaps(x, cell) {
-        if (!cell || doorwayCapDepth <= 0) return;
-        const centerZ = cell.y * CELL + CELL / 2;
-        const offset = DOOR_W / 2 + doorwayCapDepth / 2;
-        addWall(x, WALL_H / 2, centerZ - offset, WALL_T, WALL_H, doorwayCapDepth);
-        addWall(x, WALL_H / 2, centerZ + offset, WALL_T, WALL_H, doorwayCapDepth);
-    }
-    addDoorwayCaps(0, mazeGrid.entranceCell);
-    addDoorwayCaps(totalW, mazeGrid.exitCell);
-
-    function addFoldCaps(z, cell) {
-        if (!cell || doorwayCapDepth <= 0) return;
-        const centerX = cell.x * CELL + CELL / 2;
-        const offset = DOOR_W / 2 + doorwayCapDepth / 2;
-        addWall(centerX - offset, WALL_H / 2, z, doorwayCapDepth, WALL_H, WALL_T);
-        addWall(centerX + offset, WALL_H / 2, z, doorwayCapDepth, WALL_H, WALL_T);
-    }
-    if (mazeGrid.spaceFold) {
-        addFoldCaps(0, mazeGrid.spaceFold.north);
-        addFoldCaps(totalH, mazeGrid.spaceFold.south);
-    }
-
-    // Merge and add solid walls
-    if (solidGeoms.length > 0) {
-        const merged = BufferGeometryUtils.mergeGeometries(solidGeoms);
-        const solidMat = new THREE.MeshStandardMaterial({
-            color: wallColor,
-            roughness: 0.9,
-            metalness: 0.08
+    function polygonGeometry(cell) {
+        const shape = new THREE.Shape();
+        cell.vertices.forEach((point, index) => {
+            if (index === 0) shape.moveTo(point.x, point.z);
+            else shape.lineTo(point.x, point.z);
         });
-        group.add(new THREE.Mesh(merged, solidMat));
-        const edgeGeometry = new THREE.EdgesGeometry(merged, 25);
-        const edgeMaterial = new THREE.LineBasicMaterial({
-            color: accent,
-            transparent: true,
-            opacity: 0.45,
-            depthWrite: false
-        });
-        group.add(new THREE.LineSegments(edgeGeometry, edgeMaterial));
-        solidGeoms.forEach(g => g.dispose());
+        shape.closePath();
+        return new THREE.ShapeGeometry(shape);
+    }
+
+    for (const cell of mazeGrid.cells) {
+        const floor = new THREE.Mesh(polygonGeometry(cell), floorMaterial);
+        floor.rotation.x = Math.PI / 2;
+        floor.position.y = 0;
+        group.add(floor);
+        const ceiling = new THREE.Mesh(polygonGeometry(cell), ceilingMaterial);
+        ceiling.rotation.x = Math.PI / 2;
+        ceiling.position.y = WALL_H;
+        group.add(ceiling);
+    }
+
+    const rotatingCell = mazeGrid.rotatingChamber?.cell;
+    const doorPanelKeys = new Set([
+        mazeGrid.entranceDoorRoom?.panelEdge,
+        mazeGrid.exitDoorRoom?.panelEdge
+    ].filter(Boolean).map(segmentKey));
+    const staticWalls = new Set();
+    for (const cell of mazeGrid.cells) {
+        for (const edge of cell.edges) {
+            if (edge.open) continue;
+            if (rotatingCell && (cell === rotatingCell || edge.neighbor === rotatingCell)) continue;
+            const key = segmentKey(edge);
+            if (doorPanelKeys.has(key)) continue;
+            if (staticWalls.has(key)) continue;
+            staticWalls.add(key);
+            addWallSegment(edge);
+        }
     }
 
     if (mazeGrid.rotatingChamber) {
         const chamber = mazeGrid.rotatingChamber;
-        const makeDynamicPanel = (a, b) => {
-            const panelGroup = new THREE.Group();
-            const horizontal = a.y !== b.y;
-            const x = horizontal ? a.x * CELL + CELL / 2 : Math.max(a.x, b.x) * CELL;
-            const z = horizontal ? Math.max(a.y, b.y) * CELL : a.y * CELL + CELL / 2;
-            const geometry = new THREE.BoxGeometry(horizontal ? CELL : WALL_T, WALL_H, horizontal ? WALL_T : CELL);
-            const material = new THREE.MeshStandardMaterial({color:wallColor, roughness:0.86, metalness:0.12});
-            const panel = new THREE.Mesh(geometry, material);
-            panel.position.set(x, WALL_H / 2, z);
-            panelGroup.add(panel);
-            const edges = new THREE.LineSegments(
-                new THREE.EdgesGeometry(geometry),
-                new THREE.LineBasicMaterial({color:GRUVBOX.yellow, transparent:true, opacity:0.72})
-            );
-            edges.position.copy(panel.position);
-            panelGroup.add(edges);
-            panelGroup.visible = a[mazeGrid.passageDirection(a, b)];
-            group.add(panelGroup);
-            return panelGroup;
-        };
-        chamber.entryPanel = makeDynamicPanel(chamber.entry, chamber.cell);
-        chamber.exitPanel = makeDynamicPanel(chamber.cell, chamber.exit);
+        const rotorEdgeMaterial = new THREE.LineBasicMaterial({color:GRUVBOX.yellow, transparent:true, opacity:0.72});
+        chamber.panels = chamber.cell.edges.map(edge => ({
+            edge,
+            visual:addWallSegment(edge, wallMaterial, rotorEdgeMaterial)
+        }));
+        for (const panel of chamber.panels) panel.visual.visible = !panel.edge.open;
     }
 
-    // Floor
-    const floorGeom = new THREE.PlaneGeometry(totalW, totalH);
-    const floorMat = new THREE.MeshStandardMaterial({color: GRUVBOX.bgHard, roughness: 0.94, side: THREE.DoubleSide});
-    const floor = new THREE.Mesh(floorGeom, floorMat);
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.set(totalW / 2, 0, totalH / 2);
-    group.add(floor);
-
-    // Ceiling
-    const ceilGeom = new THREE.PlaneGeometry(totalW, totalH);
-    const ceilMat = new THREE.MeshStandardMaterial({color: GRUVBOX.bg, roughness: 0.94, side: THREE.DoubleSide});
-    const ceil = new THREE.Mesh(ceilGeom, ceilMat);
-    ceil.rotation.x = Math.PI / 2;
-    ceil.position.set(totalW / 2, WALL_H, totalH / 2);
-    group.add(ceil);
-
-    // Entrance marker (green glow)
-    const ec = mazeGrid.entranceCell;
-    if (ec) {
-        const eLight = new THREE.PointLight(GRUVBOX.green, 1.5, 8);
-        eLight.position.set(ec.x * CELL + CELL / 2, 1, ec.y * CELL + CELL / 2);
-        group.add(eLight);
-        const ePlane = new THREE.Mesh(
-            new THREE.PlaneGeometry(CELL * 0.6, CELL * 0.6),
-            new THREE.MeshBasicMaterial({color: GRUVBOX.green, transparent: true, opacity: 0.15, side: THREE.DoubleSide})
+    function addDoorRoom(room, label, color, textureTess) {
+        if (!room) return;
+        const center = room.center;
+        const light = new THREE.PointLight(color, room.kind === 'exit' ? 2 : 1.5, 10);
+        light.position.set(center.x, 1, center.z);
+        group.add(light);
+        const ring = new THREE.Mesh(
+            new THREE.RingGeometry(0.42, Math.min(1.05, mazeGrid.edgeLen * 0.32), 6),
+            new THREE.MeshBasicMaterial({color, transparent:true, opacity:0.45, side:THREE.DoubleSide})
         );
-        ePlane.rotation.x = -Math.PI / 2;
-        ePlane.position.set(ec.x * CELL + CELL / 2, 0.02, ec.y * CELL + CELL / 2);
-        group.add(ePlane);
-        const eLabel = makeFloorInscription(`BACK · ${srcRoom}`, '#b8bb26', {
-            size: 28,
-            worldWidth: 2.2,
-            worldHeight: 0.38,
-            plaque: true
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.set(center.x, 0.025, center.z);
+        group.add(ring);
+        const inscription = makeFloorInscription(label, color === GRUVBOX.green ? '#b8bb26' : '#fabd2f', {
+            size:28, worldWidth:2.2, worldHeight:0.38, plaque:true
         });
-        eLabel.position.set(ec.x * CELL + CELL / 2, 0.055, ec.y * CELL + CELL / 2);
-        group.add(eLabel);
+        inscription.position.set(center.x, 0.055, center.z);
+        group.add(inscription);
+
+        const panelMaterial = new THREE.MeshStandardMaterial({
+            map:getDoorTexture(textureTess, TESSERACTS[textureTess].color),
+            color:GRUVBOX.fg,
+            emissive:color,
+            emissiveIntensity:0.18,
+            metalness:0.35,
+            roughness:0.72
+        });
+        room.panelVisual = addWallSegment(room.panelEdge, panelMaterial,
+            new THREE.LineBasicMaterial({color, transparent:true, opacity:0.85}));
     }
 
-    // Exit marker (gold glow)
-    const xc = mazeGrid.exitCell;
-    if (xc) {
-        const xLight = new THREE.PointLight(GRUVBOX.yellow, 2, 10);
-        xLight.position.set(xc.x * CELL + CELL / 2, 1, xc.y * CELL + CELL / 2);
-        group.add(xLight);
-        const xPlane = new THREE.Mesh(
-            new THREE.PlaneGeometry(CELL * 0.6, CELL * 0.6),
-            new THREE.MeshBasicMaterial({color: GRUVBOX.yellow, transparent: true, opacity: 0.2, side: THREE.DoubleSide})
-        );
-        xPlane.rotation.x = -Math.PI / 2;
-        xPlane.position.set(xc.x * CELL + CELL / 2, 0.02, xc.y * CELL + CELL / 2);
-        group.add(xPlane);
-        const xLabel = makeFloorInscription(`EXIT · ${dstRoom}`, '#fabd2f', {
-            size: 28,
-            worldWidth: 2.2,
-            worldHeight: 0.38,
-            plaque: true
-        });
-        xLabel.position.set(xc.x * CELL + CELL / 2, 0.055, xc.y * CELL + CELL / 2);
-        group.add(xLabel);
+    addDoorRoom(mazeGrid.entranceDoorRoom, `BACK · ${srcRoom}`, GRUVBOX.green, getTess(srcRoom));
+    addDoorRoom(mazeGrid.exitDoorRoom, `EXIT · ${dstRoom}`, GRUVBOX.yellow, getTess(dstRoom));
 
-        // Visual-only destination hub beyond the exit. The real state
-        // transition still happens at the threshold, keeping collision and
-        // interaction ownership with the current room.
-        const returnDir = findReturnDir(srcRoom, dstRoom);
-        if (returnDir) {
-            const previewHub = buildHub(dstRoom, {preview: true, openDirection: returnDir});
-            previewHub.position.set(totalW + HUB_APO, 0, xc.y * CELL + CELL / 2);
-            previewHub.rotation.y = DIR_ANGLES[returnDir] + Math.PI / 2;
-            group.add(previewHub);
-        }
-    }
-
-    // Paired boundary apertures. Passing through either edge returns through
-    // the other without rotating the player, making the topology legible.
+    // Boundary edges stay physically sealed; a fold crosses their plane and
+    // reappears at its pair without placing geometry outside maze space.
     if (mazeGrid.spaceFold) {
         const foldColor = GRUVBOX.purple;
-        const addFoldMarker = (cell, label, edgeZ) => {
-            const x = cell.x * CELL + CELL / 2;
-            const z = cell.y * CELL + CELL / 2;
+        const addFoldMarker = (endpoint, label) => {
+            const {x, z} = edgeMidpoint(endpoint.edge);
             const light = new THREE.PointLight(foldColor, 1.4, 9);
             light.position.set(x, 1, z);
             group.add(light);
@@ -925,7 +804,7 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
                 new THREE.MeshBasicMaterial({color:foldColor, transparent:true, opacity:0.8, side:THREE.DoubleSide})
             );
             ring.rotation.x = -Math.PI / 2;
-            ring.position.set(x, 0.03, edgeZ);
+            ring.position.set(x, 0.03, z);
             group.add(ring);
             const foldLabel = makeFloorInscription(label, '#d3869b', {
                 size: 28,
@@ -933,11 +812,11 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
                 worldHeight: 0.34,
                 plaque: true
             });
-            foldLabel.position.set(x, 0.055, z);
+            foldLabel.position.set(endpoint.cell.center.x, 0.055, endpoint.cell.center.z);
             group.add(foldLabel);
         };
-        addFoldMarker(mazeGrid.spaceFold.north, 'FOLD α', 0.3);
-        addFoldMarker(mazeGrid.spaceFold.south, 'FOLD β', totalH - 0.3);
+        addFoldMarker(mazeGrid.spaceFold.a, 'FOLD α');
+        addFoldMarker(mazeGrid.spaceFold.b, 'FOLD β');
     }
 
     // One-way thresholds remain visually open. Floor arrows show the legal
@@ -946,10 +825,10 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
     for (const gate of mazeGrid.oneWayGates) {
         const gateColor = gate.required ? GRUVBOX.yellow : GRUVBOX.aqua;
         const gateCss = gate.required ? '#fabd2f' : '#8ec07c';
-        const fromX = gate.from.x * CELL + CELL / 2;
-        const fromZ = gate.from.y * CELL + CELL / 2;
-        const toX = gate.to.x * CELL + CELL / 2;
-        const toZ = gate.to.y * CELL + CELL / 2;
+        const fromX = gate.from.center.x;
+        const fromZ = gate.from.center.z;
+        const toX = gate.to.center.x;
+        const toZ = gate.to.center.z;
         const dx = toX - fromX, dz = toZ - fromZ;
         const length = Math.hypot(dx, dz);
         const ux = dx / length, uz = dz / length;
@@ -999,7 +878,7 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
         const loopColor = loop.required ? GRUVBOX.yellow : GRUVBOX.blue;
         const loopCss = loop.required ? '#fabd2f' : '#83a598';
         const addLoopMarker = (cell, label) => {
-            const x = cell.x * CELL + CELL / 2, z = cell.y * CELL + CELL / 2;
+            const {x, z} = cell.center;
             const ring = new THREE.Mesh(
                 new THREE.RingGeometry(0.42, 0.72, 32),
                 new THREE.MeshBasicMaterial({color:loopColor, transparent:true, opacity:0.82, side:THREE.DoubleSide})
@@ -1033,7 +912,7 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
 
     if (mazeGrid.rotatingChamber) {
         const chamber = mazeGrid.rotatingChamber;
-        const x = chamber.cell.x * CELL + CELL / 2, z = chamber.cell.y * CELL + CELL / 2;
+        const {x, z} = chamber.cell.center;
         const plate = new THREE.Mesh(
             new THREE.RingGeometry(0.42, 0.82, 32),
             new THREE.MeshBasicMaterial({color:GRUVBOX.yellow, transparent:true, opacity:0.82, side:THREE.DoubleSide})
@@ -1043,10 +922,12 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
         group.add(plate);
         const rotor = new THREE.Group();
         rotor.position.set(x, 0.075, z);
-        const rotorGeometry = new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(-0.62,0,0), new THREE.Vector3(0.62,0,0),
-            new THREE.Vector3(0,0,-0.62), new THREE.Vector3(0,0,0.62)
-        ]);
+        const rotorGeometry = new THREE.BufferGeometry().setFromPoints(
+            chamber.cell.vertices.flatMap(point => [
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3((point.x - x) * 0.5, 0, (point.z - z) * 0.5)
+            ])
+        );
         rotor.add(new THREE.LineSegments(rotorGeometry, new THREE.LineBasicMaterial({color:GRUVBOX.yellow, transparent:true, opacity:0.95})));
         group.add(rotor);
         chamber.visual = rotor;
@@ -1067,15 +948,15 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
     const chamberCenters = new Set();
     for (const c of mazeGrid.cells) {
         if (!c.chamber || !c.chamberCenter) continue;
-        const key = `${c.x},${c.y}`;
+        const key = c.chamberId;
         if (chamberCenters.has(key)) continue;
         chamberCenters.add(key);
 
-        const ccx = c.x * CELL + CELL / 2, ccz = c.y * CELL + CELL / 2;
+        const ccx = c.center.x, ccz = c.center.z;
 
         // Chamber floor highlight
         const chFloor = new THREE.Mesh(
-            new THREE.PlaneGeometry(CELL * 0.8, CELL * 0.8),
+            new THREE.CircleGeometry(Math.min(1.2, mazeGrid.edgeLen * 0.32), c.vertices.length),
             new THREE.MeshBasicMaterial({color: GRUVBOX.bgHard, transparent: true, opacity: 0.3, side: THREE.DoubleSide})
         );
         chFloor.rotation.x = -Math.PI / 2;
@@ -1092,7 +973,7 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
     // Traps
     for (const c of mazeGrid.cells) {
         if (!c.trap) continue;
-        const tcx = c.x * CELL + CELL / 2, tcz = c.y * CELL + CELL / 2;
+        const tcx = c.center.x, tcz = c.center.z;
         // Glowing rune circle
         const runeGeom = new THREE.RingGeometry(0.3, 0.5, 6);
         const runeMat = new THREE.MeshBasicMaterial({color: GRUVBOX.red, transparent: true, opacity: 0.35, side: THREE.DoubleSide});
@@ -1135,6 +1016,7 @@ let attachedMazeGrid = null;
 let attachedMazeParams = null;
 let attachedMazeDest = null;
 let playerInMaze = false;
+let mazeSpaceActive = false;
 let minimapBase = null;
 let minimapLayout = null;
 
@@ -1167,39 +1049,6 @@ function mazeLocalToWorld(lx, lz) {
     };
 }
 
-// Preserve the player's position and view when the rendered destination-hub
-// preview becomes the real hub. Both use the same transform, so the scene can
-// change ownership without a visible teleport.
-function captureMazeExitPose() {
-    if (!attachedMazeGroup || !attachedMazeGrid || !attachedMazeDest) return null;
-    const returnDir = findReturnDir(currentRoomId, attachedMazeDest);
-    if (!returnDir) return null;
-
-    const local = worldToMazeLocal(playerPos.x, playerPos.z);
-    const exit = attachedMazeGrid.exitCell;
-    const previewAngle = DIR_ANGLES[returnDir] + Math.PI / 2;
-    const centerX = attachedMazeGrid.w * CELL + HUB_APO;
-    const centerZ = exit.y * CELL + CELL / 2;
-    const dx = local.x - centerX;
-    const dz = local.z - centerZ;
-    const cosPreview = Math.cos(previewAngle);
-    const sinPreview = Math.sin(previewAngle);
-
-    camera.getWorldDirection(moveForward);
-    const mazeAngle = attachedMazeGroup.rotation.y;
-    const mazeDirX = moveForward.x * Math.cos(mazeAngle) - moveForward.z * Math.sin(mazeAngle);
-    const mazeDirZ = moveForward.x * Math.sin(mazeAngle) + moveForward.z * Math.cos(mazeAngle);
-    const hubDirX = mazeDirX * cosPreview - mazeDirZ * sinPreview;
-    const hubDirZ = mazeDirX * sinPreview + mazeDirZ * cosPreview;
-
-    return {
-        x: dx * cosPreview - dz * sinPreview,
-        z: dx * sinPreview + dz * cosPreview,
-        pitch: camera.rotation.x,
-        yaw: Math.atan2(-hubDirX, -hubDirZ)
-    };
-}
-
 // ===== STATE MACHINE =====
 function enterHub(roomId, fromRoom, arrivalPose = null) {
     // Find return direction before clearing state
@@ -1225,6 +1074,7 @@ function enterHub(roomId, fromRoom, arrivalPose = null) {
     gameState = 'HUB';
     currentRoomId = roomId;
     playerInMaze = false;
+    mazeSpaceActive = false;
     if (roomTrail[roomTrail.length - 1] !== roomId) roomTrail.push(roomId);
 
     if (roomId === '3.02') { enterWin(); return; }
@@ -1266,25 +1116,18 @@ function attachMaze(dir) {
     if (!dest) return;
 
     const {grid, params} = generateMaze(masterSeed, currentRoomId, dest, {allFeatures:testMazeMode});
+    if (activeShade && activeShade.mode !== 'lag') {
+        if (activeShade.visual) {
+            scene.remove(activeShade.visual);
+            disposeObjectTree(activeShade.visual);
+        }
+        activeShade = {mode:'lag', lagUntil:performance.now() + SHADE_LAG_MS,
+            grid:null, cell:null, targetCell:null, visual:null};
+    }
+    clearScene();
     const mazeGroup = buildMazeScene(grid, currentRoomId, dest);
-
-    // Rotate maze so entrance aligns with the hub door
-    // Maze entrance faces west (-X). We need it to face back toward hub.
-    const angle = DIR_ANGLES[dir];
-    const rot = Math.PI / 2 - angle;
-    mazeGroup.rotation.y = rot;
-
-    // Position so entrance opening meets the door
-    const ec = grid.entranceCell;
-    const ecZ = ec.y * CELL + CELL / 2;
-    const doorDist = HUB_APO;
-    const doorX = Math.sin(angle) * doorDist;
-    const doorZ = -Math.cos(angle) * doorDist;
-    // Entrance center in maze-local is (0, 0, ecZ). After rotation:
-    const entrWorldX = 0 * Math.cos(rot) + ecZ * Math.sin(rot);
-    const entrWorldZ = -0 * Math.sin(rot) + ecZ * Math.cos(rot);
-    mazeGroup.position.x = doorX - entrWorldX;
-    mazeGroup.position.z = doorZ - entrWorldZ;
+    mazeGroup.position.x = -(grid.bounds.minX + grid.bounds.maxX) / 2;
+    mazeGroup.position.z = -(grid.bounds.minZ + grid.bounds.maxZ) / 2;
 
     scene.add(mazeGroup);
     scene.fog.far = params.fogFar;
@@ -1293,9 +1136,32 @@ function attachMaze(dir) {
     attachedMazeGrid = grid;
     attachedMazeParams = params;
     attachedMazeDest = dest;
+    mazeSpaceActive = true;
+    playerInMaze = true;
     buildMinimapBase(grid);
 
-    // Destination preview geometry is owned by the maze group.
+    const entrance = grid.entranceDoorRoom;
+    const spawn = mazeLocalToWorld(entrance.center.x, entrance.center.z);
+    const corridorTarget = entrance.corridorEdge.neighbor?.center ||
+        edgeMidpoint(entrance.corridorEdge);
+    const dx = corridorTarget.x - entrance.center.x;
+    const dz = corridorTarget.z - entrance.center.z;
+    playerPos.set(spawn.x, EYE_H, spawn.z);
+    camera.rotation.set(0, Math.atan2(-dx, -dz), 0, 'YXZ');
+    verticalVelocity = 0;
+    // Door-room fold is an out-of-frame teleport, so hardening state must
+    // move with the player rather than letting the next frame snap it back.
+    trackedPos.x = playerPos.x;
+    trackedPos.z = playerPos.z;
+    camera.position.set(playerPos.x, playerPos.y, playerPos.z);
+    if (playerLight) playerLight.position.set(playerPos.x, playerPos.y, playerPos.z);
+
+    const hunter = grid.hunter;
+    if (hunter && !hunter.wakeAt && !activeShade) {
+        hunter.wakeAt = performance.now() + HUNTER_WAKE_DELAY_MS;
+        showEventMessage('THE SHADE STIRS', 2600);
+    }
+    updateHUD();
 }
 
 function disposeGroup(g) {
@@ -1311,6 +1177,7 @@ function detachMaze() {
     attachedMazeParams = null;
     attachedMazeDest = null;
     playerInMaze = false;
+    mazeSpaceActive = false;
     minimapBase = null;
     minimapLayout = null;
     scene.fog.far = 30;
@@ -1484,31 +1351,23 @@ function updateMovement(delta) {
     const inMazeArea = isPlayerInMaze();
 
     if (inMazeArea && attachedMazeGrid) {
-        if (!playerInMaze) {
-            playerInMaze = true;
-            const hunter = attachedMazeGrid.hunter;
-            if (hunter && !hunter.wakeAt && !activeShade) {
-                hunter.wakeAt = performance.now() + HUNTER_WAKE_DELAY_MS;
-                showEventMessage('THE SHADE STIRS', 2600);
-            }
+        const doorCrossing = checkMazeExit(previousX, previousZ);
+        if (doorCrossing === 'entrance') {
+            enterHub(currentRoomId);
+            return;
         }
-        // Maze collision in local coords
-        collideInMaze(previousX, previousZ);
+        if (doorCrossing === 'exit') {
+            const destination = attachedMazeDest;
+            const source = currentRoomId;
+            mazeCount++;
+            enterHub(destination, source);
+            return;
+        }
+        if (!checkSpaceFold(previousX, previousZ)) collideInMaze(previousX, previousZ);
         checkRotatingChamber();
         checkSpatialLoop();
         checkMazeTraps();
-        if (checkMazeExit()) {
-            const destination = attachedMazeDest;
-            const source = currentRoomId;
-            const arrivalPose = captureMazeExitPose();
-            mazeCount++;
-            enterHub(destination, source, arrivalPose);
-            return;
-        }
     } else {
-        if (playerInMaze) {
-            playerInMaze = false;
-        }
         // Hub collision
         collideWithHub();
     }
@@ -1525,12 +1384,12 @@ function checkRotatingChamber() {
     const chamber = attachedMazeGrid?.rotatingChamber;
     if (!chamber || chamber.activated) return;
     const local = worldToMazeLocal(playerPos.x, playerPos.z);
-    const centerX = chamber.cell.x * CELL + CELL / 2;
-    const centerZ = chamber.cell.y * CELL + CELL / 2;
+    const centerX = chamber.cell.center.x;
+    const centerZ = chamber.cell.center.z;
     if (Math.hypot(local.x - centerX, local.z - centerZ) > 0.68) return;
     if (!attachedMazeGrid.activateRotatingChamber()) return;
-    if (chamber.entryPanel) chamber.entryPanel.visible = true;
-    if (chamber.exitPanel) chamber.exitPanel.visible = false;
+    attachedMazeGrid._closedWallCache = null;
+    for (const panel of chamber.panels || []) panel.visual.visible = !panel.edge.open;
     buildMinimapBase(attachedMazeGrid);
     showEventMessage('CHAMBER ROTATED · EXIT OPEN');
 }
@@ -1539,7 +1398,7 @@ function checkSpatialLoop() {
     const loop = attachedMazeGrid?.spatialLoop;
     if (!loop) return;
     const local = worldToMazeLocal(playerPos.x, playerPos.z);
-    const center = cell => ({x:cell.x * CELL + CELL / 2, z:cell.y * CELL + CELL / 2});
+    const center = cell => cell.center;
 
     if (loop.cooldown) {
         const lockedCenter = center(loop.cooldown);
@@ -1565,11 +1424,7 @@ function checkSpatialLoop() {
 }
 
 function isPlayerInMaze() {
-    if (!hubDoorOpen || !attachedMazeGroup) return false;
-    const angle = DIR_ANGLES[hubDoorOpen];
-    const nx = Math.sin(angle), nz = -Math.cos(angle);
-    const dot = playerPos.x * nx + playerPos.z * nz;
-    return dot > HUB_APO - 0.2;
+    return mazeSpaceActive;
 }
 
 function collideWithHub() {
@@ -1599,95 +1454,141 @@ function collideInMaze(previousWorldX, previousWorldZ) {
     if (!grid) return;
     let local = worldToMazeLocal(playerPos.x, playerPos.z);
     const previous = worldToMazeLocal(previousWorldX, previousWorldZ);
-    const totalW = grid.w * CELL, totalH = grid.h * CELL;
-    const ec = grid.entranceCell, xc = grid.exitCell;
-    const openingHalfWidth = DOOR_W / 2 - P_RAD * 0.5;
-    const atEntrance = ec && Math.abs(local.z - (ec.y * CELL + CELL / 2)) < openingHalfWidth;
-    const atExit = xc && Math.abs(local.z - (xc.y * CELL + CELL / 2)) < openingHalfWidth;
-    const fold = grid.spaceFold;
-    const northCenterX = fold ? fold.north.x * CELL + CELL / 2 : 0;
-    const southCenterX = fold ? fold.south.x * CELL + CELL / 2 : 0;
-    const atNorthFold = fold && Math.abs(local.x - northCenterX) < openingHalfWidth;
-    const atSouthFold = fold && Math.abs(local.x - southCenterX) < openingHalfWidth;
-
-    // Boundary clamp (entrance/exit are open)
-    if (local.x < P_RAD && !atEntrance) local.x = P_RAD;
-    if (local.x > totalW - P_RAD && !atExit) local.x = totalW - P_RAD;
-    if (local.z < P_RAD && !atNorthFold) local.z = P_RAD;
-    if (local.z > totalH - P_RAD && !atSouthFold) local.z = totalH - P_RAD;
-
-    // Sweep from the previous cell before resolving proximity. Without this,
-    // crossing a wall within one frame places the player on its far side.
-    const previousGX = Math.floor(previous.x / CELL);
-    const previousGY = Math.floor(previous.z / CELL);
-    const previousCell = grid.cell(previousGX, previousGY);
-    if (previousCell) {
-        if (local.x > previous.x && (previousCell.E || previousCell.oneWayBlocked.E)) {
-            local.x = Math.min(local.x, (previousGX + 1) * CELL - P_RAD);
-        } else if (local.x < previous.x && (previousCell.W || previousCell.oneWayBlocked.W)) {
-            local.x = Math.max(local.x, previousGX * CELL + P_RAD);
-        }
-
-        const zCellX = Math.floor(local.x / CELL);
-        const zCell = grid.cell(zCellX, previousGY);
-        if (zCell) {
-            if (local.z > previous.z && (zCell.S || zCell.oneWayBlocked.S)) {
-                local.z = Math.min(local.z, (previousGY + 1) * CELL - P_RAD);
-            } else if (local.z < previous.z && (zCell.N || zCell.oneWayBlocked.N)) {
-                local.z = Math.max(local.z, previousGY * CELL + P_RAD);
+    if (!grid._closedWallCache) {
+        const seen = new Set();
+        grid._closedWallCache = [];
+        for (const cell of grid.cells) {
+            for (const edge of cell.edges) {
+                if (edge.open) continue;
+                const key = edge.segment.map(point =>
+                    `${point.x.toFixed(5)},${point.z.toFixed(5)}`).sort().join('|');
+                if (seen.has(key)) continue;
+                seen.add(key);
+                grid._closedWallCache.push({edge, owner:cell});
             }
         }
     }
+    const walls = [...grid._closedWallCache];
+    const previousCell = grid.cellContainingPoint(previous.x, previous.z);
+    for (const edge of previousCell?.edges || []) {
+        if (edge.oneWayBlocked && edge.open) walls.push({edge, owner:previousCell});
+    }
 
-    // Axis-separated cell wall collision for sliding
-    const gx = Math.floor(local.x / CELL);
-    const gy = Math.floor(local.z / CELL);
-    const c = grid.cell(gx, gy);
-    if (c) {
-        const cx = local.x - gx * CELL;
-        const cz = local.z - gy * CELL;
-        // Clamp each axis independently — allows sliding along walls
-        if (c.W && cx < P_RAD) local.x = gx * CELL + P_RAD;
-        if (c.E && cx > CELL - P_RAD) local.x = (gx + 1) * CELL - P_RAD;
-        if (c.N && cz < P_RAD) local.z = gy * CELL + P_RAD;
-        if (c.S && cz > CELL - P_RAD) local.z = (gy + 1) * CELL - P_RAD;
-
-        // Corner check: if we're near a corner where two walls meet,
-        // check the diagonal neighbor to prevent clipping through
-        const cx2 = local.x - gx * CELL;
-        const cz2 = local.z - gy * CELL;
-        if (cx2 < P_RAD && cz2 < P_RAD) {
-            const diag = grid.cell(gx - 1, gy - 1);
-            if (!diag || (c.W && c.N)) { local.x = gx * CELL + P_RAD; local.z = gy * CELL + P_RAD; }
-        }
-        if (cx2 > CELL - P_RAD && cz2 < P_RAD) {
-            const diag = grid.cell(gx + 1, gy - 1);
-            if (!diag || (c.E && c.N)) { local.x = (gx + 1) * CELL - P_RAD; local.z = gy * CELL + P_RAD; }
-        }
-        if (cx2 < P_RAD && cz2 > CELL - P_RAD) {
-            const diag = grid.cell(gx - 1, gy + 1);
-            if (!diag || (c.W && c.S)) { local.x = gx * CELL + P_RAD; local.z = (gy + 1) * CELL - P_RAD; }
-        }
-        if (cx2 > CELL - P_RAD && cz2 > CELL - P_RAD) {
-            const diag = grid.cell(gx + 1, gy + 1);
-            if (!diag || (c.E && c.S)) { local.x = (gx + 1) * CELL - P_RAD; local.z = (gy + 1) * CELL - P_RAD; }
+    // Sweep against every relevant segment before proximity relaxation so a
+    // low frame cannot tunnel from one polygon to the far side of a wall.
+    for (const {edge, owner} of walls) {
+        const [a, b] = edge.segment;
+        const reach = P_RAD + Math.hypot(local.x - previous.x, local.z - previous.z);
+        if (Math.max(previous.x, local.x) < Math.min(a.x, b.x) - reach ||
+            Math.min(previous.x, local.x) > Math.max(a.x, b.x) + reach ||
+            Math.max(previous.z, local.z) < Math.min(a.z, b.z) - reach ||
+            Math.min(previous.z, local.z) > Math.max(a.z, b.z) + reach) continue;
+        const dx = b.x - a.x, dz = b.z - a.z;
+        const length = Math.hypot(dx, dz);
+        const nx = -dz / length, nz = dx / length;
+        const ownerSide = Math.sign((owner.center.x - a.x) * nx + (owner.center.z - a.z) * nz) || 1;
+        const previousSide = (previous.x - a.x) * nx + (previous.z - a.z) * nz;
+        const currentSide = (local.x - a.x) * nx + (local.z - a.z) * nz;
+        const keepSide = Math.sign(previousSide) || ownerSide;
+        const along = ((local.x - a.x) * dx + (local.z - a.z) * dz) / (length * length);
+        if (keepSide * currentSide <= 0 && along > -0.05 && along < 1.05) {
+            local.x += nx * keepSide * (P_RAD - keepSide * currentSide + 0.001);
+            local.z += nz * keepSide * (P_RAD - keepSide * currentSide + 0.001);
         }
     }
 
-    if (fold && local.z < 0 && atNorthFold) {
-        local.x = southCenterX + (local.x - northCenterX);
-        local.z = totalH - P_RAD - 0.05;
-        showEventMessage('SPACE FOLDS: α → β');
-    } else if (fold && local.z > totalH && atSouthFold) {
-        local.x = northCenterX + (local.x - southCenterX);
-        local.z = P_RAD + 0.05;
-        showEventMessage('SPACE FOLDS: β → α');
+    // Two-dimensional Gauss-Seidel relaxation gives the expected FPS wall
+    // slide on 60-degree corners without coupling collision to eye height.
+    for (let pass = 0; pass < 3; pass++) {
+        for (const {edge, owner} of walls) {
+            const [a, b] = edge.segment;
+            if (local.x < Math.min(a.x, b.x) - P_RAD ||
+                local.x > Math.max(a.x, b.x) + P_RAD ||
+                local.z < Math.min(a.z, b.z) - P_RAD ||
+                local.z > Math.max(a.z, b.z) + P_RAD) continue;
+            const dx = b.x - a.x, dz = b.z - a.z;
+            const lengthSq = dx * dx + dz * dz;
+            const t = Math.max(0, Math.min(1, ((local.x - a.x) * dx + (local.z - a.z) * dz) / lengthSq));
+            const qx = a.x + dx * t, qz = a.z + dz * t;
+            const px = local.x - qx, pz = local.z - qz;
+            const distance = Math.hypot(px, pz);
+            if (distance >= P_RAD) continue;
+            let ux, uz;
+            if (distance > 1e-7) {
+                ux = px / distance;
+                uz = pz / distance;
+            } else {
+                const length = Math.sqrt(lengthSq);
+                ux = -(b.z - a.z) / length;
+                uz = (b.x - a.x) / length;
+                const ownerSide = Math.sign((owner.center.x - a.x) * ux + (owner.center.z - a.z) * uz) || 1;
+                ux *= ownerSide;
+                uz *= ownerSide;
+            }
+            const push = P_RAD - distance + 0.001;
+            local.x += ux * push;
+            local.z += uz * push;
+        }
     }
+
+    // Preserve the old final fallback: if relaxation found the exterior,
+    // keep the last trusted position rather than accepting a clipped frame.
+    if (!grid.cellContainingPoint(local.x, local.z)) local = previous;
 
     // Convert back to world
     const world = mazeLocalToWorld(local.x, local.z);
     playerPos.x = world.x;
     playerPos.z = world.z;
+}
+
+function crossesEdgePlane(previous, current, edge, interiorCenter) {
+    const [a, b] = edge.segment;
+    const dx = b.x - a.x, dz = b.z - a.z;
+    const length = Math.hypot(dx, dz);
+    let nx = -dz / length, nz = dx / length;
+    if ((interiorCenter.x - a.x) * nx + (interiorCenter.z - a.z) * nz > 0) {
+        nx = -nx;
+        nz = -nz;
+    }
+    const before = (previous.x - a.x) * nx + (previous.z - a.z) * nz;
+    const after = (current.x - a.x) * nx + (current.z - a.z) * nz;
+    const along = ((current.x - a.x) * dx + (current.z - a.z) * dz) / (length * length);
+    // The activation plane is inset by the player radius: it is crossed by
+    // walking into the sealed panel before collision restores clearance.
+    const triggerPlane = -(P_RAD + 0.04);
+    return before < triggerPlane && after >= triggerPlane && along >= 0 && along <= 1;
+}
+
+function checkSpaceFold(previousWorldX, previousWorldZ) {
+    const fold = attachedMazeGrid?.spaceFold;
+    if (!fold) return false;
+    const previous = worldToMazeLocal(previousWorldX, previousWorldZ);
+    const current = worldToMazeLocal(playerPos.x, playerPos.z);
+    let from = null, to = null, label = '';
+    if (crossesEdgePlane(previous, current, fold.a.edge, fold.a.cell.center)) {
+        from = fold.a; to = fold.b; label = 'α → β';
+    } else if (crossesEdgePlane(previous, current, fold.b.edge, fold.b.cell.center)) {
+        from = fold.b; to = fold.a; label = 'β → α';
+    }
+    if (!from) return false;
+    const sourceMid = edgeMidpoint(from.edge);
+    const targetMid = edgeMidpoint(to.edge);
+    const [sa, sb] = from.edge.segment;
+    const [ta, tb] = to.edge.segment;
+    const sourceLength = Math.hypot(sb.x - sa.x, sb.z - sa.z);
+    const targetLength = Math.hypot(tb.x - ta.x, tb.z - ta.z);
+    const along = ((current.x - sourceMid.x) * (sb.x - sa.x) +
+        (current.z - sourceMid.z) * (sb.z - sa.z)) / sourceLength;
+    const mapped = Math.max(-targetLength * 0.3, Math.min(targetLength * 0.3, along));
+    const target = {
+        x:to.cell.center.x + (tb.x - ta.x) / targetLength * mapped,
+        z:to.cell.center.z + (tb.z - ta.z) / targetLength * mapped
+    };
+    const world = mazeLocalToWorld(target.x, target.z);
+    playerPos.x = world.x;
+    playerPos.z = world.z;
+    showEventMessage(`SPACE FOLDS: ${label}`);
+    return true;
 }
 
 const shadeVeilEl = document.getElementById('shade-veil');
@@ -1728,7 +1629,7 @@ function updateHunter(delta) {
         if (remain > 0) return;
         if (playerInMaze && attachedMazeGrid) {
             const e = attachedMazeGrid.entranceCell;
-            const w = mazeLocalToWorld(e.x * CELL + CELL / 2, e.y * CELL + CELL / 2);
+            const w = mazeLocalToWorld(e.center.x, e.center.z);
             Object.assign(shade, {mode: 'maze', grid: attachedMazeGrid, cell: e, targetCell: null, x: w.x, z: w.z});
         } else {
             let ex = 0, ez = 0;
@@ -1763,7 +1664,7 @@ function updateHunter(delta) {
         if (playerInMaze && attachedMazeGrid) {
             // The player fled through the open door — make for the entrance.
             const e = attachedMazeGrid.entranceCell;
-            const w = mazeLocalToWorld(e.x * CELL + CELL / 2, e.y * CELL + CELL / 2);
+            const w = mazeLocalToWorld(e.center.x, e.center.z);
             const mx = w.x - shade.x, mz = w.z - shade.z;
             const md = Math.sqrt(mx * mx + mz * mz);
             if (md <= step) {
@@ -1793,7 +1694,7 @@ function updateHunter(delta) {
         return;
     }
     const localPlayer = worldToMazeLocal(playerPos.x, playerPos.z);
-    const playerCell = grid.cell(Math.floor(localPlayer.x / CELL), Math.floor(localPlayer.z / CELL));
+    const playerCell = grid.cellContainingPoint(localPlayer.x, localPlayer.z);
     if (!playerInMaze && shade.cell === grid.entranceCell && !shade.targetCell) {
         // At the doorway with the player outside: cross into the hub.
         Object.assign(shade, {mode: 'hub', grid: null, cell: null});
@@ -1808,23 +1709,21 @@ function updateHunter(delta) {
         shade.targetCell = path[1];
         // Fold/loop edges connect non-adjacent cells: the Shade crosses
         // them instantly rather than gliding through walls.
-        const adj = Math.abs(shade.targetCell.x - shade.cell.x)
-                  + Math.abs(shade.targetCell.y - shade.cell.y);
-        if (adj !== 1) {
+        if (!grid.areAdjacent(shade.targetCell, shade.cell)) {
             shade.cell = shade.targetCell;
             shade.targetCell = null;
-            const w = mazeLocalToWorld(shade.cell.x * CELL + CELL / 2, shade.cell.y * CELL + CELL / 2);
+            const w = mazeLocalToWorld(shade.cell.center.x, shade.cell.center.z);
             shade.x = w.x; shade.z = w.z;
             shade.visual.position.x = w.x;
             shade.visual.position.z = w.z;
             return;
         }
     }
-    const t = mazeLocalToWorld(shade.targetCell.x * CELL + CELL / 2, shade.targetCell.y * CELL + CELL / 2);
+    const t = mazeLocalToWorld(shade.targetCell.center.x, shade.targetCell.center.z);
     const mx = t.x - shade.x, mz = t.z - shade.z;
     const md = Math.sqrt(mx * mx + mz * mz);
     if (md <= step) {
-        const w = mazeLocalToWorld(shade.targetCell.x * CELL + CELL / 2, shade.targetCell.y * CELL + CELL / 2);
+        const w = mazeLocalToWorld(shade.targetCell.center.x, shade.targetCell.center.z);
         shade.x = w.x; shade.z = w.z;
         shade.cell = shade.targetCell;
         shade.targetCell = null;
@@ -1840,25 +1739,24 @@ function checkMazeTraps() {
     const grid = attachedMazeGrid;
     if (!grid) return;
     const local = worldToMazeLocal(playerPos.x, playerPos.z);
-    const gx = Math.floor(local.x / CELL);
-    const gy = Math.floor(local.z / CELL);
-    const c = grid.cell(gx, gy);
+    const c = grid.cellContainingPoint(local.x, local.z);
     if (!c || !c.trap) return;
-    const lx = local.x - gx * CELL - CELL / 2;
-    const lz = local.z - gy * CELL - CELL / 2;
+    const lx = local.x - c.center.x;
+    const lz = local.z - c.center.z;
     if (Math.sqrt(lx * lx + lz * lz) < 0.6) {
         c.trap = false;
         triggerTrap(c.trapDest);
     }
 }
 
-function checkMazeExit() {
-    if (!attachedMazeGrid) return false;
-    const local = worldToMazeLocal(playerPos.x, playerPos.z);
-    const xc = attachedMazeGrid.exitCell;
-    if (!xc) return false;
-    const atExitZ = Math.abs(local.z - (xc.y * CELL + CELL / 2)) < DOOR_W / 2 - P_RAD * 0.5;
-    return atExitZ && local.x > (xc.x + 1) * CELL + EXIT_HANDOFF_DEPTH;
+function checkMazeExit(previousWorldX, previousWorldZ) {
+    if (!attachedMazeGrid) return null;
+    const previous = worldToMazeLocal(previousWorldX, previousWorldZ);
+    const current = worldToMazeLocal(playerPos.x, playerPos.z);
+    for (const room of [attachedMazeGrid.entranceDoorRoom, attachedMazeGrid.exitDoorRoom]) {
+        if (room && crossesEdgePlane(previous, current, room.panelEdge, room.center)) return room.kind;
+    }
+    return null;
 }
 
 // ===== HUD =====
@@ -1891,7 +1789,7 @@ function updateHUD() {
     // Show maze info when in maze area
     if (playerInMaze && attachedMazeDest) {
         const srcTess = TESSERACTS[getTess(currentRoomId)];
-        roomInfo.textContent = `${srcTess.emoji} ${currentRoomId} \u2192 ${attachedMazeDest}`;
+        roomInfo.textContent = `${srcTess.emoji} ${currentRoomId} · MAZE · ${attachedMazeDest}`;
         const tier = ['Simple','Moderate','Complex','Labyrinthine'];
         const tierName = attachedMazeParams ? tier[attachedMazeParams.tier] : '';
         const featureNames = [];
@@ -1902,19 +1800,19 @@ function updateHUD() {
         mazeLabel.textContent = [tierName, ...featureNames].join(' · ');
         const local = worldToMazeLocal(playerPos.x, playerPos.z);
         const nearbyGate = attachedMazeGrid.oneWayGates.find(gate => {
-            const x = (gate.from.x + gate.to.x + 1) * CELL / 2;
-            const z = (gate.from.y + gate.to.y + 1) * CELL / 2;
+            const x = (gate.from.center.x + gate.to.center.x) / 2;
+            const z = (gate.from.center.z + gate.to.center.z) / 2;
             return Math.hypot(local.x - x, local.z - z) < 2.2;
         });
         const rotating = attachedMazeGrid.rotatingChamber;
         const nearRotationPlate = rotating && !rotating.activated && Math.hypot(
-            local.x - (rotating.cell.x * CELL + CELL / 2),
-            local.z - (rotating.cell.y * CELL + CELL / 2)
+            local.x - rotating.cell.center.x,
+            local.z - rotating.cell.center.z
         ) < 2.2;
         const loop = attachedMazeGrid.spatialLoop;
         const nearLoop = loop && [loop.a, loop.b].some(cell => Math.hypot(
-            local.x - (cell.x * CELL + CELL / 2),
-            local.z - (cell.y * CELL + CELL / 2)
+            local.x - cell.center.x,
+            local.z - cell.center.z
         ) < 2.1);
         if (nearRotationPlate) {
             hint.textContent = 'ROTATION PLATE · CROSS THE CENTER';
@@ -1923,7 +1821,7 @@ function updateHUD() {
             hint.textContent = loop.required ? 'REQUIRED SPATIAL LOOP · ENTER THE RING' : 'SPATIAL LOOP · ENTER THE RING';
             hint.classList.add('visible');
         } else if (nearbyGate) {
-            hint.textContent = nearbyGate.required ? 'COMMITMENT GATE · NO RETURN' : 'ONE WAY · FOLLOW THE FLOOR ARROW';
+            hint.textContent = nearbyGate.required ? 'COMMITMENT GATE' : 'ONE-WAY THRESHOLD';
             hint.classList.add('visible');
         } else {
             hint.classList.remove('visible');
@@ -1936,141 +1834,136 @@ const minimapEl = document.getElementById('minimap');
 
 function buildMinimapBase(grid) {
     const mw = 160, mh = 160;
-    const scale = Math.min((mw - 20) / grid.w, (mh - 20) / grid.h);
-    const ox = (mw - grid.w * scale) / 2;
-    const oz = (mh - grid.h * scale) / 2;
+    const {minX, maxX, minZ, maxZ} = grid.bounds;
+    const width = Math.max(1, maxX - minX);
+    const height = Math.max(1, maxZ - minZ);
+    const scale = Math.min((mw - 20) / width, (mh - 20) / height);
+    const ox = (mw - width * scale) / 2;
+    const oz = (mh - height * scale) / 2;
+    const toCanvas = point => ({
+        x:ox + (point.x - minX) * scale,
+        y:oz + (point.z - minZ) * scale
+    });
     minimapBase = document.createElement('canvas');
     minimapBase.width = mw;
     minimapBase.height = mh;
-    minimapLayout = {scale, ox, oz};
+    minimapLayout = {scale, ox, oz, minX, minZ};
     const ctx = minimapBase.getContext('2d');
 
     ctx.fillStyle = 'rgba(40,40,40,0.9)';
     ctx.fillRect(0, 0, mw, mh);
 
-    // Draw cells
-    ctx.strokeStyle = 'rgba(235,219,178,0.18)';
-    ctx.lineWidth = 1;
-    for (let gy = 0; gy < grid.h; gy++) {
-        for (let gx = 0; gx < grid.w; gx++) {
-            const c = grid.cell(gx, gy);
-            const sx = ox + gx * scale, sy = oz + gy * scale;
-            if (c.N) { ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + scale, sy); ctx.stroke(); }
-            if (c.W) { ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy + scale); ctx.stroke(); }
-            if (gy === grid.h - 1 && c.S) { ctx.beginPath(); ctx.moveTo(sx, sy + scale); ctx.lineTo(sx + scale, sy + scale); ctx.stroke(); }
-            if (gx === grid.w - 1 && c.E) { ctx.beginPath(); ctx.moveTo(sx + scale, sy); ctx.lineTo(sx + scale, sy + scale); ctx.stroke(); }
+    // Polygon footprints make either tessellation legible. Passages are
+    // overdrawn in aqua while closed edges retain the wall language.
+    for (const cell of grid.cells) {
+        const points = cell.vertices.map(toCanvas);
+        ctx.beginPath();
+        points.forEach((point, index) => {
+            if (index === 0) ctx.moveTo(point.x, point.y);
+            else ctx.lineTo(point.x, point.y);
+        });
+        ctx.closePath();
+        ctx.fillStyle = cell.chamber ? 'rgba(131,165,152,0.24)' : 'rgba(60,56,54,0.2)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(235,219,178,0.08)';
+        ctx.lineWidth = 0.6;
+        ctx.stroke();
+    }
+
+    const seenEdges = new Set();
+    for (const cell of grid.cells) {
+        for (const edge of cell.edges) {
+            const key = edge.segment.map(point => `${point.x.toFixed(5)},${point.z.toFixed(5)}`).sort().join('|');
+            if (seenEdges.has(key)) continue;
+            seenEdges.add(key);
+            const [a, b] = edge.segment.map(toCanvas);
+            ctx.strokeStyle = edge.open ? 'rgba(142,192,124,0.28)' : 'rgba(235,219,178,0.42)';
+            ctx.lineWidth = edge.open ? 1.2 : 1;
+            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
         }
     }
 
-    // Chamber highlights
-    for (const c of grid.cells) {
-        if (!c.chamber) continue;
-        const sx = ox + c.x * scale, sy = oz + c.y * scale;
-        ctx.fillStyle = 'rgba(131,165,152,0.24)';
-        ctx.fillRect(sx + 1, sy + 1, scale - 2, scale - 2);
-    }
-
     if (grid.rotatingChamber) {
-        const c = grid.rotatingChamber.cell;
-        const x = ox + (c.x + 0.5) * scale, y = oz + (c.y + 0.5) * scale;
+        const point = toCanvas(grid.rotatingChamber.cell.center);
         ctx.strokeStyle = '#fabd2f';
         ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.lineTo(x + 4, y); ctx.moveTo(x, y - 4); ctx.lineTo(x, y + 4); ctx.stroke();
+        ctx.beginPath(); ctx.arc(point.x, point.y, 5, 0, Math.PI * 2); ctx.stroke();
     }
 
-    // Trap markers
-    for (const c of grid.cells) {
-        if (!c.trap) continue;
-        const cx = ox + (c.x + 0.5) * scale, cy = oz + (c.y + 0.5) * scale;
+    for (const cell of grid.cells) {
+        if (!cell.trap) continue;
+        const point = toCanvas(cell.center);
         ctx.fillStyle = 'rgba(255,100,83,0.55)';
-        ctx.beginPath(); ctx.arc(cx, cy, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(point.x, point.y, 2, 0, Math.PI * 2); ctx.fill();
     }
 
-    // One-way arrows
     for (const gate of grid.oneWayGates) {
-        const fromX = ox + (gate.from.x + 0.5) * scale;
-        const fromY = oz + (gate.from.y + 0.5) * scale;
-        const toX = ox + (gate.to.x + 0.5) * scale;
-        const toY = oz + (gate.to.y + 0.5) * scale;
-        const dx = toX - fromX, dy = toY - fromY;
+        const from = toCanvas(gate.from.center);
+        const to = toCanvas(gate.to.center);
+        const dx = to.x - from.x, dy = to.y - from.y;
         const length = Math.hypot(dx, dy);
         const ux = dx / length, uy = dy / length;
-        const mx = (fromX + toX) / 2, my = (fromY + toY) / 2;
+        const mx = (from.x + to.x) / 2, my = (from.y + to.y) / 2;
         const tipX = mx + ux * 4, tipY = my + uy * 4;
         ctx.save();
         ctx.strokeStyle = gate.required ? '#fabd2f' : '#8ec07c';
         ctx.fillStyle = gate.required ? '#fabd2f' : '#8ec07c';
         ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(mx - ux * 4, my - uy * 4);
-        ctx.lineTo(tipX, tipY);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(mx - ux * 4, my - uy * 4); ctx.lineTo(tipX, tipY); ctx.stroke();
         ctx.beginPath();
         ctx.moveTo(tipX, tipY);
         ctx.lineTo(tipX - ux * 3 - uy * 2.5, tipY - uy * 3 + ux * 2.5);
         ctx.lineTo(tipX - ux * 3 + uy * 2.5, tipY - uy * 3 - ux * 2.5);
-        ctx.closePath();
-        ctx.fill();
+        ctx.closePath(); ctx.fill();
         ctx.restore();
     }
 
     if (grid.spatialLoop) {
         const loop = grid.spatialLoop;
-        const aX = ox + (loop.a.x + 0.5) * scale, aY = oz + (loop.a.y + 0.5) * scale;
-        const bX = ox + (loop.b.x + 0.5) * scale, bY = oz + (loop.b.y + 0.5) * scale;
+        const a = toCanvas(loop.a.center), b = toCanvas(loop.b.center);
         const color = loop.required ? '#fabd2f' : '#83a598';
         ctx.save();
         ctx.strokeStyle = color;
         ctx.fillStyle = color;
         ctx.lineWidth = 1.5;
         ctx.setLineDash([3, 3]);
-        const bendX = (aX + bX) / 2 + (bY - aY) * 0.35;
-        const bendY = (aY + bY) / 2 - (bX - aX) * 0.35;
-        ctx.beginPath(); ctx.moveTo(aX, aY); ctx.quadraticCurveTo(bendX, bendY, bX, bY); ctx.stroke();
+        const bendX = (a.x + b.x) / 2 + (b.y - a.y) * 0.35;
+        const bendY = (a.y + b.y) / 2 - (b.x - a.x) * 0.35;
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.quadraticCurveTo(bendX, bendY, b.x, b.y); ctx.stroke();
         ctx.setLineDash([]);
         ctx.font = 'bold 9px monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        for (const [x, y, label] of [[aX,aY,'α'],[bX,bY,'β']]) {
+        for (const [x, y, label] of [[a.x,a.y,'α'],[b.x,b.y,'β']]) {
             ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
             ctx.fillStyle = '#282828'; ctx.fillText(label, x, y + 0.5); ctx.fillStyle = color;
         }
         ctx.restore();
     }
 
-    // Entrance marker
-    if (grid.entranceCell) {
-        const ex = ox + (grid.entranceCell.x + 0.5) * scale;
-        const ey = oz + (grid.entranceCell.y + 0.5) * scale;
-        ctx.fillStyle = '#b8bb26';
-        ctx.beginPath(); ctx.arc(ex, ey, 3, 0, Math.PI * 2); ctx.fill();
-    }
-    // Exit marker
-    if (grid.exitCell) {
-        const ex = ox + (grid.exitCell.x + 0.5) * scale;
-        const ey = oz + (grid.exitCell.y + 0.5) * scale;
-        ctx.fillStyle = '#fabd2f';
-        ctx.beginPath(); ctx.arc(ex, ey, 3, 0, Math.PI * 2); ctx.fill();
+    for (const [room, color] of [
+        [grid.entranceDoorRoom, '#b8bb26'],
+        [grid.exitDoorRoom, '#fabd2f']
+    ]) {
+        if (!room) continue;
+        const point = toCanvas(room.center);
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.arc(point.x, point.y, 3.5, 0, Math.PI * 2); ctx.fill();
     }
 
-
-    // Paired fold gates and their non-Euclidean connection.
     if (grid.spaceFold) {
-        const northX = ox + (grid.spaceFold.north.x + 0.5) * scale;
-        const northY = oz + (grid.spaceFold.north.y + 0.5) * scale;
-        const southX = ox + (grid.spaceFold.south.x + 0.5) * scale;
-        const southY = oz + (grid.spaceFold.south.y + 0.5) * scale;
+        const a = toCanvas(edgeMidpoint(grid.spaceFold.a.edge));
+        const b = toCanvas(edgeMidpoint(grid.spaceFold.b.edge));
         ctx.save();
         ctx.strokeStyle = 'rgba(211,134,155,0.55)';
         ctx.lineWidth = 1;
         ctx.setLineDash([3, 3]);
-        ctx.beginPath(); ctx.moveTo(northX, northY); ctx.lineTo(southX, southY); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
         ctx.setLineDash([]);
         ctx.strokeStyle = '#d3869b';
         ctx.lineWidth = 2;
-        for (const [x, y] of [[northX, northY], [southX, southY]]) {
-            ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.stroke();
+        for (const point of [a, b]) {
+            ctx.beginPath(); ctx.arc(point.x, point.y, 4, 0, Math.PI * 2); ctx.stroke();
         }
         ctx.restore();
     }
@@ -2083,29 +1976,29 @@ function drawMinimap() {
     }
     minimapEl.style.display = 'block';
     const ctx = minimapEl.getContext('2d');
-    const {scale, ox, oz} = minimapLayout;
+    const {scale, ox, oz, minX, minZ} = minimapLayout;
     const local = worldToMazeLocal(playerPos.x, playerPos.z);
-    const px = local.x / CELL, pz = local.z / CELL;
+    const toCanvas = point => ({
+        x:ox + (point.x - minX) * scale,
+        y:oz + (point.z - minZ) * scale
+    });
     ctx.clearRect(0, 0, minimapEl.width, minimapEl.height);
     ctx.drawImage(minimapBase, 0, 0);
 
-    // Player dot
-    const ppx = ox + px * scale, ppz = oz + pz * scale;
+    const player = toCanvas(local);
     ctx.fillStyle = '#8ec07c';
-    ctx.beginPath(); ctx.arc(ppx, ppz, 3.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(player.x, player.y, 3.5, 0, Math.PI * 2); ctx.fill();
 
-    // The Shade — pulsing so it reads at a glance
     if (activeShade && activeShade.mode === 'maze' && activeShade.grid === attachedMazeGrid) {
-        const sl = worldToMazeLocal(activeShade.x, activeShade.z);
-        const hx = ox + (sl.x / CELL) * scale, hz = oz + (sl.z / CELL) * scale;
+        const shadeLocal = worldToMazeLocal(activeShade.x, activeShade.z);
+        const shadePoint = toCanvas(shadeLocal);
         const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 180);
         ctx.fillStyle = '#ff6453';
         ctx.globalAlpha = 0.55 + 0.45 * pulse;
-        ctx.beginPath(); ctx.arc(hx, hz, 2.8 + 1.6 * pulse, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(shadePoint.x, shadePoint.y, 2.8 + 1.6 * pulse, 0, Math.PI * 2); ctx.fill();
         ctx.globalAlpha = 1;
     }
 
-    // Direction indicator — project camera forward into maze-local space
     camera.getWorldDirection(minimapForward);
     const mazeRot = attachedMazeGroup ? attachedMazeGroup.rotation.y : 0;
     const localDirX = minimapForward.x * Math.cos(mazeRot) - minimapForward.z * Math.sin(mazeRot);
@@ -2114,11 +2007,10 @@ function drawMinimap() {
     ctx.strokeStyle = '#8ec07c';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(ppx, ppz);
-    ctx.lineTo(ppx + localDirX * dirLen, ppz + localDirZ * dirLen);
+    ctx.moveTo(player.x, player.y);
+    ctx.lineTo(player.x + localDirX * dirLen, player.y + localDirZ * dirLen);
     ctx.stroke();
 }
-
 // ===== EVENT HANDLERS =====
 function resumePlayTimer() {
     if (!playStartedAt && gameState !== 'WIN') playStartedAt = performance.now();
@@ -2249,7 +2141,7 @@ function animate(time) {
 
     const rotating = attachedMazeGrid?.rotatingChamber;
     if (rotating?.visual) {
-        const target = rotating.activated ? Math.PI / 2 : 0;
+        const target = rotating.activated ? rotating.angle : 0;
         rotating.visual.rotation.y += (target - rotating.visual.rotation.y) * Math.min(1, delta * 5);
     }
 
