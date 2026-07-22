@@ -2032,6 +2032,13 @@ function clearMovementState() {
 function setupEvents() {
     const blocker = document.getElementById('blocker');
 
+    const rebuildCurrentHub = () => {
+        if (gameState !== 'HUB' || playerInMaze || !currentGroup) return;
+        clearScene();
+        currentGroup = buildHub(currentRoomId);
+        scene.add(currentGroup);
+    };
+
     blocker.addEventListener('click', event => {
         if (event.target.closest('a') || event.target.closest('.options')) return;
         controls.lock();
@@ -2044,6 +2051,7 @@ function setupEvents() {
         hardMode = hardToggle.checked;
         try { localStorage.setItem('dreadfulEngine.hardMode', hardMode ? '1' : '0'); } catch (e) { /* private browsing */ }
         if (!hardMode) hardEntireRun = false;
+        rebuildCurrentHub();
     });
 
     const cheatToggle = document.getElementById('optCheat');
@@ -2052,6 +2060,7 @@ function setupEvents() {
         cheatMode = cheatToggle.checked;
         if (cheatMode && runStarted) cheatUsed = true;
         refreshSeedDisplay();
+        rebuildCurrentHub();
     });
 
     const dateInput = document.getElementById('optDate');
