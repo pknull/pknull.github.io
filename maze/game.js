@@ -1029,8 +1029,7 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
     // direction and small posts mark the collision plane without resembling a
     // solid wall.
     for (const gate of mazeGrid.oneWayGates) {
-        const gateColor = gate.required ? GRUVBOX.yellow : GRUVBOX.aqua;
-        const gateCss = gate.required ? '#fabd2f' : '#8ec07c';
+        const gateColor = GRUVBOX.aqua;
         const fromX = gate.from.center.x;
         const fromZ = gate.from.center.z;
         const toX = gate.to.center.x;
@@ -1064,25 +1063,15 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
         postGeometry.dispose();
         postMaterial.dispose();
 
-        const gateLight = new THREE.PointLight(gateColor, gate.required ? 0.85 : 0.55, 4.5);
+        const gateLight = new THREE.PointLight(gateColor, 0.55, 4.5);
         gateLight.position.set(mx, 0.5, mz);
         group.add(gateLight);
-        if (gate.required) {
-            const gateLabel = makeFloorInscription('COMMIT', gateCss, {
-                size: 28,
-                worldWidth: 1.45,
-                worldHeight: 0.32,
-                plaque: true
-            });
-            gateLabel.position.set(mx - ux * 0.95, 0.075, mz - uz * 0.95);
-            group.add(gateLabel);
-        }
     }
 
     if (mazeGrid.spatialLoop) {
         const loop = mazeGrid.spatialLoop;
-        const loopColor = loop.required ? GRUVBOX.yellow : GRUVBOX.blue;
-        const loopCss = loop.required ? '#fabd2f' : '#83a598';
+        const loopColor = GRUVBOX.blue;
+        const loopCss = '#83a598';
         const addLoopMarker = (cell, label) => {
             const {x, z} = cell.center;
             const ring = new THREE.Mesh(
@@ -2078,42 +2067,21 @@ function updateHUD() {
         roomInfo.textContent = `${srcTess.emoji} ${currentRoomId} · MAZE · ${attachedMazeDest}`;
         const tier = ['Simple','Moderate','Complex','Labyrinthine'];
         const tierName = attachedMazeParams ? tier[attachedMazeParams.tier] : '';
-        const featureNames = [];
-        if (attachedMazeGrid.spaceFold) featureNames.push('SPACE FOLD');
-        if (attachedMazeGrid.oneWayGates.length) featureNames.push(attachedMazeGrid.oneWayGates[0].required ? 'COMMITMENT GATE' : 'ONE WAY');
-        if (attachedMazeGrid.rotatingChamber) featureNames.push('ROTATING CHAMBER');
-        if (attachedMazeGrid.spatialLoop) featureNames.push(attachedMazeGrid.spatialLoop.required ? 'REQUIRED LOOP' : 'SPATIAL LOOP');
-        mazeLabel.textContent = [tierName, ...featureNames].join(' · ');
+        mazeLabel.textContent = tierName;
         const local = worldToMazeLocal(playerPos.x, playerPos.z);
         const nearbyGate = attachedMazeGrid.oneWayGates.find(gate => {
             const x = (gate.from.center.x + gate.to.center.x) / 2;
             const z = (gate.from.center.z + gate.to.center.z) / 2;
             return Math.hypot(local.x - x, local.z - z) < 2.2;
         });
-        const rotating = attachedMazeGrid.rotatingChamber;
-        const nearRotationPlate = rotating && !rotating.activated && Math.hypot(
-            local.x - rotating.cell.center.x,
-            local.z - rotating.cell.center.z
-        ) < 2.2;
-        const loop = attachedMazeGrid.spatialLoop;
-        const nearLoop = loop && [loop.a, loop.b].some(cell => Math.hypot(
-            local.x - cell.center.x,
-            local.z - cell.center.z
-        ) < 2.1);
         const nearbyDoor = [attachedMazeGrid.exitDoorRoom]
             .find(room => room && !room.panelOpen &&
                 distanceToMazeDoor(room, local) <= DOOR_INTERACT_RANGE);
         if (nearbyDoor) {
             hint.textContent = '[CLICK / E] OPEN DOOR';
             hint.classList.add('visible');
-        } else if (nearRotationPlate) {
-            hint.textContent = 'ROTATION PLATE · CROSS THE CENTER';
-            hint.classList.add('visible');
-        } else if (nearLoop) {
-            hint.textContent = loop.required ? 'REQUIRED SPATIAL LOOP · ENTER THE RING' : 'SPATIAL LOOP · ENTER THE RING';
-            hint.classList.add('visible');
         } else if (nearbyGate) {
-            hint.textContent = nearbyGate.required ? 'COMMITMENT GATE' : 'ONE-WAY THRESHOLD';
+            hint.textContent = 'ONE-WAY THRESHOLD';
             hint.classList.add('visible');
         } else {
             hint.classList.remove('visible');
@@ -2198,8 +2166,8 @@ function buildMinimapBase(grid) {
         const mx = (from.x + to.x) / 2, my = (from.y + to.y) / 2;
         const tipX = mx + ux * 4, tipY = my + uy * 4;
         ctx.save();
-        ctx.strokeStyle = gate.required ? '#fabd2f' : '#8ec07c';
-        ctx.fillStyle = gate.required ? '#fabd2f' : '#8ec07c';
+        ctx.strokeStyle = '#8ec07c';
+        ctx.fillStyle = '#8ec07c';
         ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(mx - ux * 4, my - uy * 4); ctx.lineTo(tipX, tipY); ctx.stroke();
         ctx.beginPath();
@@ -2213,7 +2181,7 @@ function buildMinimapBase(grid) {
     if (grid.spatialLoop) {
         const loop = grid.spatialLoop;
         const a = toCanvas(loop.a.center), b = toCanvas(loop.b.center);
-        const color = loop.required ? '#fabd2f' : '#83a598';
+        const color = '#83a598';
         ctx.save();
         ctx.strokeStyle = color;
         ctx.fillStyle = color;

@@ -7,6 +7,9 @@ import {
     HUNTER_BASE_CHANCE,
     HUNTER_TESSERACT_CHANCE,
     HUB_APO,
+    MAZE_FEATURE_CHANCES,
+    MAZE_FEATURE_REQUIRED_CHANCE,
+    MAZE_FEATURE_ROSTER,
     MAZE_TESSELLATION,
     SIGMA_EDGE_LEN,
     SIGMA_TIER_RANGES,
@@ -922,20 +925,19 @@ function getMazeParams(masterSeed, roomA, roomB, tessellation = MAZE_TESSELLATIO
     const traps = [0, rng.nextInt(0,1), rng.nextInt(1,2), rng.nextInt(2,3)][tier];
     const fogFar = 18 + rng.next() * 30;
     const availableLaw = getTesseractLaw(roomA);
-    let law = rng.next() < availableLaw.chance ? availableLaw : null;
-    let structuralFeature = null;
-    if (rng.next() < [0.45, 0.60, 0.75, 0.90][tier]) {
-        const featureRoll = rng.next();
-        structuralFeature = featureRoll < 0.44 ? 'one-way'
-            : featureRoll < 0.7 ? 'rotating-chamber' : 'spatial-loop';
+    const law = rng.next() < availableLaw.chance ? availableLaw : null;
+    const features = {};
+    // Draw exactly twice per roster entry, unconditionally. Never branch on whether to draw.
+    for (const id of MAZE_FEATURE_ROSTER) {
+        features[id] = {
+            active:rng.next() < MAZE_FEATURE_CHANCES[id][tier],
+            required:rng.next() < MAZE_FEATURE_REQUIRED_CHANCE[id]
+        };
     }
-    const structuralRequired = structuralFeature === 'rotating-chamber' ||
-        (structuralFeature !== null && rng.next() < 0.6);
-    if (structuralRequired) law = null;
     const edgeLen = tessellation === 'sigma' ? SIGMA_EDGE_LEN : DELTA_EDGE_LEN;
     return {
         w, h, bias, loops, rooms, traps, fogFar, seed, tier, law,
-        structuralFeature, structuralRequired, tessellation, edgeLen, doorDistFactorOverride
+        features, tessellation, edgeLen, doorDistFactorOverride
     };
 }
 
@@ -947,13 +949,14 @@ function buildMaze(params, roomA, roomB, allFeatures) {
     grid.removeDeadEnds([0.35, 0.25, 0.15, 0.05][params.tier]);
 
     if (allFeatures || params.law?.id === 'space-fold') grid.addSpaceFold();
-    if (allFeatures || params.structuralFeature === 'one-way')
-        grid.placeOneWayGates(1, params.structuralRequired);
-    if (allFeatures || params.structuralFeature === 'spatial-loop')
-        grid.placeSpatialLoop(params.structuralRequired);
+    if (allFeatures || params.features['one-way'].active)
+        grid.placeOneWayGates(1, params.features['one-way'].required);
+    if (allFeatures || params.features['spatial-loop'].active)
+        grid.placeSpatialLoop(params.features['spatial-loop'].required);
+    // [layered-overlap placement lands here — Phase B]
     // Rotation is validated against every route-shortening topology already
     // present, including folds and spatial loops.
-    if (allFeatures || params.structuralFeature === 'rotating-chamber') grid.placeRotatingChamber();
+    if (allFeatures || params.features['rotating-chamber'].active) grid.placeRotatingChamber();
 
     grid.guidePath = grid.findPath();
     grid.placeTraps(params.traps, roomA, roomB);

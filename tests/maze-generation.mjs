@@ -4,12 +4,14 @@ import {
     EXTERIOR_HUB_CLEARANCE,
     buildDeltaLattice,
     buildSigmaLattice,
-    generateMaze
+    generateMaze,
+    getMazeParams
 } from '../maze/generation.js';
 import {
     DELTA_EDGE_LEN,
     DOOR_MIN_DIST_CELL_FRACTION,
     DOOR_MIN_DIST_FACTOR,
+    MAZE_FEATURE_ROSTER,
     SIGMA_EDGE_LEN
 } from '../maze/maze-data.js';
 
@@ -197,6 +199,53 @@ for (const tessellation of ['delta', 'sigma']) {
     }
 }
 
+const mixedStats = {};
+for (const tessellation of ['delta', 'sigma']) {
+    const stats = {multipleStructural:0, foldWithStructural:0, none:0};
+    for (let seed = 0; seed < 100; seed++) {
+        const masterSeed = `generation-mixed-${seed}`;
+        const paramsOnly = getMazeParams(masterSeed, '1.07', '5.03', tessellation);
+        assert.deepEqual(Object.keys(paramsOnly.features), MAZE_FEATURE_ROSTER,
+            `${tessellation} mixed seed ${seed} has the wrong feature roster`);
+
+        const args = [masterSeed, '1.07', '5.03', {tessellation, allFeatures:false}];
+        const first = generateMaze(...args);
+        const second = generateMaze(...args);
+        const {grid, params} = first;
+        assert.deepEqual(params, paramsOnly);
+        assert.equal(stableLayout(grid, params), stableLayout(second.grid, second.params),
+            `${tessellation} mixed seed ${seed} is not deterministic`);
+
+        const present = {
+            'one-way':grid.oneWayGates.length > 0,
+            'spatial-loop':Boolean(grid.spatialLoop),
+            'rotating-chamber':Boolean(grid.rotatingChamber)
+        };
+        // Layered-overlap has no grid representation until Phase B; its roll is inert here.
+        for (const id of Object.keys(present)) {
+            if (!params.features[id].active) assert.equal(present[id], false,
+                `${tessellation} mixed seed ${seed} spuriously placed ${id}`);
+        }
+        if (params.law === null) assert.equal(Boolean(grid.spaceFold), false,
+            `${tessellation} mixed seed ${seed} spuriously placed a space fold`);
+        for (const gate of grid.oneWayGates)
+            assert.equal(gate.required, params.features['one-way'].required);
+        if (grid.spatialLoop)
+            assert.equal(grid.spatialLoop.required, params.features['spatial-loop'].required);
+
+        const structuralCount = Object.values(present).filter(Boolean).length;
+        if (structuralCount >= 2) stats.multipleStructural++;
+        if (grid.spaceFold && structuralCount > 0) stats.foldWithStructural++;
+        if (!grid.spaceFold && structuralCount === 0) stats.none++;
+    }
+    assert.ok(stats.multipleStructural > 0,
+        `${tessellation} mixed corpus never placed multiple structural features`);
+    assert.ok(stats.foldWithStructural > 0,
+        `${tessellation} mixed corpus never combined a fold with a structural feature`);
+    assert.ok(stats.none > 0, `${tessellation} mixed corpus never produced a featureless maze`);
+    mixedStats[tessellation] = stats;
+}
+
 const fallbackStats = {};
 for (const tessellation of ['delta', 'sigma']) {
     const achieved = [];
@@ -243,4 +292,5 @@ for (const tessellation of ['delta', 'sigma']) {
 }
 
 console.log('maze generation invariants passed (200 seeds per tessellation; standard floor never relaxed)');
+console.log('mixed-mode feature stats (100 seeds per tessellation; 200 total):', mixedStats);
 console.log('forced rung-2 achieved distances:', fallbackStats);

@@ -137,6 +137,22 @@ function getTess(id) { return parseInt(id.split('.')[0]); }
 
 // Space folds may manifest anywhere, but remain more common within Space/Time.
 const DEFAULT_MAZE_LAW = Object.freeze({id:'space-fold', label:'SPACE FOLD', chance:0.22});
+// Roster order is the RNG draw-order contract. Future features append at the END, never the middle.
+const MAZE_FEATURE_ROSTER = Object.freeze([
+    'one-way', 'spatial-loop', 'layered-overlap', 'rotating-chamber'
+]);
+const MAZE_FEATURE_CHANCES = Object.freeze({
+    'one-way':Object.freeze([0.28, 0.36, 0.45, 0.55]),
+    'spatial-loop':Object.freeze([0.20, 0.26, 0.36, 0.48]),
+    'layered-overlap':Object.freeze([0.15, 0.25, 0.35, 0.50]),
+    'rotating-chamber':Object.freeze([0.16, 0.22, 0.30, 0.40])
+});
+const MAZE_FEATURE_REQUIRED_CHANCE = Object.freeze({
+    'one-way':0.6,
+    'spatial-loop':0.6,
+    'layered-overlap':0.6,
+    'rotating-chamber':0
+});
 const TESSERACT_LAWS = Object.freeze({
     5: Object.freeze({id:'space-fold', label:'SPACE FOLD', chance:0.6})
 });
@@ -193,6 +209,9 @@ export {
     DIR_ANGLES,
     getTess,
     DEFAULT_MAZE_LAW,
+    MAZE_FEATURE_ROSTER,
+    MAZE_FEATURE_CHANCES,
+    MAZE_FEATURE_REQUIRED_CHANCE,
     HUNTER_BASE_CHANCE,
     HUNTER_TESSERACT_CHANCE,
     HUNTER_SPEED_FACTOR,
