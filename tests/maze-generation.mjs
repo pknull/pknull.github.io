@@ -24,6 +24,9 @@ function assertLattice(lattice, expectedCells, edgeLen) {
     for (const cell of lattice.cells) {
         assert.equal(cell.vertices.length, cell.edges.length);
         assert.ok(Number.isFinite(cell.center.x) && Number.isFinite(cell.center.z));
+        assert.equal(cell.layer, null);
+        assert.equal(cell.layerRegion, null);
+        assert.equal(cell.twin, null);
         for (const edge of cell.edges) {
             const [a, b] = edge.segment;
             assert.ok(Math.hypot(b.x - a.x, b.z - a.z) > 1e-8,
@@ -57,7 +60,103 @@ function featureCells(grid) {
         grid.spaceFold?.a?.cell,
         grid.spaceFold?.b?.cell
     ]) if (cell) cells.add(cell);
+    for (const cell of grid.overlapRegion?.cellsA || []) cells.add(cell);
+    for (const cell of grid.overlapRegion?.cellsB || []) cells.add(cell);
     return cells;
+}
+
+function assertOverlapRegion(grid) {
+    const region = grid.overlapRegion;
+    if (!region) return;
+    assert.equal(region.cellsA.length, region.cellsB.length);
+    assert.ok(region.cellsA.length > 0);
+    const cellsA = new Set(region.cellsA);
+    const cellsB = new Set(region.cellsB);
+    const regionCells = new Set([...cellsA, ...cellsB]);
+    const cloneStart = grid.cells.length - region.cellsB.length;
+    assert.equal(regionCells.size, region.cellsA.length + region.cellsB.length,
+        'overlap layers must have disjoint cell identities');
+
+    for (let index = 0; index < region.cellsA.length; index++) {
+        const cellA = region.cellsA[index];
+        const cellB = region.cellsB[index];
+        assert.equal(cellB.id, cloneStart + index);
+        assert.equal(grid.cells[cloneStart + index], cellB);
+        assert.notEqual(cellA.id, cellB.id);
+        assert.equal(cellA.layer, 'a');
+        assert.equal(cellB.layer, 'b');
+        assert.equal(cellA.layerRegion, region);
+        assert.equal(cellB.layerRegion, region);
+        assert.equal(cellA.twin, cellB);
+        assert.equal(cellB.twin, cellA);
+        assert.deepEqual(cellA.center, cellB.center);
+        assert.equal(cellA.vertices.length, cellB.vertices.length);
+        for (let vertex = 0; vertex < cellA.vertices.length; vertex++)
+            assert.equal(cellA.vertices[vertex], cellB.vertices[vertex]);
+        for (let edge = 0; edge < cellA.edges.length; edge++) {
+            assert.equal(cellA.edges[edge].segment[0], cellB.edges[edge].segment[0]);
+            assert.equal(cellA.edges[edge].segment[1], cellB.edges[edge].segment[1]);
+            if (cellB.edges[edge].neighbor) {
+                assert.ok(cellsB.has(cellB.edges[edge].neighbor) ||
+                    region.portals.some(portal => portal.outsideEdge.reverse === cellB.edges[edge]));
+            } else {
+                assert.equal(cellB.edges[edge].hardClosed, true);
+            }
+        }
+    }
+
+    assert.ok(region.portals.length >= 2);
+    assert.deepEqual(new Set(region.portals.map(portal => portal.layer)), new Set(['a', 'b']));
+    const severed = new Set();
+    for (const portal of region.portals) {
+        assert.equal(portal.outsideEdge.cell, portal.outsideCell);
+        assert.equal(portal.outsideEdge.open, true);
+        assert.equal(portal.outsideEdge.neighbor, portal.vestibule);
+        assert.equal(portal.outsideEdge.reverse?.cell, portal.vestibule);
+        assert.equal(portal.outsideEdge.reverse?.reverse, portal.outsideEdge);
+        assert.equal(portal.vestibule.layer, portal.layer);
+        assert.equal(portal.severedEdge.cell, portal.vestibule.twin);
+        assert.equal(portal.severedEdge.open, false);
+        assert.equal(portal.severedEdge.hardClosed, true);
+        assert.equal(portal.severedEdge.neighbor, null);
+        assert.equal(portal.severedEdge.reverse, null);
+        assert.ok(!severed.has(portal.severedEdge), 'a severed edge may belong to only one portal');
+        severed.add(portal.severedEdge);
+    }
+
+    const reachedB = new Set([region.cellsB[0]]);
+    const queue = [region.cellsB[0]];
+    for (let cursor = 0; cursor < queue.length; cursor++) {
+        for (const edge of queue[cursor].edges) {
+            if (!edge.open || !cellsB.has(edge.neighbor) || reachedB.has(edge.neighbor)) continue;
+            reachedB.add(edge.neighbor);
+            queue.push(edge.neighbor);
+        }
+    }
+    assert.equal(reachedB.size, region.cellsB.length, 'layer B must be internally connected');
+
+    const occupied = [
+        ...grid.cells.filter(cell => cell.chamber || cell.trap),
+        ...grid.oneWayGates.flatMap(gate => [gate.from, gate.to]),
+        grid.rotatingChamber?.entry,
+        grid.rotatingChamber?.cell,
+        grid.rotatingChamber?.exit,
+        grid.spatialLoop?.a,
+        grid.spatialLoop?.b,
+        grid.spaceFold?.a?.cell,
+        grid.spaceFold?.b?.cell,
+        ...(grid.entranceDoorRoom?.cells || []),
+        ...(grid.exitDoorRoom?.cells || []),
+        grid.hunter?.lair
+    ].filter(Boolean);
+    for (const cell of occupied)
+        assert.ok(!regionCells.has(cell), `overlap region cell ${cell.id} is occupied by another feature`);
+
+    const cellA = region.cellsA[0];
+    assert.equal(grid.cellContainingPoint(cellA.center), cellA);
+    region.activeLayer = 'b';
+    assert.equal(grid.cellContainingPoint(cellA.center), cellA.twin);
+    region.activeLayer = 'a';
 }
 
 function assertDoorRoom(grid, room, kind, features) {
@@ -133,6 +232,13 @@ function stableLayout(grid, params) {
         loop:grid.spatialLoop && [grid.spatialLoop.a.id, grid.spatialLoop.b.id],
         fold:grid.spaceFold && [grid.spaceFold.a.cell.id, grid.spaceFold.a.edge.index,
             grid.spaceFold.b.cell.id, grid.spaceFold.b.edge.index],
+        region:grid.overlapRegion && {
+            cellsA:ids(grid.overlapRegion.cellsA),
+            cellsB:ids(grid.overlapRegion.cellsB),
+            portals:grid.overlapRegion.portals.map(portal =>
+                [portal.outsideCell.id, portal.outsideEdge.index, portal.layer]),
+            vestibuleBreaks:grid.overlapRegion.vestibuleBreaks
+        },
         hunter:grid.hunter?.lair.id ?? null
     });
 }
@@ -140,6 +246,10 @@ function stableLayout(grid, params) {
 assertLattice(buildDeltaLattice(4, 3, DELTA_EDGE_LEN), 24, DELTA_EDGE_LEN);
 assertLattice(buildSigmaLattice(4, 3, SIGMA_EDGE_LEN), 12, SIGMA_EDGE_LEN);
 
+const overlapStats = {
+    delta:{attempted:0, placed:0, totalBreaks:0, maxBreaks:0, zeroBreaks:0},
+    sigma:{attempted:0, placed:0, totalBreaks:0, maxBreaks:0, zeroBreaks:0}
+};
 for (const tessellation of ['delta', 'sigma']) {
     for (let seed = 0; seed < 200; seed++) {
         const args = [`generation-invariant-${seed}`, '1.07', '5.03', {tessellation, allFeatures:true}];
@@ -153,9 +263,20 @@ for (const tessellation of ['delta', 'sigma']) {
             `${tessellation} seed ${seed} did not honor allFeatures`);
         if (params.traps > 0) assert.ok(grid.cells.some(cell => cell.trap),
             `${tessellation} seed ${seed} omitted requested traps`);
-        assert.equal(grid.cells.length, tessellation === 'delta' ? 2 * grid.w * grid.h : grid.w * grid.h);
+        const baseCells = tessellation === 'delta' ? 2 * grid.w * grid.h : grid.w * grid.h;
+        assert.equal(grid.cells.length, baseCells + (grid.overlapRegion?.cellsB.length ?? 0));
         assert.equal(grid.reachableFrom(grid.entranceCell, {respectOneWay:false}).size, grid.cells.length,
             `${tessellation} seed ${seed} leaves unreachable cells`);
+        assertOverlapRegion(grid);
+        const region = grid.overlapRegion;
+        overlapStats[tessellation].attempted++;
+        if (region) {
+            const breaks = region.vestibuleBreaks.length;
+            overlapStats[tessellation].placed++;
+            overlapStats[tessellation].totalBreaks += breaks;
+            overlapStats[tessellation].maxBreaks = Math.max(overlapStats[tessellation].maxBreaks, breaks);
+            if (breaks === 0) overlapStats[tessellation].zeroBreaks++;
+        }
 
         const path = grid.findPath(grid.entranceCell, grid.exitCell, {respectOneWay:true});
         assert.ok(path.length > 0, `${tessellation} seed ${seed} has no directed entrance-exit path`);
@@ -163,10 +284,10 @@ for (const tessellation of ['delta', 'sigma']) {
             `${tessellation} seed ${seed} violates the door distance floor`);
         const nominalFloor = Math.max(
             Math.ceil(DOOR_MIN_DIST_FACTOR * (grid.w + grid.h)),
-            Math.ceil(DOOR_MIN_DIST_CELL_FRACTION * grid.cells.length)
+            Math.ceil(DOOR_MIN_DIST_CELL_FRACTION * baseCells)
         );
         const epsilon = 1e-12;
-        assert.ok(grid.doorFloor >= DOOR_MIN_DIST_CELL_FRACTION * grid.cells.length * (1 - epsilon),
+        assert.ok(grid.doorFloor >= DOOR_MIN_DIST_CELL_FRACTION * baseCells * (1 - epsilon),
             `${tessellation} seed ${seed} does not apply the area-based door distance floor`);
         if (!grid.doorDistanceRelaxed) assert.equal(grid.doorFloor, nominalFloor);
         assert.equal(grid.doorDistanceRelaxed, false,
@@ -219,9 +340,9 @@ for (const tessellation of ['delta', 'sigma']) {
         const present = {
             'one-way':grid.oneWayGates.length > 0,
             'spatial-loop':Boolean(grid.spatialLoop),
+            'layered-overlap':Boolean(grid.overlapRegion),
             'rotating-chamber':Boolean(grid.rotatingChamber)
         };
-        // Layered-overlap has no grid representation until Phase B; its roll is inert here.
         for (const id of Object.keys(present)) {
             if (!params.features[id].active) assert.equal(present[id], false,
                 `${tessellation} mixed seed ${seed} spuriously placed ${id}`);
@@ -232,6 +353,7 @@ for (const tessellation of ['delta', 'sigma']) {
             assert.equal(gate.required, params.features['one-way'].required);
         if (grid.spatialLoop)
             assert.equal(grid.spatialLoop.required, params.features['spatial-loop'].required);
+        assertOverlapRegion(grid);
 
         const structuralCount = Object.values(present).filter(Boolean).length;
         if (structuralCount >= 2) stats.multipleStructural++;
@@ -271,6 +393,7 @@ for (const tessellation of ['delta', 'sigma']) {
             `${tessellation} fallback seed ${seed} did not relax an unreachable nominal floor`);
         assert.equal(stableLayout(grid, params), stableLayout(second.grid, second.params),
             `${tessellation} fallback seed ${seed} is not deterministic`);
+        assertOverlapRegion(grid);
 
         const features = featureCells(grid);
         assertDoorRoom(grid, grid.entranceDoorRoom, 'entrance', features);
@@ -291,6 +414,13 @@ for (const tessellation of ['delta', 'sigma']) {
     };
 }
 
+const overlapAttempted = Object.values(overlapStats).reduce((sum, stats) => sum + stats.attempted, 0);
+const overlapPlaced = Object.values(overlapStats).reduce((sum, stats) => sum + stats.placed, 0);
+assert.ok(overlapPlaced / overlapAttempted >= 0.60,
+    `layered overlap placement rate ${overlapPlaced}/${overlapAttempted} is below 60%`);
+
 console.log('maze generation invariants passed (200 seeds per tessellation; standard floor never relaxed)');
+console.log('layered-overlap allFeatures stats:', overlapStats,
+    `aggregate=${overlapPlaced}/${overlapAttempted} (${(100 * overlapPlaced / overlapAttempted).toFixed(1)}%)`);
 console.log('mixed-mode feature stats (100 seeds per tessellation; 200 total):', mixedStats);
 console.log('forced rung-2 achieved distances:', fallbackStats);

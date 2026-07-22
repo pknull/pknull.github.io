@@ -187,6 +187,11 @@ const DOOR_MIN_DIST_FACTOR = 1.5;
 const DOOR_MIN_DIST_CELL_FRACTION = 0.30;
 const DELTA_TIER_RANGES = Object.freeze([[8,9],[10,12],[13,15],[16,18]]);
 const SIGMA_TIER_RANGES = Object.freeze([[10,12],[13,16],[17,20],[21,24]]);
+const OVERLAP_REGION_SIZE = Object.freeze({
+    delta:[[10,12],[12,14],[14,18],[16,20]],
+    sigma:[[6,7],[7,8],[8,10],[10,12]]
+});
+const OVERLAP_ATTEMPTS = 12;
 const WALL_H = 3;
 const WALL_T = 0.15;
 const EYE_H = 1.6;
@@ -227,6 +232,8 @@ export {
     DOOR_MIN_DIST_CELL_FRACTION,
     DELTA_TIER_RANGES,
     SIGMA_TIER_RANGES,
+    OVERLAP_REGION_SIZE,
+    OVERLAP_ATTEMPTS,
     WALL_H,
     WALL_T,
     EYE_H,

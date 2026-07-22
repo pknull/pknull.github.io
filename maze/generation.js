@@ -11,6 +11,8 @@ import {
     MAZE_FEATURE_REQUIRED_CHANCE,
     MAZE_FEATURE_ROSTER,
     MAZE_TESSELLATION,
+    OVERLAP_ATTEMPTS,
+    OVERLAP_REGION_SIZE,
     SIGMA_EDGE_LEN,
     SIGMA_TIER_RANGES,
     getTess,
@@ -81,7 +83,10 @@ function makeCell(id, vertices, latticeX, latticeY) {
         trap:false,
         trapDest:null,
         rotating:false,
-        doorRoom:null
+        doorRoom:null,
+        layer:null,
+        layerRegion:null,
+        twin:null
     };
 }
 
@@ -214,6 +219,7 @@ class MazeGrid {
         this.oneWayGates = [];
         this.rotatingChamber = null;
         this.spatialLoop = null;
+        this.overlapRegion = null;
         this.guidePath = null;
         this.hunter = null;
         this.doorFloor = null;
@@ -248,7 +254,10 @@ class MazeGrid {
 
     cellContainingPoint(x, z) {
         const point = typeof x === 'object' ? x : {x, z};
-        return this.cells.find(cell => pointInPolygon(point, cell.vertices)) || null;
+        return this.cells.find(cell => {
+            if (cell.layerRegion && cell.layer !== cell.layerRegion.activeLayer) return false;
+            return pointInPolygon(point, cell.vertices);
+        }) || null;
     }
 
     eligibleEdges(cell, unvisitedOnly = false) {
@@ -352,9 +361,10 @@ class MazeGrid {
     }
 
     doorDistanceFloor() {
+        const physicalCellCount = this.cells.length - (this.overlapRegion?.cellsB.length ?? 0);
         return Math.max(
             Math.ceil((this.doorDistFactorOverride ?? DOOR_MIN_DIST_FACTOR) * (this.w + this.h)),
-            Math.ceil(DOOR_MIN_DIST_CELL_FRACTION * this.cells.length)
+            Math.ceil(DOOR_MIN_DIST_CELL_FRACTION * physicalCellCount)
         );
     }
 
@@ -422,6 +432,8 @@ class MazeGrid {
             this.spaceFold?.a?.cell,
             this.spaceFold?.b?.cell
         ]) if (cell) cells.add(cell);
+        for (const cell of this.overlapRegion?.cellsA || []) cells.add(cell);
+        for (const cell of this.overlapRegion?.cellsB || []) cells.add(cell);
         return cells;
     }
 
@@ -621,6 +633,316 @@ class MazeGrid {
         return false;
     }
 
+    overlapReachable(cells, start) {
+        const allowed = new Set(cells);
+        const reached = new Set();
+        if (!start || !allowed.has(start)) return reached;
+        const queue = [start];
+        reached.add(start);
+        for (let cursor = 0; cursor < queue.length; cursor++) {
+            for (const edge of queue[cursor].edges) {
+                if (!edge.open || !allowed.has(edge.neighbor) || reached.has(edge.neighbor)) continue;
+                reached.add(edge.neighbor);
+                queue.push(edge.neighbor);
+            }
+        }
+        return reached;
+    }
+
+    repairOverlapConnectivity(cellsB, root, layersRng) {
+        let reached = this.overlapReachable(cellsB, root);
+        while (reached.size < cellsB.length) {
+            const bridges = [];
+            for (const cell of reached) {
+                for (const edge of cell.edges) {
+                    if (!edge.neighbor || edge.neighbor.layer !== 'b' || reached.has(edge.neighbor) ||
+                        edge.open || edge.hardClosed) continue;
+                    bridges.push(edge);
+                }
+            }
+            if (!bridges.length) return false;
+            this.setEdgeOpen(layersRng.pick(bridges), true);
+            reached = this.overlapReachable(cellsB, root);
+        }
+        return true;
+    }
+
+    beginOverlapCandidate(cellsA, portalSpecs, layersRng) {
+        const originalLength = this.cells.length;
+        const previousRegion = this.overlapRegion;
+        const previousDoorFloor = this.doorFloor;
+        const cellStates = cellsA.map(cell => ({
+            cell,
+            layer:cell.layer,
+            layerRegion:cell.layerRegion,
+            twin:cell.twin
+        }));
+        const touchedEdges = new Set();
+        for (const portal of portalSpecs) {
+            touchedEdges.add(portal.edgeA);
+            touchedEdges.add(portal.outsideEdge);
+        }
+        const edgeStates = [...touchedEdges].map(edge => ({
+            edge,
+            neighbor:edge.neighbor,
+            reverse:edge.reverse,
+            open:edge.open,
+            hardClosed:edge.hardClosed
+        }));
+        const rollback = () => {
+            this.cells.length = originalLength;
+            for (const state of edgeStates) {
+                state.edge.neighbor = state.neighbor;
+                state.edge.reverse = state.reverse;
+                state.edge.open = state.open;
+                state.edge.hardClosed = state.hardClosed;
+            }
+            for (const state of cellStates) {
+                state.cell.layer = state.layer;
+                state.cell.layerRegion = state.layerRegion;
+                state.cell.twin = state.twin;
+            }
+            this.overlapRegion = previousRegion;
+            this.doorFloor = previousDoorFloor;
+        };
+
+        try {
+            const cellsB = cellsA.map((cellA, index) => {
+                const cellB = makeCell(originalLength + index, [...cellA.vertices], cellA.x, cellA.y);
+                cellB.layer = 'b';
+                return cellB;
+            });
+            const twinByA = new Map(cellsA.map((cell, index) => [cell, cellsB[index]]));
+            const footprint = new Set(cellsA);
+            const bbox = cellsA.reduce((box, cell) => {
+                for (const point of cell.vertices) {
+                    box.minX = Math.min(box.minX, point.x);
+                    box.maxX = Math.max(box.maxX, point.x);
+                    box.minZ = Math.min(box.minZ, point.z);
+                    box.maxZ = Math.max(box.maxZ, point.z);
+                }
+                return box;
+            }, {minX:Infinity, maxX:-Infinity, minZ:Infinity, maxZ:-Infinity});
+            bbox.width = bbox.maxX - bbox.minX;
+            bbox.height = bbox.maxZ - bbox.minZ;
+            const region = {
+                cellsA,
+                cellsB,
+                portals:[],
+                bbox,
+                activeLayer:'a',
+                vestibuleBreaks:[]
+            };
+
+            for (let cellIndex = 0; cellIndex < cellsA.length; cellIndex++) {
+                const cellA = cellsA[cellIndex];
+                const cellB = cellsB[cellIndex];
+                cellA.layer = 'a';
+                cellA.layerRegion = region;
+                cellA.twin = cellB;
+                cellB.layerRegion = region;
+                cellB.twin = cellA;
+                cellB.edges = cellA.edges.map(edgeA => ({
+                    index:edgeA.index,
+                    cell:cellB,
+                    neighbor:null,
+                    open:false,
+                    segment:[edgeA.segment[0], edgeA.segment[1]],
+                    reverse:null,
+                    orientation:edgeA.orientation,
+                    oneWayBlocked:false,
+                    hardClosed:!footprint.has(edgeA.neighbor),
+                    forcedOpen:false
+                }));
+            }
+            for (let cellIndex = 0; cellIndex < cellsA.length; cellIndex++) {
+                const cellA = cellsA[cellIndex];
+                const cellB = cellsB[cellIndex];
+                for (const edgeA of cellA.edges) {
+                    const neighborB = twinByA.get(edgeA.neighbor);
+                    if (!neighborB) continue;
+                    const edgeB = cellB.edges[edgeA.index];
+                    edgeB.neighbor = neighborB;
+                    edgeB.reverse = neighborB.edges[edgeA.reverse.index];
+                }
+            }
+
+            this.cells.push(...cellsB);
+            for (const spec of portalSpecs) {
+                const cellB = twinByA.get(spec.cellA);
+                const edgeB = cellB.edges[spec.edgeA.index];
+                let vestibule;
+                let severedEdge;
+                if (spec.layer === 'a') {
+                    vestibule = spec.cellA;
+                    severedEdge = edgeB;
+                } else {
+                    vestibule = cellB;
+                    severedEdge = spec.edgeA;
+                    spec.outsideEdge.neighbor = cellB;
+                    spec.outsideEdge.reverse = edgeB;
+                    spec.outsideEdge.open = true;
+                    edgeB.neighbor = spec.outsideCell;
+                    edgeB.reverse = spec.outsideEdge;
+                    edgeB.open = true;
+                    edgeB.hardClosed = false;
+                    spec.edgeA.neighbor = null;
+                    spec.edgeA.reverse = null;
+                    spec.edgeA.open = false;
+                    spec.edgeA.hardClosed = true;
+                }
+                region.portals.push({
+                    segment:spec.edgeA.segment,
+                    outsideCell:spec.outsideCell,
+                    outsideEdge:spec.outsideEdge,
+                    layer:spec.layer,
+                    vestibule,
+                    severedEdge
+                });
+            }
+            this.overlapRegion = region;
+
+            const root = region.portals.find(portal => portal.layer === 'b')?.vestibule;
+            if (!root) {
+                rollback();
+                return null;
+            }
+            const visited = new Set([root]);
+            const stack = [root];
+            while (stack.length) {
+                const current = stack[stack.length - 1];
+                const candidates = current.edges.filter(edge =>
+                    edge.neighbor?.layerRegion === region && edge.neighbor.layer === 'b' &&
+                    !visited.has(edge.neighbor));
+                if (!candidates.length) {
+                    stack.pop();
+                    continue;
+                }
+                const chosen = layersRng.pick(candidates);
+                this.setEdgeOpen(chosen, true);
+                visited.add(chosen.neighbor);
+                stack.push(chosen.neighbor);
+            }
+            if (visited.size !== cellsB.length) {
+                rollback();
+                return null;
+            }
+
+            for (let portalIndex = 0; portalIndex < portalSpecs.length; portalIndex++) {
+                const cellA = portalSpecs[portalIndex].cellA;
+                const cellB = twinByA.get(cellA);
+                for (const edgeA of cellA.edges) {
+                    if (!footprint.has(edgeA.neighbor)) continue;
+                    this.setEdgeOpen(cellB.edges[edgeA.index], edgeA.open);
+                }
+                if (this.overlapReachable(cellsB, root).size !== cellsB.length) {
+                    if (!this.repairOverlapConnectivity(cellsB, root, layersRng)) {
+                        rollback();
+                        return null;
+                    }
+                    region.vestibuleBreaks.push(portalIndex);
+                }
+            }
+            if (this.doorDistanceRelaxed) {
+                const achievedPath = this.findPath(this.entranceCell, this.exitCell, {respectOneWay:false});
+                if (!achievedPath.length) {
+                    rollback();
+                    return null;
+                }
+                this.doorFloor = achievedPath.length - 1;
+            }
+            return {region, rollback};
+        } catch {
+            rollback();
+            return null;
+        }
+    }
+
+    overlapCandidateValid() {
+        if (this.reachableFrom(this.entranceCell).size !== this.cells.length ||
+            !this.meetsDoorDistance()) return false;
+        const chamber = this.rotatingChamber;
+        if (!chamber || chamber.activated) return true;
+        const previous = chamber.cell.edges.map(edge => edge.open);
+        if (!this.activateRotatingChamber()) return false;
+        for (let index = 0; index < chamber.cell.edges.length; index++)
+            this.setEdgeOpen(chamber.cell.edges[index], previous[index]);
+        chamber.activated = false;
+        return true;
+    }
+
+    placeOverlapRegion(layersRng) {
+        if (!layersRng || this.overlapRegion) return false;
+        const [minimumSize, targetSize] = OVERLAP_REGION_SIZE[this.tessellation][this.tier ?? 0];
+        const reserved = this.featureCells();
+        const candidates = layersRng.shuffle(this.cells.filter(cell =>
+            !reserved.has(cell) && !cell.chamber && !cell.doorRoom &&
+            cell.edges.every(edge => edge.neighbor)));
+        const eligible = new Set(candidates);
+        let attempts = 0;
+        let passing = 0;
+        let best = null;
+
+        for (const seed of candidates) {
+            if (attempts++ >= OVERLAP_ATTEMPTS || passing >= 3) break;
+            const cellsA = [seed];
+            const footprint = new Set(cellsA);
+            for (let cursor = 0; cursor < cellsA.length && cellsA.length < targetSize; cursor++) {
+                for (const edge of layersRng.shuffle(cellsA[cursor].edges)) {
+                    const next = edge.neighbor;
+                    if (!next || footprint.has(next) || !eligible.has(next)) continue;
+                    footprint.add(next);
+                    cellsA.push(next);
+                    if (cellsA.length >= targetSize) break;
+                }
+            }
+            if (cellsA.length < minimumSize) continue;
+
+            const portalCandidates = [];
+            for (const cellA of cellsA) {
+                for (const edgeA of cellA.edges) {
+                    if (footprint.has(edgeA.neighbor) || !edgeA.open || !edgeA.reverse) continue;
+                    portalCandidates.push({
+                        cellA,
+                        edgeA,
+                        outsideCell:edgeA.neighbor,
+                        outsideEdge:edgeA.reverse
+                    });
+                }
+            }
+            if (portalCandidates.length < 2) continue;
+            const portalSpecs = layersRng.shuffle(portalCandidates).map((portal, index) => ({
+                ...portal,
+                layer:index === 0 ? 'a' : index === 1 ? 'b' : layersRng.next() < 0.5 ? 'a' : 'b'
+            }));
+            const applicationRngState = layersRng.state;
+            const transaction = this.beginOverlapCandidate(cellsA, portalSpecs, layersRng);
+            if (!transaction) continue;
+            const valid = this.overlapCandidateValid();
+            if (valid) {
+                passing++;
+                const score = transaction.region.vestibuleBreaks.length;
+                if (!best || score < best.score || (score === best.score && seed.id < best.seedId)) {
+                    best = {cellsA, portalSpecs, applicationRngState, score, seedId:seed.id};
+                }
+            }
+            transaction.rollback();
+        }
+
+        if (!best) {
+            this.overlapRegion = null;
+            return false;
+        }
+        layersRng.state = best.applicationRngState;
+        const transaction = this.beginOverlapCandidate(best.cellsA, best.portalSpecs, layersRng);
+        if (!transaction || !this.overlapCandidateValid()) {
+            transaction?.rollback();
+            this.overlapRegion = null;
+            return false;
+        }
+        return true;
+    }
+
     placeTraps(count, srcRoom, dstRoom) {
         const destPool = scatterPool(srcRoom, dstRoom);
         if (!destPool.length) return;
@@ -812,6 +1134,7 @@ function makePreparedGrid(params, tessellation) {
             ? buildSigmaLattice(w, h, SIGMA_EDGE_LEN)
             : buildDeltaLattice(w, h, DELTA_EDGE_LEN);
         const grid = new MazeGrid(lattice, new Rng(params.seed));
+        grid.tier = params.tier;
         grid.doorDistFactorOverride = params.doorDistFactorOverride;
         return grid;
     };
@@ -953,10 +1276,11 @@ function buildMaze(params, roomA, roomB, allFeatures) {
         grid.placeOneWayGates(1, params.features['one-way'].required);
     if (allFeatures || params.features['spatial-loop'].active)
         grid.placeSpatialLoop(params.features['spatial-loop'].required);
-    // [layered-overlap placement lands here — Phase B]
-    // Rotation is validated against every route-shortening topology already
-    // present, including folds and spatial loops.
+    // Keep rotation last among the pre-overlap route-shorteners. Overlap
+    // candidates revalidate both the resting and activated wall patterns.
     if (allFeatures || params.features['rotating-chamber'].active) grid.placeRotatingChamber();
+    if (allFeatures || params.features['layered-overlap'].active)
+        grid.placeOverlapRegion(new Rng(fnv1a(params.seed + '|layers')));
 
     grid.guidePath = grid.findPath();
     grid.placeTraps(params.traps, roomA, roomB);
