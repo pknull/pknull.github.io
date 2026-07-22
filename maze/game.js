@@ -483,7 +483,7 @@ function buildHub(roomId, {preview = false, openDirection = null} = {}) {
                 map: getDoorTexture(getTess(dest), dt.color),
                 color: GRUVBOX.fg,
                 emissive: doorColor,
-                emissiveIntensity: closerToEntryway ? 0.2 : 0.07,
+                emissiveIntensity: !hardMode && closerToEntryway ? 0.2 : 0.07,
                 metalness: 0.35,
                 roughness: 0.72,
                 side: THREE.DoubleSide
@@ -550,18 +550,19 @@ function buildHub(roomId, {preview = false, openDirection = null} = {}) {
     // Toggle portal
     const togDest = roomToggles[roomId];
     if (togDest) {
+        const portalAdvances = !hardMode && guideNext[roomId] === togDest;
         const portalColor = isControl ? GRUVBOX.aqua : GRUVBOX.yellow;
         const torus = new THREE.TorusGeometry(1.2, 0.06, 8, 32);
-        const torusMat = new THREE.MeshBasicMaterial({color: portalColor, transparent: true, opacity: 0.5});
+        const torusMat = new THREE.MeshBasicMaterial({color: portalColor, transparent: true, opacity: portalAdvances ? 0.9 : 0.5});
         const portal = new THREE.Mesh(torus, torusMat);
         portal.rotation.x = -Math.PI / 2;
         portal.position.y = 0.05;
         group.add(portal);
-        const pLight = new THREE.PointLight(portalColor, 0.6, 6);
+        const pLight = new THREE.PointLight(portalColor, portalAdvances ? 1.0 : 0.6, 6);
         pLight.position.set(0, 0.5, 0);
         group.add(pLight);
         const inner = new THREE.TorusGeometry(0.6, 0.03, 8, 24);
-        const innerMat = new THREE.MeshBasicMaterial({color: portalColor, transparent: true, opacity: 0.3});
+        const innerMat = new THREE.MeshBasicMaterial({color: portalColor, transparent: true, opacity: portalAdvances ? 0.55 : 0.3});
         const innerMesh = new THREE.Mesh(inner, innerMat);
         innerMesh.rotation.x = -Math.PI / 2;
         innerMesh.position.y = 0.04;
