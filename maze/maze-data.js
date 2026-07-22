@@ -168,8 +168,9 @@ const DELTA_EDGE_LEN = 3.6;
 const SIGMA_EDGE_LEN = 2.4;
 const EDGE_LEN = MAZE_TESSELLATION === 'delta' ? DELTA_EDGE_LEN : SIGMA_EDGE_LEN;
 const DOOR_MIN_DIST_FACTOR = 1.5;
-const DELTA_TIER_RANGES = Object.freeze([[6,7],[8,9],[11,12],[13,14]]);
-const SIGMA_TIER_RANGES = Object.freeze([[8,10],[10,14],[14,18],[18,20]]);
+const DOOR_MIN_DIST_CELL_FRACTION = 0.30;
+const DELTA_TIER_RANGES = Object.freeze([[8,9],[10,12],[13,15],[16,18]]);
+const SIGMA_TIER_RANGES = Object.freeze([[10,12],[13,16],[17,20],[21,24]]);
 const WALL_H = 3;
 const WALL_T = 0.15;
 const EYE_H = 1.6;
@@ -204,6 +205,7 @@ export {
     SIGMA_EDGE_LEN,
     EDGE_LEN,
     DOOR_MIN_DIST_FACTOR,
+    DOOR_MIN_DIST_CELL_FRACTION,
     DELTA_TIER_RANGES,
     SIGMA_TIER_RANGES,
     WALL_H,

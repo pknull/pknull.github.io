@@ -8,6 +8,7 @@ import {
 } from '../maze/generation.js';
 import {
     DELTA_EDGE_LEN,
+    DOOR_MIN_DIST_CELL_FRACTION,
     DOOR_MIN_DIST_FACTOR,
     SIGMA_EDGE_LEN
 } from '../maze/maze-data.js';
@@ -158,7 +159,13 @@ for (const tessellation of ['delta', 'sigma']) {
         assert.ok(path.length > 0, `${tessellation} seed ${seed} has no directed entrance-exit path`);
         assert.ok(path.length - 1 >= grid.doorFloor,
             `${tessellation} seed ${seed} violates the door distance floor`);
-        const nominalFloor = Math.ceil(DOOR_MIN_DIST_FACTOR * (grid.w + grid.h));
+        const nominalFloor = Math.max(
+            Math.ceil(DOOR_MIN_DIST_FACTOR * (grid.w + grid.h)),
+            Math.ceil(DOOR_MIN_DIST_CELL_FRACTION * grid.cells.length)
+        );
+        const epsilon = 1e-12;
+        assert.ok(grid.doorFloor >= DOOR_MIN_DIST_CELL_FRACTION * grid.cells.length * (1 - epsilon),
+            `${tessellation} seed ${seed} does not apply the area-based door distance floor`);
         if (!grid.doorDistanceRelaxed) assert.equal(grid.doorFloor, nominalFloor);
         assert.equal(grid.doorDistanceRelaxed, false,
             `${tessellation} seed ${seed} unexpectedly relaxed the door distance floor`);

@@ -2,6 +2,7 @@ import {
     DEFAULT_MAZE_LAW,
     DELTA_EDGE_LEN,
     DELTA_TIER_RANGES,
+    DOOR_MIN_DIST_CELL_FRACTION,
     DOOR_MIN_DIST_FACTOR,
     HUNTER_BASE_CHANCE,
     HUNTER_TESSERACT_CHANCE,
@@ -348,7 +349,10 @@ class MazeGrid {
     }
 
     doorDistanceFloor() {
-        return Math.ceil((this.doorDistFactorOverride ?? DOOR_MIN_DIST_FACTOR) * (this.w + this.h));
+        return Math.max(
+            Math.ceil((this.doorDistFactorOverride ?? DOOR_MIN_DIST_FACTOR) * (this.w + this.h)),
+            Math.ceil(DOOR_MIN_DIST_CELL_FRACTION * this.cells.length)
+        );
     }
 
     meetsDoorDistance() {
@@ -912,7 +916,7 @@ function getMazeParams(masterSeed, roomA, roomB, tessellation = MAZE_TESSELLATIO
     const [gMin, gMax] = ranges[tier];
     const w = rng.nextInt(gMin, gMax);
     const h = rng.nextInt(gMin, gMax);
-    const bias = 0.1 + rng.next() * 0.8;
+    const bias = 0.1 + rng.next() * 0.5;
     const loops = rng.next() * 0.15;
     const rooms = [rng.nextInt(0,1), rng.nextInt(1,2), rng.nextInt(2,3), rng.nextInt(3,4)][tier];
     const traps = [0, rng.nextInt(0,1), rng.nextInt(1,2), rng.nextInt(2,3)][tier];
@@ -920,13 +924,13 @@ function getMazeParams(masterSeed, roomA, roomB, tessellation = MAZE_TESSELLATIO
     const availableLaw = getTesseractLaw(roomA);
     let law = rng.next() < availableLaw.chance ? availableLaw : null;
     let structuralFeature = null;
-    if (rng.next() < [0.22, 0.36, 0.52, 0.68][tier]) {
+    if (rng.next() < [0.45, 0.60, 0.75, 0.90][tier]) {
         const featureRoll = rng.next();
         structuralFeature = featureRoll < 0.44 ? 'one-way'
             : featureRoll < 0.7 ? 'rotating-chamber' : 'spatial-loop';
     }
     const structuralRequired = structuralFeature === 'rotating-chamber' ||
-        (structuralFeature !== null && rng.next() < 0.4);
+        (structuralFeature !== null && rng.next() < 0.6);
     if (structuralRequired) law = null;
     const edgeLen = tessellation === 'sigma' ? SIGMA_EDGE_LEN : DELTA_EDGE_LEN;
     return {
@@ -940,7 +944,7 @@ function buildMaze(params, roomA, roomB, allFeatures) {
     const types = ['empty','empty','lore','nav'];
     grid.placeChambers(params.rooms, types);
     grid.addLoops(params.loops);
-    grid.removeDeadEnds([0.7, 0.5, 0.3, 0.1][params.tier]);
+    grid.removeDeadEnds([0.35, 0.25, 0.15, 0.05][params.tier]);
 
     if (allFeatures || params.law?.id === 'space-fold') grid.addSpaceFold();
     if (allFeatures || params.structuralFeature === 'one-way')
