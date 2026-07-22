@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
+import assert from 'node:assert/strict';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { createReadStream, statSync } from 'node:fs';
 import { createServer } from 'node:http';
@@ -109,6 +110,33 @@ async function waitFor(session, expression, description, timeout = TIMEOUT_MS) {
     throw new Error(`Timed out waiting for ${description}`);
 }
 
+async function readCameraPosition(session) {
+    const group = 'maze-smoke-camera';
+    try {
+        const prototype = await session.call('Runtime.evaluate', {
+            expression: `(async () => (await import('three')).PerspectiveCamera.prototype)()`,
+            awaitPromise: true,
+            objectGroup: group
+        });
+        const instances = await session.call('Runtime.queryObjects', {
+            prototypeObjectId: prototype.result.objectId,
+            objectGroup: group
+        });
+        const position = await session.call('Runtime.callFunctionOn', {
+            objectId: instances.objects.objectId,
+            functionDeclaration: `function() {
+                const camera = this.find(value => value?.isPerspectiveCamera);
+                return camera ? {x: camera.position.x, y: camera.position.y, z: camera.position.z} : null;
+            }`,
+            returnByValue: true
+        });
+        assert.ok(position.result.value, 'Perspective camera was not found');
+        return position.result.value;
+    } finally {
+        await session.call('Runtime.releaseObjectGroup', {objectGroup: group});
+    }
+}
+
 async function run() {
     const server = await startStaticServer();
     const address = server.address();
@@ -176,6 +204,19 @@ async function run() {
 
         if (errors.length) throw new Error(`JavaScript errors during initialization:\n${errors.join('\n')}`);
 
+        const frozenPrototypes = await session.call('Runtime.evaluate', {
+            expression: `(async () => {
+                const T = await import('three');
+                return Object.isFrozen(T.Object3D.prototype)
+                    && Object.isFrozen(T.Vector3.prototype)
+                    && Object.isFrozen(T.Euler.prototype)
+                    && Object.isFrozen(T.PerspectiveCamera.prototype);
+            })()`,
+            returnByValue: true,
+            awaitPromise: true
+        });
+        assert.equal(frozenPrototypes.result.value, true, 'Three.js gameplay prototypes must be frozen');
+
         await session.call('Input.dispatchMouseEvent', {
             type: 'mousePressed', x: state.x, y: state.y, button: 'left', clickCount: 1
         });
@@ -186,8 +227,29 @@ async function run() {
             `document.getElementById('blocker').classList.contains('hidden') && document.pointerLockElement === document.body`,
             'entry interaction', 10_000);
 
+        const positionBeforeSyntheticInput = await readCameraPosition(session);
+        await session.call('Runtime.evaluate', {
+            expression: `(async () => {
+                document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyW'}));
+                await new Promise(resolveFrames => {
+                    let frames = 0;
+                    const nextFrame = () => {
+                        frames++;
+                        if (frames === 6) resolveFrames();
+                        else requestAnimationFrame(nextFrame);
+                    };
+                    requestAnimationFrame(nextFrame);
+                });
+                document.dispatchEvent(new KeyboardEvent('keyup', {code: 'KeyW'}));
+            })()`,
+            awaitPromise: true
+        });
+        const positionAfterSyntheticInput = await readCameraPosition(session);
+        assert.deepEqual(positionAfterSyntheticInput, positionBeforeSyntheticInput,
+            'Synthetic keyboard input must not move the player');
+
         if (errors.length) throw new Error(`JavaScript errors after entry:\n${errors.join('\n')}`);
-        console.log(`Maze smoke passed: ${state.seed}; entry acquired pointer lock.`);
+        console.log(`Maze smoke passed: ${state.seed}; prototypes frozen, synthetic input rejected, entry acquired pointer lock.`);
     } finally {
         session?.close();
         server.close();

@@ -30,6 +30,33 @@ import {
 } from './maze-data.js';
 import { Rng, fnv1a, generateMaze } from './generation.js';
 
+// The import map shares the three.js module instance with the console, so
+// prototype patches there would reach our objects (issue #4). Frozen, the
+// patches silently no-op. Preserve Three.js's deliberate prototype writes:
+// Vector3 resets its type marker, and Euler shadows its default callback.
+Object.freeze(THREE.Object3D.prototype);
+Object.defineProperty(THREE.Vector3.prototype, 'isVector3', {
+    get: () => true,
+    set: () => {},
+    configurable: false
+});
+Object.freeze(THREE.Vector3.prototype);
+const defaultEulerOnChange = THREE.Euler.prototype._onChangeCallback;
+Object.defineProperty(THREE.Euler.prototype, '_onChangeCallback', {
+    get: () => defaultEulerOnChange,
+    set(callback) {
+        if (this === THREE.Euler.prototype) return;
+        Object.defineProperty(this, '_onChangeCallback', {
+            value: callback,
+            writable: true,
+            configurable: true
+        });
+    },
+    configurable: false
+});
+Object.freeze(THREE.Euler.prototype);
+Object.freeze(THREE.PerspectiveCamera.prototype);
+
 // ===== PROCEDURAL TEXTURES =====
 function finishCanvasTexture(canvas) {
     const texture = new THREE.CanvasTexture(canvas);
@@ -217,6 +244,7 @@ function addHubCheatLine(group, roomId) {
 // ===== THREE.JS SETUP =====
 let scene, camera, renderer, controls;
 const playerPos = new THREE.Vector3();
+const trackedPos = {x: 0, z: 0};
 const moveState = {forward:false, backward:false, left:false, right:false};
 const moveForward = new THREE.Vector3();
 const moveRight = new THREE.Vector3();
@@ -1089,7 +1117,7 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
 
     // Player light (follows camera, added to scene not group)
     playerLight = new THREE.PointLight(GRUVBOX.fg, 1.15, 20);
-    playerLight.position.copy(playerPos);
+    playerLight.position.set(playerPos.x, playerPos.y, playerPos.z);
     scene.add(playerLight);
 
     if (cheatMode) addCheatLine(group, mazeGrid);
@@ -1220,6 +1248,8 @@ function enterHub(roomId, fromRoom, arrivalPose = null) {
         playerPos.set(0, EYE_H, 0);
         camera.rotation.set(0, 0, 0, 'YXZ');
     }
+    trackedPos.x = playerPos.x;
+    trackedPos.z = playerPos.z;
     camera.position.set(playerPos.x, playerPos.y, playerPos.z);
     updateHUD();
 }
@@ -1411,6 +1441,15 @@ function triggerTrap(destRoom, verb = 'DISPLACED') {
 function updateMovement(delta) {
     if (gameState !== 'HUB') return;
 
+    // Nothing legitimate moves the player between frames — internal
+    // teleports sync trackedPos at their sites. A position written from
+    // outside the module snaps back before movement resolves (issue #4):
+    // the maze must be walked.
+    if (Math.hypot(playerPos.x - trackedPos.x, playerPos.z - trackedPos.z) > 0.25) {
+        playerPos.x = trackedPos.x;
+        playerPos.z = trackedPos.z;
+    }
+
     const previousX = playerPos.x;
     const previousZ = playerPos.z;
 
@@ -1464,6 +1503,8 @@ function updateMovement(delta) {
         collideWithHub();
     }
 
+    trackedPos.x = playerPos.x;
+    trackedPos.z = playerPos.z;
     camera.position.set(playerPos.x, playerPos.y, playerPos.z);
 
     // Update player light
@@ -2136,7 +2177,8 @@ function setupEvents() {
         blocker.classList.add('hidden');
     });
 
-    document.addEventListener('click', () => {
+    document.addEventListener('click', e => {
+        if (!e.isTrusted) return;
         if (controls.isLocked) onHubClick();
     });
 
@@ -2148,9 +2190,13 @@ function setupEvents() {
         }
     });
 
-    window.addEventListener('blur', clearMovementState);
+    window.addEventListener('blur', e => {
+        if (!e.isTrusted) return;
+        clearMovementState();
+    });
 
     document.addEventListener('keydown', e => {
+        if (!e.isTrusted) return;
         switch (e.code) {
             case 'KeyW': case 'ArrowUp': moveState.forward = true; break;
             case 'KeyS': case 'ArrowDown': moveState.backward = true; break;
@@ -2163,6 +2209,7 @@ function setupEvents() {
     });
 
     document.addEventListener('keyup', e => {
+        if (!e.isTrusted) return;
         switch (e.code) {
             case 'KeyW': case 'ArrowUp': moveState.forward = false; break;
             case 'KeyS': case 'ArrowDown': moveState.backward = false; break;
