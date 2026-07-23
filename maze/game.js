@@ -294,52 +294,126 @@ function addHubCheatLine(group, roomId) {
     addHubDoorArrow(group, bestDir, GRUVBOX.red);
 }
 
-function addHubOrbCheatLine(group, roomId) {
-    const tess = getTess(roomId);
-    if (!orbTesseracts().includes(tess) || collectedObelisks.has(tess)) return;
-    const pairKey = orbPairKey(masterSeed, tess);
-    if (!pairKey) return;
-    const pairRooms = pairKey.split('|');
-    let next = pairRooms.includes(roomId)
-        ? pairRooms.find(room => room !== roomId)
-        : null;
+function orbGuidanceTargets() {
+    const targets = new Map();
+    for (const tess of orbTesseracts()) {
+        if (collectedObelisks.has(tess)) continue;
+        const pairKey = orbPairKey(masterSeed, tess);
+        if (!pairKey) continue;
+        for (const room of pairKey.split('|')) targets.set(room, tess);
+    }
+    return targets;
+}
 
-    if (!next) {
-        const adjacency = new Map();
-        const addNeighbor = (from, to) => {
-            if (!adjacency.has(from)) adjacency.set(from, []);
-            adjacency.get(from).push(to);
-        };
-        for (const [room, nav] of Object.entries(roomNavigation)) {
-            if (getTess(room) !== tess) continue;
-            for (const dest of Object.values(nav)) {
-                if (getTess(dest) !== tess) continue;
-                addNeighbor(room, dest);
-                addNeighbor(dest, room);
-            }
+function nearestOrbTarget(roomId, targets) {
+    const costs = new Map([[roomId, 0]]);
+    const previous = new Map([[roomId, null]]);
+    const deque = [{room:roomId, cost:0}];
+    while (deque.length > 0) {
+        const {room, cost} = deque.shift();
+        if (cost !== costs.get(room)) continue;
+        if (targets.has(room)) {
+            let step = room;
+            while (previous.get(step) !== roomId) step = previous.get(step);
+            return {step, tess:targets.get(room)};
         }
-        const targets = new Set(pairRooms);
-        const previous = new Map([[roomId, null]]);
-        const queue = [roomId];
-        for (let cursor = 0; cursor < queue.length && !next; cursor++) {
-            const current = queue[cursor];
-            if (targets.has(current)) {
-                let step = current;
-                while (previous.get(step) !== roomId) step = previous.get(step);
-                next = step;
-                break;
-            }
-            for (const neighbor of adjacency.get(current) || []) {
-                if (previous.has(neighbor)) continue;
-                previous.set(neighbor, current);
-                queue.push(neighbor);
-            }
+
+        const tog = roomToggles[room];
+        if (tog && (costs.get(tog) === undefined || cost < costs.get(tog))) {
+            costs.set(tog, cost);
+            previous.set(tog, room);
+            deque.unshift({room:tog, cost});
+        }
+        for (const dest of Object.values(roomNavigation[room] || {})) {
+            const nextCost = cost + 1;
+            if (costs.get(dest) !== undefined && nextCost >= costs.get(dest)) continue;
+            costs.set(dest, nextCost);
+            previous.set(dest, room);
+            deque.push({room:dest, cost:nextCost});
         }
     }
+    return null;
+}
 
+function addHubOrbDoorRings(group, roomId) {
+    const tess = getTess(roomId);
+    if (collectedObelisks.has(tess)) return;
+    for (const [dir, dest] of Object.entries(roomNavigation[roomId] || {})) {
+        if (!isOrbMaze(masterSeed, roomId, dest)) continue;
+        const angle = DIR_ANGLES[dir];
+        const marker = new THREE.Mesh(
+            new THREE.TorusGeometry(0.3, 0.03, 8, 24),
+            new THREE.MeshBasicMaterial({color: TESSERACTS[tess].color})
+        );
+        marker.rotation.x = -Math.PI / 2;
+        marker.position.set(
+            Math.sin(angle) * HUB_APO,
+            0.08,
+            -Math.cos(angle) * HUB_APO
+        );
+        group.add(marker);
+    }
+}
+
+function addHubOrbWarpGuide(group, tess) {
+    const color = TESSERACTS[tess].color;
+    const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(1.55, 0.08, 8, 48),
+        new THREE.MeshBasicMaterial({color, transparent: true, opacity: 0.8, depthWrite: false})
+    );
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.y = 0.13;
+    group.add(ring);
+
+    const label = makeFloorInscription(`${TESSERACTS[tess].emoji} WARP`, color, {
+        size: 30,
+        worldWidth: 2.2,
+        worldHeight: 0.36,
+        plaque: true
+    });
+    label.position.set(0, 0.145, -1.65);
+    group.add(label);
+}
+
+function addHubOrbCheatLine(group, roomId, targets) {
+    if (targets.size === 0) return;
+    const roomTess = targets.get(roomId);
+    if (roomTess !== undefined) {
+        const orbDir = Object.entries(roomNavigation[roomId] || {})
+            .find(([, dest]) => isOrbMaze(masterSeed, roomId, dest))?.[0];
+        if (orbDir) addHubDoorArrow(group, orbDir, TESSERACTS[roomTess].color);
+        return;
+    }
+
+    const route = nearestOrbTarget(roomId, targets);
+    if (!route) return;
+    if (roomToggles[roomId] === route.step) {
+        addHubOrbWarpGuide(group, route.tess);
+        return;
+    }
     const bestDir = Object.entries(roomNavigation[roomId] || {})
-        .find(([, dest]) => dest === next)?.[0];
-    if (bestDir) addHubDoorArrow(group, bestDir, TESSERACTS[tess].color);
+        .find(([, dest]) => dest === route.step)?.[0];
+    if (bestDir) addHubDoorArrow(group, bestDir, TESSERACTS[route.tess].color);
+}
+
+function buildHubOrbGuidance(roomId) {
+    const group = new THREE.Group();
+    const targets = orbGuidanceTargets();
+    addHubOrbDoorRings(group, roomId);
+    addHubOrbCheatLine(group, roomId, targets);
+    return group;
+}
+
+function refreshHubOrbGuidance() {
+    if (!currentGroup) return;
+    if (currentGroup._orbGuide) {
+        currentGroup.remove(currentGroup._orbGuide);
+        disposeObjectTree(currentGroup._orbGuide);
+        currentGroup._orbGuide = null;
+    }
+    if (!cheatMode) return;
+    currentGroup._orbGuide = buildHubOrbGuidance(currentRoomId);
+    currentGroup.add(currentGroup._orbGuide);
 }
 
 // ===== THREE.JS SETUP =====
@@ -617,17 +691,6 @@ function buildHub(roomId, {preview = false, openDirection = null} = {}) {
                 doorPanel._wire = doorWire;
                 group.add(doorWire);
 
-                if (cheatMode && !preview && !collectedObelisks.has(tessNum) &&
-                    isOrbMaze(masterSeed, roomId, dest)) {
-                    const marker = new THREE.Mesh(
-                        new THREE.TorusGeometry(0.3, 0.03, 8, 24),
-                        new THREE.MeshBasicMaterial({color: tess.color})
-                    );
-                    marker.rotation.x = -Math.PI / 2;
-                    marker.position.set(wx, 0.08, wz);
-                    group.add(marker);
-                }
-
                 // Destination and interaction text are plaques fixed to the door,
                 // rather than camera-facing labels suspended in the room.
                 const label = makeTextPanel(`${dest} · ${dt.name.toUpperCase()}`, dt.color, {
@@ -754,7 +817,8 @@ function buildHub(roomId, {preview = false, openDirection = null} = {}) {
 
     if (cheatMode && !preview) {
         addHubCheatLine(group, roomId);
-        addHubOrbCheatLine(group, roomId);
+        group._orbGuide = buildHubOrbGuidance(roomId);
+        group.add(group._orbGuide);
     }
 
     return group;
@@ -798,6 +862,7 @@ function interactWithHub(allowNearbyWarp = false) {
         orb.visible = false;
         if (orb._obeliskLight) orb._obeliskLight.visible = false;
         mazeOrbClickables = mazeOrbClickables.filter(clickable => clickable !== orb);
+        refreshHubOrbGuidance();
         showEventMessage(`${TESSERACTS[tess].emoji} ${TESSERACTS[tess].name.toUpperCase()} OBELISK CLAIMED`);
         return;
     }
