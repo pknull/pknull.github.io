@@ -12,6 +12,7 @@ import {
     DOOR_MIN_DIST_CELL_FRACTION,
     DOOR_MIN_DIST_FACTOR,
     MAZE_FEATURE_ROSTER,
+    ROTATION_MIN_GAIN,
     SIGMA_EDGE_LEN
 } from '../maze/maze-data.js';
 
@@ -63,6 +64,33 @@ function featureCells(grid) {
     for (const cell of grid.overlapRegion?.cellsA || []) cells.add(cell);
     for (const cell of grid.overlapRegion?.cellsB || []) cells.add(cell);
     return cells;
+}
+
+function assertGateBridges(grid, label) {
+    for (const gate of grid.oneWayGates) {
+        const reached = grid.reachableFrom(gate.from, {
+            respectOneWay:false,
+            excludeEdge:gate.edge
+        });
+        assert.ok(!reached.has(gate.to), `${label} gate ${gate.from.id}->${gate.to.id} is bypassable`);
+    }
+}
+
+function assertRotatingChamberMeaningful(grid, label) {
+    const chamber = grid.rotatingChamber;
+    if (!chamber) return;
+    const sealedPath = grid.findPath(grid.entranceCell, grid.exitCell, {respectOneWay:true});
+    const sealedDistance = sealedPath.length ? sealedPath.length - 1 : Infinity;
+    const previous = chamber.cell.edges.map(edge => edge.open);
+    assert.equal(grid.activateRotatingChamber(), true, `${label} has a nonfunctional rotating chamber`);
+    const activePath = grid.findPath(grid.entranceCell, grid.exitCell, {respectOneWay:true});
+    const activeDistance = activePath.length ? activePath.length - 1 : Infinity;
+    for (let index = 0; index < chamber.cell.edges.length; index++)
+        grid.setEdgeOpen(chamber.cell.edges[index], previous[index]);
+    chamber.activated = false;
+    assert.ok(Number.isFinite(activeDistance) &&
+        (!Number.isFinite(sealedDistance) || sealedDistance - activeDistance >= ROTATION_MIN_GAIN),
+    `${label} rotation gain ${sealedDistance} -> ${activeDistance} is below ${ROTATION_MIN_GAIN}`);
 }
 
 function assertOverlapRegion(grid) {
@@ -250,6 +278,10 @@ const overlapStats = {
     delta:{attempted:0, placed:0, totalBreaks:0, maxBreaks:0, zeroBreaks:0},
     sigma:{attempted:0, placed:0, totalBreaks:0, maxBreaks:0, zeroBreaks:0}
 };
+const featureSurvivalStats = {
+    delta:{attempted:0, gate:0, chamber:0},
+    sigma:{attempted:0, gate:0, chamber:0}
+};
 for (const tessellation of ['delta', 'sigma']) {
     for (let seed = 0; seed < 200; seed++) {
         const args = [`generation-invariant-${seed}`, '1.07', '5.03', {tessellation, allFeatures:true}];
@@ -258,15 +290,19 @@ for (const tessellation of ['delta', 'sigma']) {
         const {grid, params} = first;
 
         assert.equal(grid.tessellation, tessellation);
-        assert.ok(grid.spaceFold && grid.oneWayGates.length && grid.rotatingChamber &&
-            grid.spatialLoop && grid.hunter,
+        assert.ok(grid.spaceFold && grid.spatialLoop && grid.hunter,
             `${tessellation} seed ${seed} did not honor allFeatures`);
+        featureSurvivalStats[tessellation].attempted++;
+        if (grid.oneWayGates.length) featureSurvivalStats[tessellation].gate++;
+        if (grid.rotatingChamber) featureSurvivalStats[tessellation].chamber++;
         if (params.traps > 0) assert.ok(grid.cells.some(cell => cell.trap),
             `${tessellation} seed ${seed} omitted requested traps`);
         const baseCells = tessellation === 'delta' ? 2 * grid.w * grid.h : grid.w * grid.h;
         assert.equal(grid.cells.length, baseCells + (grid.overlapRegion?.cellsB.length ?? 0));
         assert.equal(grid.reachableFrom(grid.entranceCell, {respectOneWay:false}).size, grid.cells.length,
             `${tessellation} seed ${seed} leaves unreachable cells`);
+        assertGateBridges(grid, `${tessellation} seed ${seed}`);
+        assertRotatingChamberMeaningful(grid, `${tessellation} seed ${seed}`);
         assertOverlapRegion(grid);
         const region = grid.overlapRegion;
         overlapStats[tessellation].attempted++;
@@ -353,6 +389,8 @@ for (const tessellation of ['delta', 'sigma']) {
             assert.equal(gate.required, params.features['one-way'].required);
         if (grid.spatialLoop)
             assert.equal(grid.spatialLoop.required, params.features['spatial-loop'].required);
+        assertGateBridges(grid, `${tessellation} mixed seed ${seed}`);
+        assertRotatingChamberMeaningful(grid, `${tessellation} mixed seed ${seed}`);
         assertOverlapRegion(grid);
 
         const structuralCount = Object.values(present).filter(Boolean).length;
@@ -393,6 +431,8 @@ for (const tessellation of ['delta', 'sigma']) {
             `${tessellation} fallback seed ${seed} did not relax an unreachable nominal floor`);
         assert.equal(stableLayout(grid, params), stableLayout(second.grid, second.params),
             `${tessellation} fallback seed ${seed} is not deterministic`);
+        assertGateBridges(grid, `${tessellation} fallback seed ${seed}`);
+        assertRotatingChamberMeaningful(grid, `${tessellation} fallback seed ${seed}`);
         assertOverlapRegion(grid);
 
         const features = featureCells(grid);
@@ -422,5 +462,10 @@ assert.ok(overlapPlaced / overlapAttempted >= 0.60,
 console.log('maze generation invariants passed (200 seeds per tessellation; standard floor never relaxed)');
 console.log('layered-overlap allFeatures stats:', overlapStats,
     `aggregate=${overlapPlaced}/${overlapAttempted} (${(100 * overlapPlaced / overlapAttempted).toFixed(1)}%)`);
+console.log('gate/chamber allFeatures survival rates:', Object.fromEntries(
+    Object.entries(featureSurvivalStats).map(([tessellation, stats]) => [tessellation, {
+        gate:`${stats.gate}/${stats.attempted} (${(100 * stats.gate / stats.attempted).toFixed(1)}%)`,
+        chamber:`${stats.chamber}/${stats.attempted} (${(100 * stats.chamber / stats.attempted).toFixed(1)}%)`
+    }])));
 console.log('mixed-mode feature stats (100 seeds per tessellation; 200 total):', mixedStats);
 console.log('forced rung-2 achieved distances:', fallbackStats);

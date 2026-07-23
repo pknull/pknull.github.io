@@ -13,6 +13,7 @@ import {
     MAZE_TESSELLATION,
     OVERLAP_ATTEMPTS,
     OVERLAP_REGION_SIZE,
+    ROTATION_MIN_GAIN,
     SIGMA_EDGE_LEN,
     SIGMA_TIER_RANGES,
     getTess,
@@ -360,6 +361,45 @@ class MazeGrid {
         return reached;
     }
 
+    openBridgeEdges() {
+        const links = new Map(this.cells.map(cell => [cell, []]));
+        const addLink = (a, b, edge = null) => {
+            if (!a || !b || a === b || !links.has(a) || !links.has(b)) return;
+            const link = {a, b, edge};
+            links.get(a).push({cell:b, link});
+            links.get(b).push({cell:a, link});
+        };
+        for (const cell of this.cells) {
+            for (const edge of cell.edges) {
+                if (edge.open && !edge.hardClosed && edge.neighbor && cell.id < edge.neighbor.id)
+                    addLink(cell, edge.neighbor, edge);
+            }
+        }
+        addLink(this.spatialLoop?.a, this.spatialLoop?.b);
+        addLink(this.spaceFold?.a?.cell, this.spaceFold?.b?.cell);
+
+        const discovered = new Map();
+        const low = new Map();
+        const bridges = new Set();
+        let time = 0;
+        const visit = (cell, parentLink = null) => {
+            discovered.set(cell, ++time);
+            low.set(cell, time);
+            for (const {cell:next, link} of links.get(cell)) {
+                if (link === parentLink) continue;
+                if (!discovered.has(next)) {
+                    visit(next, link);
+                    low.set(cell, Math.min(low.get(cell), low.get(next)));
+                    if (link.edge && low.get(next) > discovered.get(cell)) bridges.add(link.edge);
+                } else {
+                    low.set(cell, Math.min(low.get(cell), discovered.get(next)));
+                }
+            }
+        };
+        for (const cell of this.cells) if (!discovered.has(cell)) visit(cell);
+        return bridges;
+    }
+
     doorDistanceFloor() {
         const physicalCellCount = this.cells.length - (this.overlapRegion?.cellsB.length ?? 0);
         return Math.max(
@@ -523,14 +563,12 @@ class MazeGrid {
     placeOneWayGates(count, required = false) {
         const reserved = this.featureCells();
         const path = this.findPath();
-        const pathEdges = path.slice(0, -1).map((cell, index) => this.edgeBetween(cell, path[index + 1])).filter(Boolean);
-        const allEdges = [];
-        for (const cell of this.cells) {
-            for (const edge of cell.edges) {
-                if (edge.open && edge.neighbor && cell.id < edge.neighbor.id) allEdges.push(edge);
-            }
-        }
-        const candidates = required ? pathEdges : allEdges;
+        const pathEdges = new Set(path.slice(0, -1)
+            .map((cell, index) => this.edgeBetween(cell, path[index + 1]))
+            .map(edge => edge && edge.cell.id < edge.neighbor.id ? edge : edge?.reverse)
+            .filter(Boolean));
+        const bridges = this.openBridgeEdges();
+        const candidates = [...bridges].filter(edge => !required || pathEdges.has(edge));
         let placed = 0;
         for (const edge of this.rng.shuffle(candidates)) {
             if (placed >= count) break;
@@ -582,17 +620,30 @@ class MazeGrid {
             chamber.wallPattern = [...previous];
             chamber.cell.rotating = true;
             this.rotatingChamber = chamber;
-            if (!this.activateRotatingChamber()) {
+            if (!this.rotatingChamberValid()) {
                 chamber.cell.rotating = false;
                 this.rotatingChamber = null;
                 continue;
             }
-            for (let i = 0; i < chamber.cell.edges.length; i++)
-                this.setEdgeOpen(chamber.cell.edges[i], previous[i]);
-            chamber.activated = false;
             return true;
         }
         return false;
+    }
+
+    rotatingChamberValid() {
+        const chamber = this.rotatingChamber;
+        if (!chamber || chamber.activated) return false;
+        const sealedPath = this.findPath(this.entranceCell, this.exitCell, {respectOneWay:true});
+        const sealedDistance = sealedPath.length ? sealedPath.length - 1 : Infinity;
+        const previous = chamber.cell.edges.map(edge => edge.open);
+        if (!this.activateRotatingChamber()) return false;
+        const activePath = this.findPath(this.entranceCell, this.exitCell, {respectOneWay:true});
+        const activeDistance = activePath.length ? activePath.length - 1 : Infinity;
+        for (let index = 0; index < chamber.cell.edges.length; index++)
+            this.setEdgeOpen(chamber.cell.edges[index], previous[index]);
+        chamber.activated = false;
+        return Number.isFinite(activeDistance) &&
+            (!Number.isFinite(sealedDistance) || sealedDistance - activeDistance >= ROTATION_MIN_GAIN);
     }
 
     activateRotatingChamber() {
@@ -859,16 +910,14 @@ class MazeGrid {
     }
 
     overlapCandidateValid() {
+        const bridges = this.openBridgeEdges();
+        if (this.oneWayGates.some(gate => !bridges.has(
+            gate.edge.cell.id < gate.edge.neighbor.id ? gate.edge : gate.reverse))) return false;
         if (this.reachableFrom(this.entranceCell).size !== this.cells.length ||
             !this.meetsDoorDistance()) return false;
         const chamber = this.rotatingChamber;
         if (!chamber || chamber.activated) return true;
-        const previous = chamber.cell.edges.map(edge => edge.open);
-        if (!this.activateRotatingChamber()) return false;
-        for (let index = 0; index < chamber.cell.edges.length; index++)
-            this.setEdgeOpen(chamber.cell.edges[index], previous[index]);
-        chamber.activated = false;
-        return true;
+        return this.rotatingChamberValid();
     }
 
     placeOverlapRegion(layersRng) {
@@ -1272,10 +1321,10 @@ function buildMaze(params, roomA, roomB, allFeatures) {
     grid.removeDeadEnds([0.35, 0.25, 0.15, 0.05][params.tier]);
 
     if (allFeatures || params.law?.id === 'space-fold') grid.addSpaceFold();
-    if (allFeatures || params.features['one-way'].active)
-        grid.placeOneWayGates(1, params.features['one-way'].required);
     if (allFeatures || params.features['spatial-loop'].active)
         grid.placeSpatialLoop(params.features['spatial-loop'].required);
+    if (allFeatures || params.features['one-way'].active)
+        grid.placeOneWayGates(1, params.features['one-way'].required);
     // Keep rotation last among the pre-overlap route-shorteners. Overlap
     // candidates revalidate both the resting and activated wall patterns.
     if (allFeatures || params.features['rotating-chamber'].active) grid.placeRotatingChamber();

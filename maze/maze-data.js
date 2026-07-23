@@ -192,6 +192,7 @@ const OVERLAP_REGION_SIZE = Object.freeze({
     sigma:[[6,7],[7,8],[8,10],[10,12]]
 });
 const OVERLAP_ATTEMPTS = 12;
+const ROTATION_MIN_GAIN = 6;
 const WALL_H = 3;
 const WALL_T = 0.15;
 const EYE_H = 1.6;
@@ -240,6 +241,7 @@ export {
     SIGMA_TIER_RANGES,
     OVERLAP_REGION_SIZE,
     OVERLAP_ATTEMPTS,
+    ROTATION_MIN_GAIN,
     WALL_H,
     WALL_T,
     EYE_H,
