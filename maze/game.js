@@ -309,6 +309,8 @@ let roomTrail = [];
 let lastShareText = '';
 let hardMode = false;
 let hardEntireRun = false;
+let shadeDisabled = false;
+let shadeDisabledEntireRun = false;
 let runStarted = false;
 let cheatUsed = false;
 let activeShade = null;
@@ -1221,7 +1223,7 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
     }
 
     // Dormant lair apparition — only when no Shade is already loose in the run
-    if (mazeGrid.hunter && !activeShade) {
+    if (mazeGrid.hunter && !activeShade && !shadeDisabled) {
         const hunter = mazeGrid.hunter;
         const shade = makeShadeVisual();
         shade.position.set(hunter.x, 0, hunter.z);
@@ -1452,7 +1454,7 @@ function enterWin() {
     const elapsed = Math.floor(elapsedMs / 1000);
     const min = Math.floor(elapsed / 60);
     const sec = elapsed % 60;
-    const timeStr = `${min}:${sec.toString().padStart(2,'0')}${hardEntireRun ? '*' : ''}${cheatUsed ? '†' : ''}`;
+    const timeStr = `${min}:${sec.toString().padStart(2,'0')}${hardEntireRun ? '*' : ''}${shadeDisabledEntireRun ? '°' : ''}${cheatUsed ? '†' : ''}`;
     const glyphs = tesseractGlyphs();
     const roomsSeen = new Set(roomTrail).size;
     document.getElementById('winTime').textContent = `Time: ${timeStr}`;
@@ -1601,7 +1603,7 @@ function updateMovement(delta) {
     if (inMazeArea && attachedMazeGrid) {
         if (!wasPlayerInMaze) {
             const hunter = attachedMazeGrid.hunter;
-            if (hunter && !hunter.wakeAt && !activeShade) {
+            if (hunter && !hunter.wakeAt && !activeShade && !shadeDisabled) {
                 hunter.wakeAt = performance.now() + HUNTER_WAKE_DELAY_MS;
                 showEventMessage('THE SHADE STIRS', 2600);
             }
@@ -1996,6 +1998,8 @@ function shadeInInactiveOverlap(shade) {
 }
 
 function updateHunter(delta) {
+    if (shadeDisabled && !activeShade) return;
+
     const now = performance.now();
 
     // Dormant lair apparition: bobs in its maze until the stir completes,
@@ -2493,6 +2497,15 @@ function setupEvents() {
         rebuildCurrentHub();
     });
 
+    const shadeToggle = document.getElementById('optShade');
+    try { shadeDisabled = localStorage.getItem('dreadfulEngine.noShade') === '1'; } catch (e) { /* storage unavailable */ }
+    shadeToggle.checked = shadeDisabled;
+    shadeToggle.addEventListener('change', () => {
+        shadeDisabled = shadeToggle.checked;
+        try { localStorage.setItem('dreadfulEngine.noShade', shadeDisabled ? '1' : '0'); } catch (e) { /* private browsing */ }
+        if (!shadeDisabled) shadeDisabledEntireRun = false;
+    });
+
     const cheatToggle = document.getElementById('optCheat');
     cheatToggle.checked = cheatMode;
     cheatToggle.addEventListener('change', () => {
@@ -2520,8 +2533,10 @@ function setupEvents() {
         if (!runStarted) {
             runStarted = true;
             hardEntireRun = hardMode;
+            shadeDisabledEntireRun = shadeDisabled;
             if (cheatMode) cheatUsed = true;
             hardToggle.disabled = true;
+            shadeToggle.disabled = true;
         }
         resumePlayTimer();
         blocker.classList.add('hidden');
