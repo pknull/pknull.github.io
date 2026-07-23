@@ -31,7 +31,7 @@ import {
     roomToggles,
     scatterPool
 } from './maze-data.js';
-import { Rng, fnv1a, generateMaze, isOrbMaze, orbTesseracts } from './generation.js';
+import { Rng, fnv1a, generateMaze, isOrbMaze, orbPairKey, orbTesseracts } from './generation.js';
 
 const DOORWAY_ESCAPE_DEPTH = 1.5;
 const OVERLAP_LAYER_COLORS = {a:'#8ec07c', b:'#fe8019'};
@@ -213,10 +213,9 @@ function pointInDoorwayOpening(point, room) {
         normalDistance <= DOORWAY_ESCAPE_DEPTH;
 }
 
-function addCheatLine(group, grid) {
-    const path = solveMaze(grid);
+function addCheatPath(group, grid, path, color) {
     if (path.length < 2) return;
-    const mat = new THREE.LineBasicMaterial({color: GRUVBOX.red, transparent: true, opacity: 0.5, depthWrite: false});
+    const mat = new THREE.LineBasicMaterial({color, transparent: true, opacity: 0.5, depthWrite: false});
     const centerPoint = cell => new THREE.Vector3(cell.center.x, 0.1, cell.center.z);
     let segment = [centerPoint(path[0])];
     const flush = () => {
@@ -235,6 +234,29 @@ function addCheatLine(group, grid) {
     }
     flush();
     mat.dispose();
+}
+
+function addCheatLine(group, grid) {
+    addCheatPath(group, grid, solveMaze(grid), GRUVBOX.red);
+}
+
+function addHubDoorArrow(group, dir, color) {
+    const angle = DIR_ANGLES[dir];
+    const points = [
+        new THREE.Vector3(0, 0.1, 0),
+        new THREE.Vector3(Math.sin(angle) * (HUB_APO - 0.5), 0.1, -Math.cos(angle) * (HUB_APO - 0.5))
+    ];
+    const geom = new THREE.BufferGeometry().setFromPoints(points);
+    const mat = new THREE.LineBasicMaterial({color, transparent: true, opacity: 0.5, depthWrite: false});
+    group.add(new THREE.Line(geom, mat));
+    // Arrow at the end
+    const arrowGeo = new THREE.ConeGeometry(0.12, 0.25, 4);
+    const arrowMat = new THREE.MeshBasicMaterial({color, transparent: true, opacity: 0.5});
+    const arrow = new THREE.Mesh(arrowGeo, arrowMat);
+    arrow.rotation.x = -Math.PI / 2;
+    arrow.rotation.z = -angle;
+    arrow.position.set(Math.sin(angle) * (HUB_APO - 0.3), 0.1, -Math.cos(angle) * (HUB_APO - 0.3));
+    group.add(arrow);
 }
 
 function addHubCheatLine(group, roomId) {
@@ -269,22 +291,55 @@ function addHubCheatLine(group, roomId) {
         return;
     }
     if (!bestDir) return;
-    const angle = DIR_ANGLES[bestDir];
-    const points = [
-        new THREE.Vector3(0, 0.1, 0),
-        new THREE.Vector3(Math.sin(angle) * (HUB_APO - 0.5), 0.1, -Math.cos(angle) * (HUB_APO - 0.5))
-    ];
-    const geom = new THREE.BufferGeometry().setFromPoints(points);
-    const mat = new THREE.LineBasicMaterial({color: GRUVBOX.red, transparent: true, opacity: 0.5, depthWrite: false});
-    group.add(new THREE.Line(geom, mat));
-    // Arrow at the end
-    const arrowGeo = new THREE.ConeGeometry(0.12, 0.25, 4);
-    const arrowMat = new THREE.MeshBasicMaterial({color: GRUVBOX.red, transparent: true, opacity: 0.5});
-    const arrow = new THREE.Mesh(arrowGeo, arrowMat);
-    arrow.rotation.x = -Math.PI / 2;
-    arrow.rotation.z = -angle;
-    arrow.position.set(Math.sin(angle) * (HUB_APO - 0.3), 0.1, -Math.cos(angle) * (HUB_APO - 0.3));
-    group.add(arrow);
+    addHubDoorArrow(group, bestDir, GRUVBOX.red);
+}
+
+function addHubOrbCheatLine(group, roomId) {
+    const tess = getTess(roomId);
+    if (!orbTesseracts().includes(tess) || collectedObelisks.has(tess)) return;
+    const pairKey = orbPairKey(masterSeed, tess);
+    if (!pairKey) return;
+    const pairRooms = pairKey.split('|');
+    let next = pairRooms.includes(roomId)
+        ? pairRooms.find(room => room !== roomId)
+        : null;
+
+    if (!next) {
+        const adjacency = new Map();
+        const addNeighbor = (from, to) => {
+            if (!adjacency.has(from)) adjacency.set(from, []);
+            adjacency.get(from).push(to);
+        };
+        for (const [room, nav] of Object.entries(roomNavigation)) {
+            if (getTess(room) !== tess) continue;
+            for (const dest of Object.values(nav)) {
+                if (getTess(dest) !== tess) continue;
+                addNeighbor(room, dest);
+                addNeighbor(dest, room);
+            }
+        }
+        const targets = new Set(pairRooms);
+        const previous = new Map([[roomId, null]]);
+        const queue = [roomId];
+        for (let cursor = 0; cursor < queue.length && !next; cursor++) {
+            const current = queue[cursor];
+            if (targets.has(current)) {
+                let step = current;
+                while (previous.get(step) !== roomId) step = previous.get(step);
+                next = step;
+                break;
+            }
+            for (const neighbor of adjacency.get(current) || []) {
+                if (previous.has(neighbor)) continue;
+                previous.set(neighbor, current);
+                queue.push(neighbor);
+            }
+        }
+    }
+
+    const bestDir = Object.entries(roomNavigation[roomId] || {})
+        .find(([, dest]) => dest === next)?.[0];
+    if (bestDir) addHubDoorArrow(group, bestDir, TESSERACTS[tess].color);
 }
 
 // ===== THREE.JS SETUP =====
@@ -697,7 +752,10 @@ function buildHub(roomId, {preview = false, openDirection = null} = {}) {
     roomLabel.position.set(0, 0.075, 2.0);
     group.add(roomLabel);
 
-    if (cheatMode && !preview) addHubCheatLine(group, roomId);
+    if (cheatMode && !preview) {
+        addHubCheatLine(group, roomId);
+        addHubOrbCheatLine(group, roomId);
+    }
 
     return group;
 }
@@ -1220,6 +1278,26 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
     scene.add(playerLight);
 
     if (cheatMode) addCheatLine(group, mazeGrid);
+    if (cheatMode && mazeGrid.orbChamber &&
+        !collectedObelisks.has(mazeGrid.orbChamber.tess)) {
+        let orbPath = mazeGrid.findPath(
+            mazeGrid.entranceCell,
+            mazeGrid.orbChamber.center
+        );
+        if (!orbPath.length) {
+            orbPath = mazeGrid.findPath(
+                mazeGrid.entranceCell,
+                mazeGrid.orbChamber.center,
+                {respectOneWay:false}
+            );
+        }
+        addCheatPath(
+            group,
+            mazeGrid,
+            orbPath,
+            TESSERACTS[mazeGrid.orbChamber.tess].color
+        );
+    }
 
     return group;
 }
