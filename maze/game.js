@@ -14,6 +14,12 @@ import {
     HUNTER_SPEED_FACTOR,
     HUNTER_WAKE_DELAY_MS,
     MOVE_SPD,
+    OVERLAP_FORCE_RADIUS_FACTOR,
+    OVERLAP_HYSTERESIS_MARGIN,
+    OVERLAP_MINIMAP_ALPHA,
+    OVERLAP_PORTAL_W,
+    OVERLAP_SWAP_RADIUS_FACTOR,
+    OVERLAP_VIEW_AWAY_DOT,
     P_RAD,
     SHADE_LAG_MS,
     TESSERACTS,
@@ -159,6 +165,23 @@ function solveMaze(grid) {
 function edgeMidpoint(edge) {
     const [a, b] = edge.segment;
     return {x:(a.x + b.x) / 2, z:(a.z + b.z) / 2};
+}
+
+function applyOverlapVisibility(grid) {
+    const region = grid?.overlapRegion;
+    if (!region) return;
+    for (const panel of region.panels || [])
+        panel.visual.visible = panel.layer === region.activeLayer;
+    for (const occluder of region.occluders || [])
+        occluder.visual.visible = occluder.layer === region.activeLayer;
+}
+
+function setActiveOverlapLayer(grid, layer) {
+    const region = grid?.overlapRegion;
+    if (!region || region.activeLayer === layer) return;
+    region.activeLayer = layer;
+    applyOverlapVisibility(grid);
+    grid._closedWallCache = null;
 }
 
 function doorRoomThreshold(room) {
@@ -775,18 +798,18 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
         return mesh;
     }
 
-    function addEntranceDoorwayWall(edge) {
+    function addDoorwayWall(edge, doorwayWidth = DOOR_W) {
         const [a, b] = edge.segment;
         const dx = b.x - a.x, dz = b.z - a.z;
         const length = Math.hypot(dx, dz);
         const tx = dx / length, tz = dz / length;
         const midpoint = edgeMidpoint(edge);
-        const capLength = Math.max(0, (length - DOOR_W) / 2);
+        const capLength = Math.max(0, (length - doorwayWidth) / 2);
         for (const side of [-1, 1]) {
             if (capLength <= 0.001) continue;
             const inner = {
-                x:midpoint.x + tx * side * DOOR_W / 2,
-                z:midpoint.z + tz * side * DOOR_W / 2
+                x:midpoint.x + tx * side * doorwayWidth / 2,
+                z:midpoint.z + tz * side * doorwayWidth / 2
             };
             const outer = {
                 x:midpoint.x + tx * side * length / 2,
@@ -797,7 +820,7 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
         const lintelHeight = WALL_H - DOOR_H;
         if (lintelHeight > 0.001) {
             const lintel = new THREE.Mesh(
-                new THREE.BoxGeometry(DOOR_W, lintelHeight, WALL_T),
+                new THREE.BoxGeometry(doorwayWidth, lintelHeight, WALL_T),
                 wallMaterial
             );
             lintel.position.set(midpoint.x, DOOR_H + lintelHeight / 2, midpoint.z);
@@ -818,6 +841,7 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
     }
 
     for (const cell of mazeGrid.cells) {
+        if (cell.layer === 'b') continue;
         const floor = new THREE.Mesh(polygonGeometry(cell), floorMaterial);
         floor.rotation.x = Math.PI / 2;
         floor.position.y = 0;
@@ -832,6 +856,7 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
     const rotatingCell = mazeGrid.rotatingChamber?.cell;
     const staticWalls = new Set();
     for (const cell of mazeGrid.cells) {
+        if (cell.layerRegion) continue;
         for (const edge of cell.edges) {
             if (edge.open) continue;
             if (rotatingCell && (cell === rotatingCell || edge.neighbor === rotatingCell)) continue;
@@ -840,11 +865,55 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
             staticWalls.add(key);
             if (edge === mazeGrid.entranceDoorRoom?.panelEdge ||
                 edge === mazeGrid.exitDoorRoom?.panelEdge) {
-                addEntranceDoorwayWall(edge);
+                addDoorwayWall(edge);
                 continue;
             }
             addWallSegment(edge);
         }
+    }
+
+    if (mazeGrid.overlapRegion) {
+        const region = mazeGrid.overlapRegion;
+        const regionWalls = new Set();
+        region.panels = [];
+        region.occluders = [];
+        for (const cellA of region.cellsA) {
+            for (const edgeA of cellA.edges) {
+                if (edgeA.neighbor?.layerRegion !== region) continue;
+                const key = segmentKey(edgeA);
+                if (regionWalls.has(key)) continue;
+                regionWalls.add(key);
+                const edgeB = cellA.twin.edges[edgeA.index];
+                if (edgeA.open === edgeB.open) {
+                    if (!edgeA.open) addWallSegment(edgeA);
+                    continue;
+                }
+                const layer = edgeA.open ? 'b' : 'a';
+                const edge = layer === 'a' ? edgeA : edgeB;
+                region.panels.push({layer, visual:addWallSegment(edge)});
+            }
+        }
+        for (const portal of region.portals) {
+            const edge = {segment:portal.segment};
+            addDoorwayWall(edge, OVERLAP_PORTAL_W);
+            const [a, b] = portal.segment;
+            const dx = b.x - a.x, dz = b.z - a.z;
+            const length = Math.hypot(dx, dz);
+            const midpoint = edgeMidpoint(edge);
+            let rotation = -Math.atan2(dz, dx);
+            const nx = -dz / length, nz = dx / length;
+            if ((portal.vestibule.center.x - midpoint.x) * nx +
+                (portal.vestibule.center.z - midpoint.z) * nz < 0) rotation += Math.PI;
+            const visual = new THREE.Mesh(
+                new THREE.PlaneGeometry(OVERLAP_PORTAL_W, DOOR_H),
+                new THREE.MeshStandardMaterial({color:GRUVBOX.bgHard, side:THREE.FrontSide})
+            );
+            visual.position.set(midpoint.x, DOOR_H / 2, midpoint.z);
+            visual.rotation.y = rotation;
+            group.add(visual);
+            region.occluders.push({layer:portal.severedEdge.cell.layer, visual});
+        }
+        applyOverlapVisibility(mazeGrid);
     }
 
     if (mazeGrid.rotatingChamber) {
@@ -1540,7 +1609,11 @@ function updateMovement(delta) {
             enterHub(destination, source, arrivalPose);
             return;
         }
-        if (!checkSpaceFold(previousX, previousZ)) collideInMaze(previousX, previousZ);
+        checkOverlapPortals(previousX, previousZ);
+        if (!checkSpaceFold(previousX, previousZ)) {
+            collideInMaze(previousX, previousZ);
+            updateOverlapApproach();
+        }
         checkRotatingChamber();
         checkSpatialLoop();
         checkMazeTraps();
@@ -1642,6 +1715,7 @@ function collideInMaze(previousWorldX, previousWorldZ) {
         const seen = new Set();
         grid._closedWallCache = [];
         for (const cell of grid.cells) {
+            if (cell.layerRegion && cell.layer !== cell.layerRegion.activeLayer) continue;
             for (const edge of cell.edges) {
                 if (edge.open) continue;
                 const key = edge.segment.map(point =>
@@ -1670,6 +1744,25 @@ function collideInMaze(previousWorldX, previousWorldZ) {
                     continue;
                 }
                 grid._closedWallCache.push({edge, owner:cell});
+            }
+        }
+        for (const portal of grid.overlapRegion?.portals || []) {
+            const [a, b] = portal.segment;
+            const dx = b.x - a.x, dz = b.z - a.z;
+            const length = Math.hypot(dx, dz);
+            const midpoint = edgeMidpoint({segment:portal.segment});
+            const tangent = {x:dx / length, z:dz / length};
+            for (const side of [-1, 1]) {
+                grid._closedWallCache.push({
+                    edge:{segment:[
+                        side < 0 ? a : b,
+                        {
+                            x:midpoint.x + tangent.x * side * OVERLAP_PORTAL_W / 2,
+                            z:midpoint.z + tangent.z * side * OVERLAP_PORTAL_W / 2
+                        }
+                    ]},
+                    owner:portal.outsideCell
+                });
             }
         }
         // The split hull wall supplies the jamb collision. While sealed, the
@@ -1793,6 +1886,60 @@ function crossesEdgePlane(previous, current, edge, interiorCenter,
     return tangentDistance <= halfWidth;
 }
 
+function checkOverlapPortals(previousWorldX, previousWorldZ) {
+    const grid = attachedMazeGrid;
+    const region = grid?.overlapRegion;
+    if (!region) return;
+    const previous = worldToMazeLocal(previousWorldX, previousWorldZ);
+    const current = worldToMazeLocal(playerPos.x, playerPos.z);
+    for (const portal of region.portals) {
+        // The shared helper detects outward motion. Reversing the traversal
+        // makes actual entry cross the outside-side trigger plane.
+        if (crossesEdgePlane(current, previous, portal.outsideEdge,
+            portal.vestibule.center, -(P_RAD + 0.04), OVERLAP_PORTAL_W / 2 - P_RAD)) {
+            setActiveOverlapLayer(grid, portal.layer);
+        }
+    }
+}
+
+function updateOverlapApproach() {
+    const grid = attachedMazeGrid;
+    const region = grid?.overlapRegion;
+    if (!region) return;
+    const local = worldToMazeLocal(playerPos.x, playerPos.z);
+    const {minX, maxX, minZ, maxZ} = region.bbox;
+    if (local.x >= minX && local.x <= maxX && local.z >= minZ && local.z <= maxZ &&
+        grid.cellContainingPoint(local.x, local.z)?.layerRegion === region) return;
+
+    const portals = region.portals.map(portal => ({
+        portal,
+        distance:Math.hypot(
+            local.x - (portal.segment[0].x + portal.segment[1].x) / 2,
+            local.z - (portal.segment[0].z + portal.segment[1].z) / 2
+        )
+    })).sort((a, b) => a.distance - b.distance);
+    const nearest = portals[0];
+    if (!nearest || nearest.distance > OVERLAP_SWAP_RADIUS_FACTOR * grid.edgeLen ||
+        nearest.portal.layer === region.activeLayer) return;
+    const nearestActive = portals.find(candidate =>
+        candidate.portal.layer === region.activeLayer)?.distance ?? Infinity;
+    if (nearest.distance + OVERLAP_HYSTERESIS_MARGIN >= nearestActive) return;
+
+    let shouldSwap = nearest.distance <= OVERLAP_FORCE_RADIUS_FACTOR * grid.edgeLen;
+    if (!shouldSwap) {
+        const center = mazeLocalToWorld((minX + maxX) / 2, (minZ + maxZ) / 2);
+        const toRegionX = center.x - playerPos.x;
+        const toRegionZ = center.z - playerPos.z;
+        const length = Math.hypot(toRegionX, toRegionZ);
+        camera.getWorldDirection(minimapForward);
+        const forwardLength = Math.hypot(minimapForward.x, minimapForward.z);
+        shouldSwap = length > 1e-7 && forwardLength > 1e-7 &&
+            (minimapForward.x * toRegionX + minimapForward.z * toRegionZ) / length <
+                OVERLAP_VIEW_AWAY_DOT * forwardLength;
+    }
+    if (shouldSwap) setActiveOverlapLayer(grid, nearest.portal.layer);
+}
+
 function checkSpaceFold(previousWorldX, previousWorldZ) {
     const fold = attachedMazeGrid?.spaceFold;
     if (!fold) return false;
@@ -1828,6 +1975,12 @@ function checkSpaceFold(previousWorldX, previousWorldZ) {
 const shadeVeilEl = document.getElementById('shade-veil');
 function setShadeVeil(strength) {
     shadeVeilEl.style.opacity = strength.toFixed(3);
+}
+
+function shadeInInactiveOverlap(shade) {
+    const region = shade?.grid?.overlapRegion;
+    return Boolean(region && shade.cell?.layerRegion === region &&
+        shade.cell.layer !== region.activeLayer);
 }
 
 function updateHunter(delta) {
@@ -1880,6 +2033,8 @@ function updateHunter(delta) {
         showEventMessage('IT CAME THROUGH', 2200);
     }
 
+    const shadeIsInactive = shadeInInactiveOverlap(shade);
+    shade.visual.visible = !shadeIsInactive;
     shade.visual.position.y = Math.sin(now / 320) * 0.12;
 
     // Veil + catch work in world coordinates, hub and maze alike. The ramp
@@ -1888,7 +2043,7 @@ function updateHunter(delta) {
     const dx = playerPos.x - shade.x, dz = playerPos.z - shade.z;
     const dist = Math.sqrt(dx * dx + dz * dz);
     setShadeVeil(0.78 * Math.min(1, Math.max(0, (12 - dist) / 10.5)));
-    if (dist < 0.75) {
+    if (!shadeIsInactive && dist < 0.75) {
         const pool = scatterPool(currentRoomId, attachedMazeDest);
         triggerTrap(shadeRng.pick(pool), 'SEIZED BY THE SHADE');
         return;
@@ -1932,6 +2087,7 @@ function updateHunter(delta) {
     if (!playerInMaze && shade.cell === grid.entranceCell && !shade.targetCell) {
         // At the doorway with the player outside: cross into the hub.
         Object.assign(shade, {mode: 'hub', grid: null, cell: null});
+        shade.visual.visible = true;
         return;
     }
     if (!shade.targetCell) {
@@ -1950,6 +2106,7 @@ function updateHunter(delta) {
             shade.x = w.x; shade.z = w.z;
             shade.visual.position.x = w.x;
             shade.visual.position.z = w.z;
+            shade.visual.visible = !shadeInInactiveOverlap(shade);
             return;
         }
     }
@@ -1967,6 +2124,7 @@ function updateHunter(delta) {
     }
     shade.visual.position.x = shade.x;
     shade.visual.position.z = shade.z;
+    shade.visual.visible = !shadeInInactiveOverlap(shade);
 }
 
 function checkMazeTraps() {
@@ -2075,6 +2233,7 @@ function buildMinimapBase(grid) {
     // Polygon footprints make either tessellation legible. Passages are
     // overdrawn in aqua while closed edges retain the wall language.
     for (const cell of grid.cells) {
+        if (cell.layer === 'b') continue;
         const points = cell.vertices.map(toCanvas);
         ctx.beginPath();
         points.forEach((point, index) => {
@@ -2089,16 +2248,50 @@ function buildMinimapBase(grid) {
         ctx.stroke();
     }
 
+    const edgeKey = edge => edge.segment.map(point =>
+        `${point.x.toFixed(5)},${point.z.toFixed(5)}`).sort().join('|');
+    const drawEdge = (edge, open = edge.open, alpha = 1) => {
+        const [a, b] = edge.segment.map(toCanvas);
+        ctx.strokeStyle = open
+            ? `rgba(142,192,124,${0.28 * alpha})`
+            : `rgba(235,219,178,${0.42 * alpha})`;
+        ctx.lineWidth = open ? 1.2 : 1;
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    };
+    const portalEdges = new Set((grid.overlapRegion?.portals || []).map(portal =>
+        edgeKey({segment:portal.segment})));
     const seenEdges = new Set();
     for (const cell of grid.cells) {
+        if (cell.layerRegion) continue;
         for (const edge of cell.edges) {
-            const key = edge.segment.map(point => `${point.x.toFixed(5)},${point.z.toFixed(5)}`).sort().join('|');
-            if (seenEdges.has(key)) continue;
+            const key = edgeKey(edge);
+            if (seenEdges.has(key) || portalEdges.has(key)) continue;
             seenEdges.add(key);
-            const [a, b] = edge.segment.map(toCanvas);
-            ctx.strokeStyle = edge.open ? 'rgba(142,192,124,0.28)' : 'rgba(235,219,178,0.42)';
-            ctx.lineWidth = edge.open ? 1.2 : 1;
-            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+            drawEdge(edge);
+        }
+    }
+
+    const region = grid.overlapRegion;
+    if (region) {
+        const seenRegionEdges = new Set();
+        for (const cellA of region.cellsA) {
+            for (const edgeA of cellA.edges) {
+                if (edgeA.neighbor?.layerRegion !== region) continue;
+                const key = edgeKey(edgeA);
+                if (seenRegionEdges.has(key)) continue;
+                seenRegionEdges.add(key);
+                const edgeB = cellA.twin.edges[edgeA.index];
+                if (edgeA.open === edgeB.open) drawEdge(edgeA);
+                else {
+                    drawEdge(edgeA, edgeA.open, OVERLAP_MINIMAP_ALPHA);
+                    drawEdge(edgeB, edgeB.open, OVERLAP_MINIMAP_ALPHA);
+                }
+            }
+        }
+        for (const portal of region.portals) {
+            const edge = {segment:portal.segment};
+            drawEdge(edge, true, OVERLAP_MINIMAP_ALPHA);
+            drawEdge(edge, false, OVERLAP_MINIMAP_ALPHA);
         }
     }
 
@@ -2208,7 +2401,8 @@ function drawMinimap() {
     ctx.fillStyle = '#8ec07c';
     ctx.beginPath(); ctx.arc(player.x, player.y, 3.5, 0, Math.PI * 2); ctx.fill();
 
-    if (activeShade && activeShade.mode === 'maze' && activeShade.grid === attachedMazeGrid) {
+    if (activeShade && activeShade.mode === 'maze' && activeShade.grid === attachedMazeGrid &&
+        !shadeInInactiveOverlap(activeShade)) {
         const shadeLocal = worldToMazeLocal(activeShade.x, activeShade.z);
         const shadePoint = toCanvas(shadeLocal);
         const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 180);
