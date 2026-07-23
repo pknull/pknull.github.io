@@ -2407,15 +2407,6 @@ function setupEvents() {
         rebuildCurrentHub();
     });
 
-    const shadeToggle = document.getElementById('optShade');
-    try { shadeDisabled = localStorage.getItem('dreadfulEngine.noShade') === '1'; } catch (e) { /* storage unavailable */ }
-    shadeToggle.checked = shadeDisabled;
-    shadeToggle.addEventListener('change', () => {
-        shadeDisabled = shadeToggle.checked;
-        try { localStorage.setItem('dreadfulEngine.noShade', shadeDisabled ? '1' : '0'); } catch (e) { /* private browsing */ }
-        if (!shadeDisabled) shadeDisabledEntireRun = false;
-    });
-
     const cheatToggle = document.getElementById('optCheat');
     cheatToggle.checked = cheatMode;
     cheatToggle.addEventListener('change', () => {
@@ -2435,6 +2426,7 @@ function setupEvents() {
         const params = new URLSearchParams();
         if (v !== localDateKey()) params.set('key', v);
         if (cheatMode) params.set('cheat', 'true');
+        if (shadeDisabled) params.set('shade', 'false');
         const qs = params.toString();
         location.href = location.pathname + (qs ? '?' + qs : '');
     });
@@ -2446,7 +2438,6 @@ function setupEvents() {
             shadeDisabledEntireRun = shadeDisabled;
             if (cheatMode) cheatUsed = true;
             hardToggle.disabled = true;
-            shadeToggle.disabled = true;
         }
         resumePlayTimer();
         blocker.classList.add('hidden');
@@ -2539,6 +2530,7 @@ function init() {
     const isDaily = !suppliedKey || !suppliedKey.trim();
 
     cheatMode = testMazeMode || params.get('cheat') === 'true';
+    shadeDisabled = params.get('shade') === 'false';
     masterSeed = String(fnv1a(activeKey));
     const seedRng = new Rng(fnv1a(activeKey));
     const startRoom = testMazeMode ? '5.13' : CONTROL_ROOMS[seedRng.nextInt(0, CONTROL_ROOMS.length - 1)];
