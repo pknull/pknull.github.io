@@ -40,9 +40,11 @@ function canonicalRoomPairKey(roomA, roomB) {
     return [roomA, roomB].sort().join('|');
 }
 
+const ORB_EXCLUDED_TESSERACTS = Object.freeze([3, 8]);
 const ORB_PAIR_KEYS_BY_TESS = new Map();
 for (const [room, navigation] of Object.entries(roomNavigation)) {
     const tess = getTess(room);
+    if (ORB_EXCLUDED_TESSERACTS.includes(tess)) continue;
     for (const destination of Object.values(navigation)) {
         if (getTess(destination) !== tess) continue;
         if (!ORB_PAIR_KEYS_BY_TESS.has(tess)) ORB_PAIR_KEYS_BY_TESS.set(tess, new Set());
@@ -1399,6 +1401,7 @@ export {
     MazeGrid,
     Rng,
     EXTERIOR_HUB_CLEARANCE,
+    ORB_EXCLUDED_TESSERACTS,
     buildDeltaLattice,
     buildSigmaLattice,
     fnv1a,

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 
 import {
     EXTERIOR_HUB_CLEARANCE,
+    ORB_EXCLUDED_TESSERACTS,
     buildDeltaLattice,
     buildSigmaLattice,
     generateMaze,
@@ -334,7 +335,15 @@ assertLattice(buildSigmaLattice(4, 3, SIGMA_EDGE_LEN), 12, SIGMA_EDGE_LEN);
 const orbMasterSeed = 'orb-generation-invariant';
 const eligibleOrbTesseracts = orbTesseracts();
 assert.deepEqual(eligibleOrbTesseracts, Object.keys(TESSERACTS).map(Number)
-    .filter(tess => navPairKeys(tess).length > 0));
+    .filter(tess => navPairKeys(tess).length > 0)
+    .filter(tess => !ORB_EXCLUDED_TESSERACTS.includes(tess)));
+assert.equal(orbPairKey(orbMasterSeed, 3), null);
+assert.equal(orbPairKey(orbMasterSeed, 8), null);
+for (const pair of navPairKeys(3)) {
+    const [roomA, roomB] = pair.split('|');
+    assert.equal(isOrbMaze(orbMasterSeed, roomA, roomB), false,
+        `excluded tesseract 3 pair ${pair} unexpectedly became an orb maze`);
+}
 for (const tess of eligibleOrbTesseracts) {
     const pairs = navPairKeys(tess);
     const chosen = orbPairKey(orbMasterSeed, tess);
