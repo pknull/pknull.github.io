@@ -4,6 +4,7 @@ import {
     CONTROL_ROOMS,
     DIRECTIONS,
     DIR_ANGLES,
+    DOOR_AUTO_OPEN_RANGE,
     DOOR_H,
     DOOR_W,
     EYE_H,
@@ -990,15 +991,6 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
         plaque.rotation.y = rotation;
         doorPanel._label = plaque;
         group.add(plaque);
-
-        const sigil = makeTextPanel('OPEN · CLICK / E', tessColor, {
-            size:25, worldWidth:1.62, worldHeight:0.3
-        });
-        sigil.position.set(frame.x - normal.x * 0.058, 1.25,
-            frame.z - normal.z * 0.058);
-        sigil.rotation.y = rotation;
-        doorPanel._sigil = sigil;
-        group.add(sigil);
     }
 
     addDoorRoom(mazeGrid.entranceDoorRoom, `BACK · ${srcRoom}`, GRUVBOX.green, getTess(srcRoom));
@@ -1600,6 +1592,12 @@ function updateMovement(delta) {
                 showEventMessage('THE SHADE STIRS', 2600);
             }
         }
+        const exitDoorRoom = attachedMazeGrid.exitDoorRoom;
+        const local = worldToMazeLocal(playerPos.x, playerPos.z);
+        if (exitDoorRoom && !exitDoorRoom.panelOpen &&
+            distanceToMazeDoor(exitDoorRoom, local) <= DOOR_AUTO_OPEN_RANGE) {
+            openMazeDoor(exitDoorRoom);
+        }
         const doorCrossing = checkMazeExit(previousX, previousZ);
         if (doorCrossing === 'exit') {
             const destination = attachedMazeDest;
@@ -2191,13 +2189,7 @@ function updateHUD() {
             const z = (gate.from.center.z + gate.to.center.z) / 2;
             return Math.hypot(local.x - x, local.z - z) < 2.2;
         });
-        const nearbyDoor = [attachedMazeGrid.exitDoorRoom]
-            .find(room => room && !room.panelOpen &&
-                distanceToMazeDoor(room, local) <= DOOR_INTERACT_RANGE);
-        if (nearbyDoor) {
-            hint.textContent = '[CLICK / E] OPEN DOOR';
-            hint.classList.add('visible');
-        } else if (nearbyGate) {
+        if (nearbyGate) {
             hint.textContent = 'ONE-WAY THRESHOLD';
             hint.classList.add('visible');
         } else {
