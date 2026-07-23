@@ -35,6 +35,7 @@ import {
 import { Rng, fnv1a, generateMaze } from './generation.js';
 
 const DOOR_INTERACT_RANGE = 3;
+const OVERLAP_LAYER_COLORS = {a:'#8ec07c', b:'#fe8019'};
 
 // The import map shares the three.js module instance with the console, so
 // prototype patches there would reach our objects (issue #4). Frozen, the
@@ -913,6 +914,19 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
             visual.rotation.y = rotation;
             group.add(visual);
             region.occluders.push({layer:portal.severedEdge.cell.layer, visual});
+            if (cheatMode) {
+                const color = OVERLAP_LAYER_COLORS[portal.layer];
+                const marker = new THREE.Mesh(
+                    new THREE.TorusGeometry(0.35, 0.055, 8, 24),
+                    new THREE.MeshBasicMaterial({color})
+                );
+                marker.rotation.x = -Math.PI / 2;
+                marker.position.set(midpoint.x, 0.1, midpoint.z);
+                group.add(marker);
+                const light = new THREE.PointLight(color, 1.2, 4.5);
+                light.position.set(midpoint.x, 0.25, midpoint.z);
+                group.add(light);
+            }
         }
         applyOverlapVisibility(mazeGrid);
     }
@@ -2240,6 +2254,20 @@ function buildMinimapBase(grid) {
         ctx.stroke();
     }
 
+    if (cheatMode && grid.overlapRegion) {
+        ctx.fillStyle = 'rgba(211,134,155,0.18)';
+        for (const cell of grid.overlapRegion.cellsA) {
+            const points = cell.vertices.map(toCanvas);
+            ctx.beginPath();
+            points.forEach((point, index) => {
+                if (index === 0) ctx.moveTo(point.x, point.y);
+                else ctx.lineTo(point.x, point.y);
+            });
+            ctx.closePath();
+            ctx.fill();
+        }
+    }
+
     const edgeKey = edge => edge.segment.map(point =>
         `${point.x.toFixed(5)},${point.z.toFixed(5)}`).sort().join('|');
     const drawEdge = (edge, open = edge.open, alpha = 1) => {
@@ -2275,8 +2303,9 @@ function buildMinimapBase(grid) {
                 const edgeB = cellA.twin.edges[edgeA.index];
                 if (edgeA.open === edgeB.open) drawEdge(edgeA);
                 else {
-                    drawEdge(edgeA, edgeA.open, OVERLAP_MINIMAP_ALPHA);
-                    drawEdge(edgeB, edgeB.open, OVERLAP_MINIMAP_ALPHA);
+                    const alpha = cheatMode ? 1 : OVERLAP_MINIMAP_ALPHA;
+                    drawEdge(edgeA, edgeA.open, alpha);
+                    drawEdge(edgeB, edgeB.open, alpha);
                 }
             }
         }
@@ -2284,6 +2313,11 @@ function buildMinimapBase(grid) {
             const edge = {segment:portal.segment};
             drawEdge(edge, true, OVERLAP_MINIMAP_ALPHA);
             drawEdge(edge, false, OVERLAP_MINIMAP_ALPHA);
+            if (cheatMode) {
+                const point = toCanvas(edgeMidpoint(edge));
+                ctx.fillStyle = OVERLAP_LAYER_COLORS[portal.layer];
+                ctx.beginPath(); ctx.arc(point.x, point.y, 2.5, 0, Math.PI * 2); ctx.fill();
+            }
         }
     }
 
