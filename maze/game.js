@@ -31,7 +31,7 @@ import {
     roomToggles,
     scatterPool
 } from './maze-data.js';
-import { Rng, fnv1a, generateMaze, orbTesseracts } from './generation.js';
+import { Rng, fnv1a, generateMaze, isOrbMaze, orbTesseracts } from './generation.js';
 
 const DOORWAY_ESCAPE_DEPTH = 1.5;
 const OVERLAP_LAYER_COLORS = {a:'#8ec07c', b:'#fe8019'};
@@ -561,6 +561,17 @@ function buildHub(roomId, {preview = false, openDirection = null} = {}) {
                 doorWire.rotation.copy(doorPanel.rotation);
                 doorPanel._wire = doorWire;
                 group.add(doorWire);
+
+                if (cheatMode && !preview && !collectedObelisks.has(tessNum) &&
+                    isOrbMaze(masterSeed, roomId, dest)) {
+                    const marker = new THREE.Mesh(
+                        new THREE.TorusGeometry(0.3, 0.03, 8, 24),
+                        new THREE.MeshBasicMaterial({color: tess.color})
+                    );
+                    marker.rotation.x = -Math.PI / 2;
+                    marker.position.set(wx, 0.08, wz);
+                    group.add(marker);
+                }
 
                 // Destination and interaction text are plaques fixed to the door,
                 // rather than camera-facing labels suspended in the room.
