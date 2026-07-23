@@ -35,6 +35,7 @@ import {
 import { Rng, fnv1a, generateMaze } from './generation.js';
 
 const DOOR_INTERACT_RANGE = 3;
+const DOORWAY_ESCAPE_DEPTH = 1.5;
 const OVERLAP_LAYER_COLORS = {a:'#8ec07c', b:'#fe8019'};
 
 // The import map shares the three.js module instance with the console, so
@@ -206,7 +207,12 @@ function pointInDoorwayOpening(point, room) {
         (point.x - midpoint.x) * dx / length +
         (point.z - midpoint.z) * dz / length
     );
-    return tangentDistance < DOOR_W / 2 - P_RAD * 0.5;
+    const normalDistance = Math.abs(
+        (point.x - midpoint.x) * room.panelNormal.x +
+        (point.z - midpoint.z) * room.panelNormal.z
+    );
+    return tangentDistance < DOOR_W / 2 - P_RAD * 0.5 &&
+        normalDistance <= DOORWAY_ESCAPE_DEPTH;
 }
 
 function addCheatLine(group, grid) {
@@ -1614,8 +1620,15 @@ function updateMovement(delta) {
             distanceToMazeDoor(exitDoorRoom, local) <= DOOR_AUTO_OPEN_RANGE) {
             openMazeDoor(exitDoorRoom);
         }
+        let beyondOpenExit = false;
+        if (exitDoorRoom?.panelOpen) {
+            const {frame, normal} = doorRoomThreshold(exitDoorRoom);
+            const exitDepth = (local.x - frame.x) * normal.x +
+                (local.z - frame.z) * normal.z;
+            beyondOpenExit = exitDepth > P_RAD + 0.04;
+        }
         const doorCrossing = checkMazeExit(previousX, previousZ);
-        if (doorCrossing === 'exit') {
+        if (doorCrossing === 'exit' || beyondOpenExit) {
             const destination = attachedMazeDest;
             const source = currentRoomId;
             const arrivalPose = captureMazeExitPose();
@@ -2163,7 +2176,7 @@ function checkMazeExit(previousWorldX, previousWorldZ) {
     const current = worldToMazeLocal(playerPos.x, playerPos.z);
     const room = attachedMazeGrid.exitDoorRoom;
     if (room?.panelOpen && crossesEdgePlane(previous, current, room.panelEdge, room.center,
-        -(P_RAD + 0.04), DOOR_W / 2 - P_RAD)) return room.kind;
+        -(P_RAD + 0.04), DOOR_W / 2)) return room.kind;
     return null;
 }
 
