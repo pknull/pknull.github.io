@@ -5,7 +5,10 @@ import {
     buildDeltaLattice,
     buildSigmaLattice,
     generateMaze,
-    getMazeParams
+    getMazeParams,
+    isOrbMaze,
+    orbPairKey,
+    orbTesseracts
 } from '../maze/generation.js';
 import {
     DELTA_EDGE_LEN,
@@ -13,7 +16,10 @@ import {
     DOOR_MIN_DIST_FACTOR,
     MAZE_FEATURE_ROSTER,
     ROTATION_MIN_GAIN,
-    SIGMA_EDGE_LEN
+    SIGMA_EDGE_LEN,
+    TESSERACTS,
+    getTess,
+    roomNavigation
 } from '../maze/maze-data.js';
 
 function assertLattice(lattice, expectedCells, edgeLen) {
@@ -227,6 +233,52 @@ function assertDoorRoom(grid, room, kind, features) {
     assert.equal(corridorCount, 1, `${kind} room must have one corridor`);
 }
 
+function navPairKeys(tess) {
+    const pairs = new Set();
+    for (const [room, navigation] of Object.entries(roomNavigation)) {
+        if (getTess(room) !== tess) continue;
+        for (const destination of Object.values(navigation)) {
+            if (getTess(destination) !== tess) continue;
+            pairs.add([room, destination].sort().join('|'));
+        }
+    }
+    return [...pairs].sort();
+}
+
+function assertOrbChamber(grid, tess, label) {
+    const orb = grid.orbChamber;
+    assert.ok(orb, `${label} omitted its orb chamber`);
+    assert.equal(orb.tess, tess);
+    assert.ok(orb.cells.includes(orb.center));
+    assert.equal(orb.center.chamberCenter, true);
+    assert.ok(orb.cells.length >= 4);
+    const reached = grid.reachableFrom(grid.entranceCell, {respectOneWay:false});
+    const occupied = new Set([
+        ...grid.cells.filter(cell => (cell.chamber && cell.chamber !== 'orb') || cell.trap),
+        ...grid.oneWayGates.flatMap(gate => [gate.from, gate.to]),
+        grid.rotatingChamber?.entry,
+        grid.rotatingChamber?.cell,
+        grid.rotatingChamber?.exit,
+        grid.spatialLoop?.a,
+        grid.spatialLoop?.b,
+        grid.spaceFold?.a?.cell,
+        grid.spaceFold?.b?.cell,
+        ...(grid.overlapRegion?.cellsA || []),
+        ...(grid.overlapRegion?.cellsB || []),
+        ...(grid.entranceDoorRoom?.cells || []),
+        ...(grid.exitDoorRoom?.cells || []),
+        grid.hunter?.lair
+    ].filter(Boolean));
+    for (const cell of orb.cells) {
+        assert.equal(cell.chamber, 'orb');
+        assert.equal(cell.chamberId, orb.center.chamberId);
+        assert.ok(reached.has(cell), `${label} orb cell ${cell.id} is unreachable`);
+        assert.ok(!occupied.has(cell), `${label} orb cell ${cell.id} overlaps another feature`);
+        assert.ok(!grid.doorProtectedCells().has(cell),
+            `${label} orb cell ${cell.id} touches a door room`);
+    }
+}
+
 function assertExteriorHubClearance(grid) {
     const midpoint = room => {
         const [a, b] = room.panelEdge.segment;
@@ -267,12 +319,51 @@ function stableLayout(grid, params) {
                 [portal.outsideCell.id, portal.outsideEdge.index, portal.layer]),
             vestibuleBreaks:grid.overlapRegion.vestibuleBreaks
         },
+        orb:grid.orbChamber && {
+            cells:ids(grid.orbChamber.cells),
+            center:grid.orbChamber.center.id,
+            tess:grid.orbChamber.tess
+        },
         hunter:grid.hunter?.lair.id ?? null
     });
 }
 
 assertLattice(buildDeltaLattice(4, 3, DELTA_EDGE_LEN), 24, DELTA_EDGE_LEN);
 assertLattice(buildSigmaLattice(4, 3, SIGMA_EDGE_LEN), 12, SIGMA_EDGE_LEN);
+
+const orbMasterSeed = 'orb-generation-invariant';
+const eligibleOrbTesseracts = orbTesseracts();
+assert.deepEqual(eligibleOrbTesseracts, Object.keys(TESSERACTS).map(Number)
+    .filter(tess => navPairKeys(tess).length > 0));
+for (const tess of eligibleOrbTesseracts) {
+    const pairs = navPairKeys(tess);
+    const chosen = orbPairKey(orbMasterSeed, tess);
+    assert.ok(pairs.includes(chosen), `tesseract ${tess} chose a non-navigation orb pair`);
+    assert.equal(orbPairKey(orbMasterSeed, tess), chosen,
+        `tesseract ${tess} orb pair is unstable across calls`);
+    assert.equal(pairs.filter(pair => {
+        const [roomA, roomB] = pair.split('|');
+        return isOrbMaze(orbMasterSeed, roomA, roomB);
+    }).length, 1, `tesseract ${tess} did not choose exactly one orb pair`);
+    const [roomA, roomB] = chosen.split('|');
+    assert.equal(isOrbMaze(orbMasterSeed, roomB, roomA), true,
+        `tesseract ${tess} orb pair is not undirected`);
+    const first = generateMaze(orbMasterSeed, roomA, roomB, {allFeatures:true});
+    const second = generateMaze(orbMasterSeed, roomA, roomB, {allFeatures:true});
+    assertOrbChamber(first.grid, tess, `tesseract ${tess}`);
+    assert.equal(stableLayout(first.grid, first.params), stableLayout(second.grid, second.params),
+        `tesseract ${tess} orb maze is not deterministic`);
+
+    const nonChosen = pairs.find(pair => pair !== chosen);
+    assert.ok(nonChosen, `tesseract ${tess} has no non-chosen pair to test`);
+    const [otherA, otherB] = nonChosen.split('|');
+    assert.equal(generateMaze(orbMasterSeed, otherA, otherB, {allFeatures:true}).grid.orbChamber, null,
+        `tesseract ${tess} placed an orb in a non-chosen maze`);
+}
+for (const tess of Object.keys(TESSERACTS).map(Number)
+    .filter(tess => !eligibleOrbTesseracts.includes(tess)))
+    assert.equal(orbPairKey(orbMasterSeed, tess), null,
+        `ineligible tesseract ${tess} unexpectedly chose an orb pair`);
 
 const overlapStats = {
     delta:{attempted:0, placed:0, totalBreaks:0, maxBreaks:0, zeroBreaks:0},
@@ -290,6 +381,9 @@ for (const tessellation of ['delta', 'sigma']) {
         const {grid, params} = first;
 
         assert.equal(grid.tessellation, tessellation);
+        if (!isOrbMaze(args[0], args[1], args[2])) assert.equal(grid.orbChamber, null);
+        else if (grid.orbChamber) assertOrbChamber(grid, getTess(args[1]),
+            `${tessellation} seed ${seed}`);
         assert.ok(grid.spaceFold && grid.spatialLoop && grid.hunter,
             `${tessellation} seed ${seed} did not honor allFeatures`);
         featureSurvivalStats[tessellation].attempted++;

@@ -18,6 +18,7 @@ import {
     SIGMA_TIER_RANGES,
     getTess,
     getTesseractLaw,
+    roomNavigation,
     scatterPool
 } from './maze-data.js';
 
@@ -33,6 +34,38 @@ function fnv1a(str) {
         h = Math.imul(h, 0x01000193);
     }
     return h >>> 0;
+}
+
+function canonicalRoomPairKey(roomA, roomB) {
+    return [roomA, roomB].sort().join('|');
+}
+
+const ORB_PAIR_KEYS_BY_TESS = new Map();
+for (const [room, navigation] of Object.entries(roomNavigation)) {
+    const tess = getTess(room);
+    for (const destination of Object.values(navigation)) {
+        if (getTess(destination) !== tess) continue;
+        if (!ORB_PAIR_KEYS_BY_TESS.has(tess)) ORB_PAIR_KEYS_BY_TESS.set(tess, new Set());
+        ORB_PAIR_KEYS_BY_TESS.get(tess).add(canonicalRoomPairKey(room, destination));
+    }
+}
+for (const [tess, pairs] of ORB_PAIR_KEYS_BY_TESS)
+    ORB_PAIR_KEYS_BY_TESS.set(tess, Object.freeze([...pairs].sort()));
+
+function orbPairKey(masterSeed, tess) {
+    const pairs = ORB_PAIR_KEYS_BY_TESS.get(Number(tess));
+    if (!pairs?.length) return null;
+    return pairs[fnv1a(masterSeed + '|orb' + tess) % pairs.length];
+}
+
+function isOrbMaze(masterSeed, roomA, roomB) {
+    const tess = getTess(roomA);
+    return tess === getTess(roomB) &&
+        canonicalRoomPairKey(roomA, roomB) === orbPairKey(masterSeed, tess);
+}
+
+function orbTesseracts() {
+    return [...ORB_PAIR_KEYS_BY_TESS.keys()].sort((a, b) => a - b);
 }
 
 class Rng {
@@ -221,6 +254,7 @@ class MazeGrid {
         this.rotatingChamber = null;
         this.spatialLoop = null;
         this.overlapRegion = null;
+        this.orbChamber = null;
         this.guidePath = null;
         this.hunter = null;
         this.doorFloor = null;
@@ -477,17 +511,17 @@ class MazeGrid {
         return cells;
     }
 
-    placeChambers(count, types) {
-        const protectedCells = this.doorProtectedCells();
-        const candidates = this.rng.shuffle(this.cells.filter(cell =>
+    placeChambers(count, types, rng = this.rng, protectedCells = this.doorProtectedCells()) {
+        const candidates = rng.shuffle(this.cells.filter(cell =>
             !protectedCells.has(cell) && cell.edges.every(edge => edge.neighbor)));
         let placed = 0;
+        const chambers = [];
         for (const center of candidates) {
             if (placed >= count) break;
-            const size = this.cells.length >= 240 && this.rng.next() > 0.5 ? 6 : 4;
+            const size = this.cells.length >= 240 && rng.next() > 0.5 ? 6 : 4;
             const footprint = [center];
             for (let cursor = 0; cursor < footprint.length && footprint.length < size; cursor++) {
-                for (const edge of this.rng.shuffle(footprint[cursor].edges)) {
+                for (const edge of rng.shuffle(footprint[cursor].edges)) {
                     const next = edge.neighbor;
                     if (!next || footprint.includes(next) || protectedCells.has(next) || next.chamber ||
                         !next.edges.every(candidate => candidate.neighbor)) continue;
@@ -509,14 +543,24 @@ class MazeGrid {
                 continue;
             }
             const chamberId = `chamber-${center.id}`;
-            const type = this.rng.pick(types);
+            const type = rng.pick(types);
             for (const cell of footprint) {
                 cell.chamber = type;
                 cell.chamberId = chamberId;
             }
             center.chamberCenter = true;
+            chambers.push({cells:footprint, center, type});
             placed++;
         }
+        return chambers;
+    }
+
+    placeOrbChamber(tess, orbRng) {
+        if (!orbRng || this.orbChamber) return false;
+        const [chamber] = this.placeChambers(1, ['orb'], orbRng, this.featureCells());
+        if (!chamber) return false;
+        this.orbChamber = {cells:chamber.cells, center:chamber.center, tess};
+        return true;
     }
 
     addSpaceFold() {
@@ -1313,12 +1357,14 @@ function getMazeParams(masterSeed, roomA, roomB, tessellation = MAZE_TESSELLATIO
     };
 }
 
-function buildMaze(params, roomA, roomB, allFeatures) {
+function buildMaze(params, masterSeed, roomA, roomB, allFeatures) {
     const grid = makePreparedGrid(params, params.tessellation);
     const types = ['empty','empty','lore','nav'];
     grid.placeChambers(params.rooms, types);
     grid.addLoops(params.loops);
     grid.removeDeadEnds([0.35, 0.25, 0.15, 0.05][params.tier]);
+    if (isOrbMaze(masterSeed, roomA, roomB))
+        grid.placeOrbChamber(getTess(roomA), new Rng(fnv1a(params.seed + '|orb')));
 
     if (allFeatures || params.law?.id === 'space-fold') grid.addSpaceFold();
     if (allFeatures || params.features['spatial-loop'].active)
@@ -1346,7 +1392,7 @@ function generateMaze(masterSeed, roomA, roomB, {
     if (tessellation !== 'delta' && tessellation !== 'sigma')
         throw new RangeError(`Unknown maze tessellation: ${tessellation}`);
     const params = getMazeParams(masterSeed, roomA, roomB, tessellation, doorDistFactorOverride);
-    return buildMaze(params, roomA, roomB, allFeatures);
+    return buildMaze(params, masterSeed, roomA, roomB, allFeatures);
 }
 
 export {
@@ -1357,5 +1403,8 @@ export {
     buildSigmaLattice,
     fnv1a,
     generateMaze,
-    getMazeParams
+    getMazeParams,
+    isOrbMaze,
+    orbPairKey,
+    orbTesseracts
 };

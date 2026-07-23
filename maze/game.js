@@ -31,7 +31,7 @@ import {
     roomToggles,
     scatterPool
 } from './maze-data.js';
-import { Rng, fnv1a, generateMaze } from './generation.js';
+import { Rng, fnv1a, generateMaze, orbTesseracts } from './generation.js';
 
 const DOORWAY_ESCAPE_DEPTH = 1.5;
 const OVERLAP_LAYER_COLORS = {a:'#8ec07c', b:'#fe8019'};
@@ -322,6 +322,7 @@ let lastArrivalDir = null;
 let shadeRng = null;
 let testMazeMode = false;
 let playerLight = null;
+let collectedObelisks = new Set();
 
 function setupThree() {
     scene = new THREE.Scene();
@@ -433,6 +434,7 @@ function clearScene() {
 let hubDoorOpen = null;        // direction string or null
 let hubDoorPanels = {};        // dir -> mesh (sealed door panel)
 let hubClickables = [];        // raycasting targets
+let mazeOrbClickables = [];
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2(0, 0); // center of screen
 
@@ -714,8 +716,22 @@ function openHubDoor(dir) {
 }
 
 function interactWithHub(allowNearbyWarp = false) {
-    if (gameState !== 'HUB' || playerInMaze || !controls.isLocked) return;
+    if (gameState !== 'HUB' || !controls.isLocked) return;
     raycaster.setFromCamera(pointer, camera);
+    if (playerInMaze) {
+        const visibleHit = raycaster.intersectObjects(mazeOrbClickables)
+            .find(hit => hit.distance <= 3 && hit.object.visible);
+        if (!visibleHit) return;
+        const orb = visibleHit.object;
+        const {tess} = orb.userData;
+        if (!orb.userData.isObelisk || collectedObelisks.has(tess)) return;
+        collectedObelisks.add(tess);
+        orb.visible = false;
+        if (orb._obeliskLight) orb._obeliskLight.visible = false;
+        mazeOrbClickables = mazeOrbClickables.filter(clickable => clickable !== orb);
+        showEventMessage(`${TESSERACTS[tess].emoji} ${TESSERACTS[tess].name.toUpperCase()} OBELISK CLAIMED`);
+        return;
+    }
     const hits = raycaster.intersectObjects(hubClickables);
     const visibleHit = hits.find(hit => hit.object.visible);
     if (visibleHit) {
@@ -738,6 +754,7 @@ function onHubClick() {
 
 // ===== MAZE BUILDER =====
 function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
+    mazeOrbClickables = [];
     const group = new THREE.Group();
     const accent = new THREE.Color(TESSERACTS[getTess(dstRoom)].color);
     const wallColor = new THREE.Color(GRUVBOX.bg1).lerp(accent, 0.1);
@@ -1124,6 +1141,38 @@ function buildMazeScene(mazeGrid, srcRoom, dstRoom) {
 
     }
 
+    const orbChamber = mazeGrid.orbChamber;
+    if (orbChamber && !collectedObelisks.has(orbChamber.tess)) {
+        const {x, z} = orbChamber.center.center;
+        const tess = orbChamber.tess;
+        const color = TESSERACTS[tess].color;
+        const orb = new THREE.Mesh(
+            new THREE.SphereGeometry(0.35, 24, 24),
+            new THREE.MeshStandardMaterial({
+                color,
+                emissive:color,
+                emissiveIntensity:0.6,
+                metalness:0.25,
+                roughness:0.24
+            })
+        );
+        orb.position.set(x, 1.4, z);
+        orb.userData = {isObelisk:true, tess};
+        group.add(orb);
+        const light = new THREE.PointLight(color, 1.0, 5);
+        light.position.copy(orb.position);
+        group.add(light);
+        orb._obeliskLight = light;
+        const ring = new THREE.Mesh(
+            new THREE.RingGeometry(0.38, 0.68, 32),
+            new THREE.MeshBasicMaterial({color, transparent:true, opacity:0.68, side:THREE.DoubleSide})
+        );
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.set(x, 0.035, z);
+        group.add(ring);
+        mazeOrbClickables.push(orb);
+    }
+
     // Traps
     for (const c of mazeGrid.cells) {
         if (!c.trap) continue;
@@ -1350,6 +1399,7 @@ function detachMaze() {
     mazeSpaceActive = false;
     minimapBase = null;
     minimapLayout = null;
+    mazeOrbClickables = [];
     scene.fog.far = 30;
     if (playerLight) {
         scene.remove(playerLight);
@@ -1368,6 +1418,13 @@ function tesseractGlyphs() {
     return glyphs.join('');
 }
 
+function obeliskResultLine() {
+    const eligible = orbTesseracts();
+    const glyphs = eligible.filter(tess => collectedObelisks.has(tess))
+        .map(tess => TESSERACTS[tess].emoji).join('');
+    return `Obelisks: ${collectedObelisks.size}/${eligible.length}${glyphs ? ` · ${glyphs}` : ''}`;
+}
+
 function enterWin() {
     gameState = 'WIN';
     destroyShade();
@@ -1382,11 +1439,20 @@ function enterWin() {
     document.getElementById('winTime').textContent = `Time: ${timeStr}`;
     document.getElementById('winMazes').textContent = `Mazes traversed: ${mazeCount} · Rooms: ${roomsSeen}`;
     document.getElementById('winTrail').textContent = glyphs;
+    let winObelisks = document.getElementById('winObelisks');
+    if (!winObelisks) {
+        winObelisks = document.createElement('p');
+        winObelisks.id = 'winObelisks';
+        document.getElementById('shareBtn').before(winObelisks);
+    }
+    const obeliskLine = obeliskResultLine();
+    winObelisks.textContent = obeliskLine;
     lastShareText = [
         'THE DREADFUL ENGINE',
         seedLabel + (cheatUsed ? ' † CHEAT' : ''),
         glyphs,
         `${timeStr} · ${mazeCount} mazes · ${roomsSeen} rooms`,
+        obeliskLine,
         isDailyRun ? 'pknull.ai/maze' : `pknull.ai/maze?key=${encodeURIComponent(activeKey)}`,
     ].join('\n');
     document.getElementById('win').style.display = 'flex';
@@ -2182,6 +2248,12 @@ function buildMinimapBase(grid) {
         }
     }
 
+    if (cheatMode && grid.orbChamber) {
+        const point = toCanvas(grid.orbChamber.center.center);
+        ctx.fillStyle = TESSERACTS[grid.orbChamber.tess].color;
+        ctx.beginPath(); ctx.arc(point.x, point.y, 2.5, 0, Math.PI * 2); ctx.fill();
+    }
+
     const edgeKey = edge => edge.segment.map(point =>
         `${point.x.toFixed(5)},${point.z.toFixed(5)}`).sort().join('|');
     const drawEdge = (edge, open = edge.open, alpha = 1) => {
@@ -2550,6 +2622,7 @@ function init() {
     mazeCount = 0;
     roomTrail = [];
     lastShareText = '';
+    collectedObelisks = new Set();
     activeShade = null;
     lastArrivalDir = null;
     shadeRng = new Rng(fnv1a(activeKey + '|shade'));
