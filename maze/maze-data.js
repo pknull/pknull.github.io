@@ -165,6 +165,13 @@ const HUNTER_TESSERACT_CHANCE = Object.freeze({1: 0.45, 9: 0.3});
 const HUNTER_SPEED_FACTOR = 1.0;
 const HUNTER_WAKE_DELAY_MS = 1500;
 const SHADE_LAG_MS = 5000;
+// After a room/hub transition the Shade briefly outpaces the player to close a
+// large door-exit gap — but only beyond the proximity-veil range, so the
+// acceleration is never seen — then reverts to base speed for a fair chase.
+const SHADE_CATCHUP_FACTOR = 1.35;
+const SHADE_CATCHUP_RESOLVE_DIST = 12;   // == proximity veil range
+const SHADE_REENTRY_GRACE_MS = 600;      // no catch on the materialization frame
+const SHADE_MIN_REENTRY_GAP = 3.0;       // invariant the hub placement must satisfy; asserted by tests
 
 // Mines scatter the player to a random room of the Engine. Never the
 // Entryway (3.02) or its antechamber (2.02) — a mine must never be able
@@ -229,6 +236,10 @@ export {
     HUNTER_SPEED_FACTOR,
     HUNTER_WAKE_DELAY_MS,
     SHADE_LAG_MS,
+    SHADE_CATCHUP_FACTOR,
+    SHADE_CATCHUP_RESOLVE_DIST,
+    SHADE_REENTRY_GRACE_MS,
+    SHADE_MIN_REENTRY_GAP,
     scatterPool,
     getTesseractLaw,
     MAZE_TESSELLATION,

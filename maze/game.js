@@ -22,6 +22,9 @@ import {
     OVERLAP_VIEW_AWAY_DOT,
     P_RAD,
     SHADE_LAG_MS,
+    SHADE_CATCHUP_FACTOR,
+    SHADE_CATCHUP_RESOLVE_DIST,
+    SHADE_REENTRY_GRACE_MS,
     TESSERACTS,
     TOGGLE_RAD,
     WALL_H,
@@ -447,7 +450,6 @@ let shadeDisabledEntireRun = false;
 let runStarted = false;
 let cheatUsed = false;
 let activeShade = null;
-let lastArrivalDir = null;
 let shadeRng = null;
 let testMazeMode = false;
 let playerLight = null;
@@ -1439,7 +1441,6 @@ function enterHub(roomId, fromRoom, arrivalPose = null) {
     if (fromRoom) {
         arrivalDir = findReturnDir(fromRoom, roomId);
     }
-    lastArrivalDir = arrivalDir;
 
     // An awake Shade follows through room transitions: pull its visual out
     // before the scene is torn down and let it travel unseen.
@@ -2127,6 +2128,34 @@ function shadeInInactiveOverlap(shade) {
         shade.cell.layer !== region.activeLayer);
 }
 
+// Pure Shade-transition helpers (issue #13). Kept dependency-free so the
+// re-entry invariants can be unit-tested without the THREE/scene runtime.
+
+// Hub re-entry point: diametrically opposite the player across hub centre, at
+// the known-good spawn radius. A player at centre (orb-warp) degenerates to a
+// fixed edge point. Guarantees separation, so the Shade never lands on you.
+function hubReentryPoint(px, pz, apo) {
+    const r = apo - 0.8;
+    const pd = Math.hypot(px, pz);
+    if (pd < 0.5) return { x: 0, z: -r };
+    return { x: -px / pd * r, z: -pz / pd * r };
+}
+
+// While catching up the Shade outpaces the player; otherwise it matches speed.
+function shadeStepFactor(catchup, base, catchupFactor) {
+    return catchup ? catchupFactor : base;
+}
+
+// Catch-up ends the frame the Shade reaches proximity range (the veil edge).
+function catchupResolved(dist, resolveDist) {
+    return dist <= resolveDist;
+}
+
+// The catch fires only past the grace window, in range, and not overlap-hidden.
+function catchAllowed(now, graceUntil, dist, catchRad, inactive) {
+    return !inactive && now >= graceUntil && dist < catchRad;
+}
+
 function updateHunter(delta) {
     if (shadeDisabled && !activeShade) return;
 
@@ -2153,7 +2182,6 @@ function updateHunter(delta) {
         scene.add(activeShade.visual);
     }
     const shade = activeShade;
-    const step = MOVE_SPD * HUNTER_SPEED_FACTOR * delta;
 
     // Between rooms it travels unseen; the dark thickens before it arrives.
     if (shade.mode === 'lag') {
@@ -2165,14 +2193,17 @@ function updateHunter(delta) {
             const w = mazeLocalToWorld(e.center.x, e.center.z);
             Object.assign(shade, {mode: 'maze', grid: attachedMazeGrid, cell: e, targetCell: null, x: w.x, z: w.z});
         } else {
-            let ex = 0, ez = 0;
-            if (lastArrivalDir) {
-                const a = DIR_ANGLES[lastArrivalDir];
-                ex = Math.sin(a) * (HUB_APO - 0.8);
-                ez = -Math.cos(a) * (HUB_APO - 0.8);
-            }
-            Object.assign(shade, {mode: 'hub', grid: null, cell: null, targetCell: null, x: ex, z: ez});
+            // Re-enter relative to the player, not at the hub's (0,0) origin —
+            // an orb-warp drops the player there too, so the old fallback put
+            // the Shade in your lap and the catch fired on the same frame.
+            const reentry = hubReentryPoint(playerPos.x, playerPos.z, HUB_APO);
+            Object.assign(shade, {mode: 'hub', grid: null, cell: null, targetCell: null, x: reentry.x, z: reentry.z});
         }
+        // Catch-up closes a large door-exit gap (unseen, beyond veil range);
+        // the grace window blocks a catch on the materialization frame. Together
+        // they make the follow-through a real chase, not death-or-nothing.
+        shade.catchup = true;
+        shade.graceUntil = now + SHADE_REENTRY_GRACE_MS;
         if (!shade.visual) shade.visual = makeShadeVisual();
         shade.visual.position.set(shade.x, 0, shade.z);
         scene.add(shade.visual);
@@ -2188,12 +2219,19 @@ function updateHunter(delta) {
     // even when you cannot see it.
     const dx = playerPos.x - shade.x, dz = playerPos.z - shade.z;
     const dist = Math.sqrt(dx * dx + dz * dz);
+    if (shade.catchup && catchupResolved(dist, SHADE_CATCHUP_RESOLVE_DIST)) {
+        shade.catchup = false;
+    }
     setShadeVeil(0.78 * Math.min(1, Math.max(0, (12 - dist) / 10.5)));
-    if (!shadeIsInactive && dist < 0.75) {
+    if (catchAllowed(now, shade.graceUntil || 0, dist, 0.75, shadeIsInactive)) {
         const pool = scatterPool(currentRoomId, attachedMazeDest);
         triggerTrap(shadeRng.pick(pool), 'SEIZED BY THE SHADE');
         return;
     }
+
+    const step = MOVE_SPD *
+        shadeStepFactor(shade.catchup, HUNTER_SPEED_FACTOR, SHADE_CATCHUP_FACTOR) *
+        delta;
 
     if (shade.mode === 'hub') {
         if (playerInMaze && attachedMazeGrid) {
@@ -2778,7 +2816,6 @@ function init() {
     lastShareText = '';
     collectedObelisks = new Set();
     activeShade = null;
-    lastArrivalDir = null;
     shadeRng = new Rng(fnv1a(activeKey + '|shade'));
 
     enterHub(startRoom);
