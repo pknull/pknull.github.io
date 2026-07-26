@@ -9,6 +9,8 @@ on:
       - 'fonts/JetBrainsMonoMaze-Regular.woff2'
       - 'tests/maze-generation.mjs'
       - 'tests/maze-smoke.mjs'
+      - 'tests/shade-reentry.mjs'
+      - 'tests/shade-transition.mjs'
       - '.github/workflows/maze-smoke.yml'
   pull_request:
     paths:
@@ -16,6 +18,8 @@ on:
       - 'fonts/JetBrainsMonoMaze-Regular.woff2'
       - 'tests/maze-generation.mjs'
       - 'tests/maze-smoke.mjs'
+      - 'tests/shade-reentry.mjs'
+      - 'tests/shade-transition.mjs'
       - '.github/workflows/maze-smoke.yml'
 
 jobs:
@@ -33,5 +37,11 @@ jobs:
       - name: Verify maze generation
         run: node tests/maze-generation.mjs
 
+      - name: Verify Shade re-entry logic (issue #13, unit)
+        run: node tests/shade-reentry.mjs
+
       - name: Verify maze startup
         run: node tests/maze-smoke.mjs
+
+      - name: Verify Shade transitions (issue #13, behavioural)
+        run: node tests/shade-transition.mjs
