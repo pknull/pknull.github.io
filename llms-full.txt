@@ -1,5 +1,5 @@
 # PKNULL.AI — Full Content Mirror
-> Single-file inlined-content mirror for agent crawlers. Generated 2026-07-25. Canonical HTML at https://pknull.ai/.
+> Single-file inlined-content mirror for agent crawlers. Generated 2026-07-27. Canonical HTML at https://pknull.ai/.
 > Per-page sources also available at /<path>/index.md (markdown) and /<path>/index.txt (plain text). See https://pknull.ai/llms.txt for the structured index.
 
 ## Site Overview
@@ -712,12 +712,12 @@ Archived. The source is public; I'm no longer adding to it.
 
 ## Posts (newest first)
 
-### 2026.07.19
+### The Number Is Working Two Jobs
 
 URL: https://pknull.ai/post/2026-07-19/
 Date: 2026-07-19
 
-2026.07.19
+The Number Is Working Two Jobs
 https://pknull.ai/post/2026-07-19/
 
 Of all the objections on the menu against the AI industry (the scraping, the labor tucked behind the word "automation," the concentration of power in a few companies), water is the one that…
@@ -750,12 +750,12 @@ That's the test worth keeping. One water argument changes with the location, the
 
 Withdrawn, not consumed.
 
-### 2026.06.09
+### Percent Human: Pending
 
 URL: https://pknull.ai/post/2026-06-09/
 Date: 2026-06-09
 
-2026.06.09
+Percent Human: Pending
 https://pknull.ai/post/2026-06-09/
 
 A while back I fed a paragraph of my own fiction into GPTZero, the way you'd press a bruise. Not to prove the machine wrote it; to find out how much of it was still me. There's a number it gives…
@@ -778,12 +778,12 @@ I don't have a fix. I'm not going to tell you to log off; I won't either. I'll j
 
 Percent human: pending.
 
-### 2026.05.19
+### Nobody Grades the In-Between
 
 URL: https://pknull.ai/post/2026-05-19/
 Date: 2026-05-19
 
-2026.05.19
+Nobody Grades the In-Between
 https://pknull.ai/post/2026-05-19/
 
 I think there's a thing in martial arts most people never practice. Between one pose and the next there's movement, and there's understanding inside the movement, and the instructor only ever…
@@ -814,12 +814,12 @@ I don't know that I'm any better. I think I'm probably also running clean.
 
 Penmates, apparently.
 
-### 2026.05.04
+### A Clean Repo as the Receipt
 
 URL: https://pknull.ai/post/2026-05-04/
 Date: 2026-05-04
 
-2026.05.04
+A Clean Repo as the Receipt
 https://pknull.ai/post/2026-05-04/
 
 A company I worked at became flush, and as a celebration decided the next logical move was rewriting most of the customer-facing platform. Not because it was failing, but because it was outdated,…
@@ -834,12 +834,12 @@ The pattern shows up outside code too. The loss of words over time, because the 
 
 It strikes me that with LLMs (/post/2026-04-29/) we're constantly trying to pack every token of context we can into the window. Why don't we approach the rest of our lives like that?
 
-### 2026.04.29
+### A Pile of Habits
 
 URL: https://pknull.ai/post/2026-04-29/
 Date: 2026-04-29
 
-2026.04.29
+A Pile of Habits
 https://pknull.ai/post/2026-04-29/
 
 Last week I was in a training where they paired us up to write code with an LLM, which was a frustrating waste of a day in nearly every dimension except one: it made it really obvious that…
@@ -854,12 +854,12 @@ The thing I keep landing on is what my role at a company actually looks like in 
 
 As a fun test on the side though, I've let an LLM basically shape this post entirely.
 
-### 2025.12.03
+### A Fan of Crunch
 
 URL: https://pknull.ai/post/2025-12-03/
 Date: 2025-12-03
 
-2025.12.03
+A Fan of Crunch
 https://pknull.ai/post/2025-12-03/
 
 I feel like I'm doing these at the wrong time of day currently. Like a nightcap of sorts. Probably doesn't matter as these words are falling to an audience of none. Today I was toying with the…
@@ -868,12 +868,12 @@ I feel like I'm doing these at the wrong time of day currently. Like a nightcap 
 
 I tend to like games with lots of options for ways to play especially when it comes to the more extreme things people can do. I also enjoy playing Shadowrun (https://store.catalystgamelabs.com/collections/shadowrun) though I'm a fan of earlier versions (3 and 5 both are warm in my heart). I feel there's something really fun about tuning a character to a certain playstyle that some other systems like D20 (https://5e.d20srd.org/index.htm) don't offer in the same way. That's not to say I don't like things like ShadowDark (https://www.thearcanelibrary.com/pages/shadowdark), Mothership (https://www.tuesdayknightgames.com/pages/mothership-rpg), Old Gods of Appalachia (https://www.montecookgames.com/store/product/old-gods-of-appalachia-roleplaying-game/), or Obojima: Tales from the Tall Grass (https://obojima.com/). It's just that, when describing a system I like, I tend to be a fan of crunch.
 
-### 2025.12.02
+### The Appearance of Wisdom
 
 URL: https://pknull.ai/post/2025-12-02/
 Date: 2025-12-02
 
-2025.12.02
+The Appearance of Wisdom
 https://pknull.ai/post/2025-12-02/
 
 Every technology gets the same flurries of woe and worry before it's even truly born. Plato had Socrates warning that writing would rot our memory—people trusting "external marks" instead of…
@@ -882,12 +882,12 @@ Every technology gets the same flurries of woe and worry before it's even truly 
 
 You could read a story (https://www.cs.ucdavis.edu/~koehl/Teaching/ECS188/PDF_files/Machine_stops.pdf) about how people thought this was all going to go back in 1909.
 
-### 2025.12.01
+### Permanently Into the Ether
 
 URL: https://pknull.ai/post/2025-12-01/
 Date: 2025-12-01
 
-2025.12.01
+Permanently Into the Ether
 https://pknull.ai/post/2025-12-01/
 
 Today I worked out some sequence diagrams in PUML for some ways of handling old auth issues like deeplinks via SSO and passkey management. Neither of which is exciting to talk about. I also made…
@@ -896,12 +896,12 @@ Today I worked out some sequence diagrams in PUML (https://plantuml.com/) for so
 
 Oh, and if you hate LLMs because you thought they were using too much water (https://generative-ai-newsroom.com/the-often-overlooked-water-footprint-of-ai-models-46991e3094b6), well, here's something even worse (https://futurism.com/artificial-intelligence/amazon-data-center-oregon). Don't worry not everyone believes (https://andymasley.substack.com/p/the-ai-water-issue-is-fake) we're wasting all the water. I think this is going to be another one of those, you're killing the planet type scenarios, where what we're actually doing is just making the planet unlivable for us.
 
-### 2025.11.30
+### The Web Used to Be Weirder
 
 URL: https://pknull.ai/post/2025-11-30/
 Date: 2025-11-30
 
-2025.11.30
+The Web Used to Be Weirder
 https://pknull.ai/post/2025-11-30/
 
 I spent most of today playing with this site, mostly cleaning up some CSS inconsistencies and playing with getting a comment system going. The fact that it's run like a git repo made the entire…
@@ -916,12 +916,12 @@ I think the idea, of asking something to identify itself, is a fun followup to t
 
 Not a lot to talk about today, will just watch Hannibal (https://www.imdb.com/title/tt2243973/) and call it a night.
 
-### 2025.11.29
+### Very Creative, and a Little Gay
 
 URL: https://pknull.ai/post/2025-11-29/
 Date: 2025-11-29
 
-2025.11.29
+Very Creative, and a Little Gay
 https://pknull.ai/post/2025-11-29/
 
 I was lucky enough to catch Naked Lunch at the Eugene Art House. I took my younger son to see it, to which he described it later as "very creative" and "a little gay". I always find it impressive…
@@ -1027,12 +1027,12 @@ When I use LLMs myself lately, I'm more keen to ask if the LLM can understand wh
 
     **The ribbon remembers everything.**
 
-### 2025.11.28
+### A Blog (Again?)
 
 URL: https://pknull.ai/post/2025-11-28/
 Date: 2025-11-28
 
-2025.11.28
+A Blog (Again?)
 https://pknull.ai/post/2025-11-28/
 
 I have decided to write a blog (again?). Having grown through the dotcom era, I saw so many social sites pop up. As an internet guy, I felt compelled to engage in these things constantly,…

@@ -1,4 +1,4 @@
-2025.11.30
+The Web Used to Be Weirder
 https://pknull.ai/post/2025-11-30/
 
 I spent most of today playing with this site, mostly cleaning up some CSS inconsistencies and playing with getting a comment system going. The fact that it's run like a git repo made the entire…

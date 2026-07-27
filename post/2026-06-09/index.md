@@ -1,3 +1,7 @@
+---
+title: "Percent Human: Pending"
+---
+
 A while back I fed a paragraph of my own fiction into [GPTZero](https://gptzero.me), the way you'd press a bruise. Not to prove the machine wrote it; to find out how much of it was still me. There's a number it gives you, a percent-human, and I sat there auditing my own sentences like a customs officer going through his own luggage. (That's the embarrassing part. There's a worse one near the end.)
 
 Here's what I keep thinking, and I feel like it's been sitting under every AI argument I've read without anybody saying it plain. The thing people are scared of losing isn't a thing. It's a process. We keep defending it like it's an object, because an object is easier to grieve.

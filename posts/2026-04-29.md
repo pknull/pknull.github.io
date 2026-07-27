@@ -1,3 +1,7 @@
+---
+title: "A Pile of Habits"
+---
+
 Last week I was in a training where they paired us up to write code with an LLM, which was a frustrating waste of a day in nearly every dimension except one: it made it really obvious that engineers right now are not approaching these tools the same way. The pair I sat with kept asking the LLM for solutions at too high a level ("build me a thing that does X") and then getting confused when the first response wasn't feature complete and they had to iterate. They didn't know to write a failing test first and let the LLM work toward green. They didn't have the [TDD](https://en.wikipedia.org/wiki/Test-driven_development) instincts to bring to it. They especially didn't see why I kept suggesting we paste the ticket's [acceptance criteria](https://en.wikipedia.org/wiki/Acceptance_criteria) into the prompt, like that was an extra step instead of the only step that ever made the output land.
 
 A different coworker mentioned around the same time that he doesn't understand why security won't let people just use whatever LLM they want. He hasn't really thought about how prompts get captured, or what models retain or train on. He especially hasn't thought about the way an open repo with live config can leak credentials into a context window faster than you can apologize for it. None of this is a moral failing on their part. It's that the field of "how to actually work with these things" is two or three years old and there's no formal training, just a pile of habits the people who started early have figured out as they went.

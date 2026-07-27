@@ -4,6 +4,7 @@
     "date": "2026-07-19",
     "displayDate": "2026.07.19",
     "blurb": "Of all the objections on the menu against the AI industry (the scraping, the labor tucked behind the word \"automation,\" the concentration of power in a few companies), water is the one that…",
+    "title": "The Number Is Working Two Jobs",
     "img": "/images/2026-07-19_fog-1440.webp"
   },
   {
@@ -11,6 +12,7 @@
     "date": "2026-06-09",
     "displayDate": "2026.06.09",
     "blurb": "A while back I fed a paragraph of my own fiction into GPTZero, the way you'd press a bruise. Not to prove the machine wrote it; to find out how much of it was still me. There's a number it gives…",
+    "title": "Percent Human: Pending",
     "img": "/images/2026-06-09_polyps-1440.webp"
   },
   {
@@ -18,6 +20,7 @@
     "date": "2026-05-19",
     "displayDate": "2026.05.19",
     "blurb": "I think there's a thing in martial arts most people never practice. Between one pose and the next there's movement, and there's understanding inside the movement, and the instructor only ever…",
+    "title": "Nobody Grades the In-Between",
     "img": "/images/2026-05-19_pose-1440.webp"
   },
   {
@@ -25,6 +28,7 @@
     "date": "2026-05-04",
     "displayDate": "2026.05.04",
     "blurb": "A company I worked at became flush, and as a celebration decided the next logical move was rewriting most of the customer-facing platform. Not because it was failing, but because it was outdated,…",
+    "title": "A Clean Repo as the Receipt",
     "img": "/images/2026-05-04_moss-1440.webp"
   },
   {
@@ -32,6 +36,7 @@
     "date": "2026-04-29",
     "displayDate": "2026.04.29",
     "blurb": "Last week I was in a training where they paired us up to write code with an LLM, which was a frustrating waste of a day in nearly every dimension except one: it made it really obvious that…",
+    "title": "A Pile of Habits",
     "img": "/images/2026-04-29_tulip-1440.webp"
   },
   {
@@ -39,6 +44,7 @@
     "date": "2025-12-03",
     "displayDate": "2025.12.03",
     "blurb": "I feel like I'm doing these at the wrong time of day currently. Like a nightcap of sorts. Probably doesn't matter as these words are falling to an audience of none. Today I was toying with the…",
+    "title": "A Fan of Crunch",
     "img": "/images/2025-12-04-dice-1440.webp"
   },
   {
@@ -46,6 +52,7 @@
     "date": "2025-12-02",
     "displayDate": "2025.12.02",
     "blurb": "Every technology gets the same flurries of woe and worry before it's even truly born. Plato had Socrates warning that writing would rot our memory—people trusting \"external marks\" instead of…",
+    "title": "The Appearance of Wisdom",
     "img": "/images/2025-12-02_flaminglips-1440.webp"
   },
   {
@@ -53,6 +60,7 @@
     "date": "2025-12-01",
     "displayDate": "2025.12.01",
     "blurb": "Today I worked out some sequence diagrams in PUML for some ways of handling old auth issues like deeplinks via SSO and passkey management. Neither of which is exciting to talk about. I also made…",
+    "title": "Permanently Into the Ether",
     "img": "/images/2025-12-01_incense-1440.webp"
   },
   {
@@ -60,6 +68,7 @@
     "date": "2025-11-30",
     "displayDate": "2025.11.30",
     "blurb": "I spent most of today playing with this site, mostly cleaning up some CSS inconsistencies and playing with getting a comment system going. The fact that it's run like a git repo made the entire…",
+    "title": "The Web Used to Be Weirder",
     "img": "/images/2025-11-30_csszengarden-1440.webp"
   },
   {
@@ -67,6 +76,7 @@
     "date": "2025-11-29",
     "displayDate": "2025.11.29",
     "blurb": "I was lucky enough to catch Naked Lunch at the Eugene Art House. I took my younger son to see it, to which he described it later as \"very creative\" and \"a little gay\". I always find it impressive…",
+    "title": "Very Creative, and a Little Gay",
     "img": "/images/2025-11-29_mugwriter-1440.webp"
   },
   {
@@ -74,6 +84,7 @@
     "date": "2025-11-28",
     "displayDate": "2025.11.28",
     "blurb": "I have decided to write a blog (again?). Having grown through the dotcom era, I saw so many social sites pop up. As an internet guy, I felt compelled to engage in these things constantly,…",
+    "title": "A Blog (Again?)",
     "img": "/images/2025-11-28_empty_stage-1440.webp"
   }
 ]

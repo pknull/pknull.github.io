@@ -1,3 +1,7 @@
+---
+title: "The Number Is Working Two Jobs"
+---
+
 Of all the objections on the menu against the AI industry (the scraping, the labor tucked behind the word "automation," the concentration of power in a few companies), water is the one that travels. And it travels with a number attached. That number is working two jobs. The visible one is measurement. The quieter one is telling you which side the speaker is on.
 
 Andy Masley [spent months picking at](https://blog.andymasley.com/p/empire-of-ai-is-wildly-misleading) the water figures in circulation, and his headline example, [by his analysis](https://www.wired.com/story/karen-hao-empire-of-ai-water-use-statistics/), comes from Karen Hao's *Empire of AI*: a claim about a proposed Google data center in Chile that was off by a factor of one thousand. A unit slip, cubic meters read as liters. Hao [investigated, confirmed it, and revised the book](https://karendhao.com/20251217/empire-water-changes), and Masley praised her for engaging. Credit where due; that's the correction machinery working exactly as advertised. But three zeroes isn't a rounding error, and it rode through drafting, editing, and print wearing the full authority of a measurement. Fixing the arithmetic fixes the book. Whether it reaches everything the number was recruited to carry is a different question.

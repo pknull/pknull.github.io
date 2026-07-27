@@ -456,8 +456,11 @@ def load_posts():
         body = body.strip()
         raw_img = meta.get("img")
         img = normalize_content_url(raw_img) if isinstance(raw_img, str) and raw_img else first_image(body)
+        title = meta.get("title")
+        title = str(title).strip() if title else None
         post = {
             "slug": slug,
+            "title": title,
             "date": slug,
             "displayDate": to_display_date(slug),
             "blurb": meta.get("blurb") or compute_blurb(body),
@@ -521,6 +524,8 @@ def build_posts_json(posts):
             "displayDate": post["displayDate"],
             "blurb": post["blurb"],
         }
+        if post.get("title"):
+            entry["title"] = post["title"]
         if post.get("img"):
             entry["img"] = largest_variant(post["img"])
         payload.append(entry)
@@ -743,7 +748,7 @@ def render_recent_post_list(posts):
             "</a></li>".format(
                 href=html.escape(post["path"], quote=True),
                 date=html.escape(post["displayDate"]),
-                title=html.escape(post["blurb"] or "(entry)"),
+                title=html.escape(post.get("title") or post["blurb"] or "(entry)"),
             )
         )
     return '<ol class="post-list tight">' + "".join(items) + "</ol>"
@@ -932,7 +937,9 @@ def render_blog_page(posts):
         for month in order:
             items = []
             for post in grouped[month]:
-                if post["blurb"]:
+                if post.get("title"):
+                    title = post["title"]
+                elif post["blurb"]:
                     title = post["blurb"]
                     if len(title) > 110:
                         title = title[:107].rstrip()
@@ -994,12 +1001,17 @@ def render_post_page(post, posts):
     return (
         '<p class="back-link"><a href="/blog/">← All entries</a></p>'
         '<article class="post">'
-        '<header class="post-hd"><h1>{title}</h1><div class="post-meta"><span class="mono">notebook entry</span><span class="mono dim">{minutes} min read</span></div></header>'
+        '<header class="post-hd"><h1>{title}</h1><div class="post-meta"><span class="mono">notebook entry</span>{date_span}<span class="mono dim">{minutes} min read</span></div></header>'
         '<div class="post-body">{body}</div>'
         '{nav}'
         "</article>"
     ).format(
-        title=html.escape(post["displayDate"]),
+        title=html.escape(post.get("title") or post["displayDate"]),
+        date_span=(
+            f'<span class="mono dim">{html.escape(post["displayDate"])}</span>'
+            if post.get("title")
+            else ""
+        ),
         minutes=minutes,
         body=body_html,
         nav=render_post_navigation(posts, post["slug"]),
@@ -1157,7 +1169,7 @@ def body_to_plaintext(body_md: str) -> str:
 
 def post_to_plaintext(post) -> str:
     header = [
-        post.get("displayDate") or post.get("title") or post.get("slug", ""),
+        post.get("title") or post.get("displayDate") or post.get("slug", ""),
         absolute_url(post_path(post["slug"])),
     ]
     blurb = strip_draft_comments(post.get("blurb") or "").strip()
@@ -1362,7 +1374,7 @@ def build_feed(posts):
         body_html = render_markdown(post["body_md"])
         entries.append(
             "  <entry>\n"
-            f"    <title>{html.escape(post['displayDate'])}</title>\n"
+            f"    <title>{html.escape(post.get('title') or post['displayDate'])}</title>\n"
             f"    <link href=\"{html.escape(post['canonical'])}\"/>\n"
             f"    <id>{html.escape(post['canonical'])}</id>\n"
             f"    <updated>{post['date']}T00:00:00Z</updated>\n"
@@ -1404,7 +1416,7 @@ def jsonld_article(post):
     payload = {
         "@context": "https://schema.org",
         "@type": "BlogPosting",
-        "headline": post["displayDate"],
+        "headline": post.get("title") or post["displayDate"],
         "datePublished": post["date"],
         "dateModified": post["date"],
         "author": {"@type": "Person", "name": AUTHOR_NAME, "url": AUTHOR_URL},
@@ -1554,7 +1566,7 @@ def main():
                 nav="blog",
                 page_kind="post",
                 main_class="main main--post",
-                title=post["displayDate"],
+                title=post.get("title") or post["displayDate"],
                 description=post["blurb"] or f'Notebook entry from {post["displayDate"]}.',
                 canonical=post["canonical"],
                 og_image=post_og,
@@ -1567,7 +1579,7 @@ def main():
                     jsonld_breadcrumbs([
                         ("Home", home_path()),
                         ("Blog", blog_path()),
-                        (post["displayDate"], post["path"]),
+                        (post.get("title") or post["displayDate"], post["path"]),
                     ]),
                 ),
             ),

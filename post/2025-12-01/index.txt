@@ -1,4 +1,4 @@
-2025.12.01
+Permanently Into the Ether
 https://pknull.ai/post/2025-12-01/
 
 Today I worked out some sequence diagrams in PUML for some ways of handling old auth issues like deeplinks via SSO and passkey management. Neither of which is exciting to talk about. I also made…
