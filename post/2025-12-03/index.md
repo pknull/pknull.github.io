@@ -3,8 +3,10 @@ title: "A Fan of Crunch"
 date: 2025-12-03
 img: "./images/2025-12-04-dice.jpg"
 img_alt: "metal dice for added thunk"
-gptzero: 100
-gptzero_class: H
+gptzero:
+  human: 100
+  ai: 0
+  collab: 0
 ---
 
 I feel like I'm doing these at the wrong time of day currently. Like a nightcap of sorts. Probably doesn't matter as these words are falling to an audience of none. Today I was toying with the idea of action point systems in TTRPGs. They're a kind of extension on the concept of Fatigue Points from BRUGE. I'm going to implement a system, where you burn an AP per turn, and when you run out, you're exhausted, and like magic, you can keep spending them at risk to your health. I want to try and staircase this into the concept of feats. Spend an extra point or two this round, and move a bit faster than expected, or perform some feat of strength that may not normally be possible. A gain for each point spent. Though I worry about it just falling into rule of cool territory and someone dumping all their points to punch through a building. Besides being a wide play on Call of Cthulhu in that it's really just sanity and flavor text. It's more like a Pulp Cthulhu with a BRUGE substrate. I had them adopt [The Second Way](https://basicroleplaying.org/files/file/471-the-second-way-draft/) and a few other minor systems to help reflect the unusual magic in the world. 

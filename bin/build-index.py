@@ -470,8 +470,17 @@ def load_posts():
             body = body + "\n\n" + "\n\n".join(closing)
         fm_date = meta.get("date")
         date = str(fm_date).strip() if fm_date else slug
-        gptzero = meta.get("gptzero")
-        gptzero_class = str(meta.get("gptzero_class") or "").strip().upper() or None
+        gptzero_raw = meta.get("gptzero")
+        gptzero = gptzero_class = None
+        if isinstance(gptzero_raw, dict):
+            probs = {k: v for k, v in gptzero_raw.items() if isinstance(v, (int, float))}
+            if probs:
+                dominant = max(probs, key=probs.get)
+                gptzero = round(probs[dominant])
+                gptzero_class = {"human": "H", "ai": "A", "collab": "C", "mixed": "C"}.get(dominant)
+        elif isinstance(gptzero_raw, (int, float)):
+            gptzero = round(gptzero_raw)
+            gptzero_class = str(meta.get("gptzero_class") or "").strip().upper() or None
         post = {
             "slug": slug,
             "title": title,
