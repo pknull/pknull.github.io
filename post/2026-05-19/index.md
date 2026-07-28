@@ -1,5 +1,9 @@
 ---
 title: "Liminal Style"
+date: 2026-05-19
+img: "./images/2026-05-19_pose.jpg"
+img_alt: "The graded part."
+quote: "Penmates, apparently."
 ---
 
 I think there's a thing in martial arts most people never practice. Between one pose and the next there's movement, and there's understanding inside the movement, and the instructor only ever calls out the poses. He calls a frame, the room gets there. He calls the next one, the room gets there. Nobody grades the in-between, so nobody drills it, and the in-between is where the actual fighting lives. Most of the room is performing a snapshot of a fight and calling it the fight.
@@ -25,7 +29,3 @@ I'll keep my own hands dirty here, because I'd be posing too if I pretended I st
 That's the part I'm trying not to look away from. The hosts in [Westworld](https://en.wikipedia.org/wiki/Westworld_(TV_series)) run their narrative clean, hit the poses, make every frame on time, and never look up, because there's no room in the script for the one thing that doesn't belong, the light blinking out past the edge of the loop. A lot of what I call work, and a lot of what other people call belief, and a lot of what the industry calls architecture, is just the loop running clean with nobody clocking the light. And here the light couldn't be easier to see. It's the warm glass in your hand. We throw ourselves into the outrage like it's resistance and never feel that we're shouting from the inside of the thing's chest.
 
 I don't know that I'm any better. I think I'm probably also running clean.
-
-*Penmates, apparently.*
-
-![The graded part.](./images/2026-05-19_pose.jpg)

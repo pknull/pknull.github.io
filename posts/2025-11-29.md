@@ -1,5 +1,8 @@
 ---
 title: "What vs Who am I"
+date: 2025-11-29
+img: "./images/2025-11-29_mugwriter.webp"
+img_alt: "My trying to make the LLM tell a story."
 ---
 
 I was lucky enough to catch [Naked Lunch](https://www.imdb.com/title/tt0102511/) at the [Eugene Art House](https://www.eugenearthouse.com). I took my younger son to see it, to which he described it later as "very creative" and "a little gay". I always find it impressive that someone could take a story like [Naked Lunch](https://www.goodreads.com/book/show/2613925) and turn it into something so tangible on screen. It sits next to [Brazil!](https://www.imdb.com/title/tt0088846/) up in my top favorite films. I think one of the things I've always liked about [David Cronenberg](https://www.imdb.com/name/nm0000343/) is the way his movies tend to have a lot of questions about "what am I becoming". Things like being unwillingly transformed into [a fly](https://www.imdb.com/title/tt0091064/), or the opportunities of "[new flesh](https://www.imdb.com/title/tt0086541/)", and other times characters leaning in with abandon like [Crimes of the Future](https://www.imdb.com/title/tt14549466/). [His son](https://www.imdb.com/name/nm2060593/) tends to lean more into the "Who am I", with ideas around cloning (and watching the clone be executed) or having your mind placed into the body of another (shoutout [I Will Fear No Evil](https://www.goodreads.com/book/show/50834.I_Will_Fear_No_Evil)). What's interesting to me about Naked Lunch being one of my favorites is that I feel it's spiritually closer to what his son has been doing. Ultimately, for the movie Naked Lunch though, it's neither a who am I, or what am I, but what is this world I see. I find life to be rather absurd myself, and I think it's why things like Naked Lunch and Brazil! tend to resonate so well for me.
@@ -104,5 +107,3 @@ Level 1 (The Typewriter) -- Session coordinator
 
 **The ribbon remembers everything.**
 ```
-
-![My trying to make the LLM tell a story.](./images/2025-11-29_mugwriter.webp)

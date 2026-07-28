@@ -1,5 +1,9 @@
 ---
 title: "Percent Human: Pending"
+date: 2026-06-09
+img: "./images/2026-06-09_polyps.jpg"
+img_alt: "Occasions, all the way down."
+quote: "Percent human: pending."
 ---
 
 A while back I fed a paragraph of my own fiction into [GPTZero](https://gptzero.me), the way you'd press a bruise. Not to prove the machine wrote it; to find out how much of it was still me. There's a number it gives you, a percent-human, and I sat there auditing my own sentences like a customs officer going through his own luggage. (That's the embarrassing part. There's a worse one near the end.)
@@ -17,7 +21,3 @@ So when [Plato fretted](https://en.wikipedia.org/wiki/Phaedrus_(dialogue)) that 
 Now the worse embarrassment, the one I promised. I didn't write this. I handed [a language model](https://claude.ai) a file that knows I land my sentences on semicolons and flinch before you can, and I told it to be me. The call is coming from inside the house. I'm holding the pose, and the transition is exactly the part I handed away, and what came back was good enough that you nearly couldn't tell, and that nearly is the whole of it.
 
 I don't have a fix. I'm not going to tell you to log off; I won't either. I'll just leave you where it left me, blinking at a percent-human score on a sentence I know I wrote: if the self was always a becoming and never a thing, what do we do with a machine that nails every pose and can't see a single transition? And which one did you think you were?
-
-*Percent human: pending.*
-
-![Occasions, all the way down.](./images/2026-06-09_polyps.jpg)

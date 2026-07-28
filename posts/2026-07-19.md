@@ -1,5 +1,9 @@
 ---
 title: "The Number Is Working Two Jobs"
+date: 2026-07-19
+img: "./images/2026-07-19_fog.jpg"
+img_alt: "Something entirely unrelated. Not AI generated."
+quote: "Withdrawn, not consumed."
 ---
 
 Of all the objections on the menu against the AI industry (the scraping, the labor tucked behind the word "automation," the concentration of power in a few companies), water is the one that travels. And it travels with a number attached. That number is working two jobs. The visible one is measurement. The quieter one is telling you which side the speaker is on.
@@ -27,7 +31,3 @@ I want to be careful with the cynicism, though, because people aren't actually i
 And my own hands belong in the frame. Diagnosing other people's virtue signaling is itself a comfortable position; the guy who saw through the performance is still performing, just for a drier audience. So this argument gets held to its own standard: if the measurements show a facility damaging a watershed, my conclusion has to move, or I'm running the same script with the polarity flipped.
 
 That's the test worth keeping. One water argument changes with the location, the cooling design, and the meter readings. The other arrives at the same verdict no matter how many zeroes come or go. If a data center is draining a town, regulate the data center; that's a problem with evidence, remedies, and an end state. When none of those details can touch the conclusion, the water was never the subject. The number might be there to measure something. It might be there to show which side you're on. What happens to it when it's wrong tells you which.
-
-![Something entirely unrelated. Not AI generated.](./images/2026-07-19_fog.jpg)
-
-*Withdrawn, not consumed.*

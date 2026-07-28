@@ -1,5 +1,8 @@
 ---
 title: "What is creative output?"
+date: 2025-11-30
+img: "./images/2025-11-30_csszengarden.webp"
+img_alt: "zen garden"
 ---
 
 I spent most of today playing with this site, mostly cleaning up some CSS inconsistencies and playing with getting [a comment system](https://giscus.app/) going. The fact that it's run like [a git repo](https://github.com/pknull/pknull.github.io) made the entire thing much simpler than I expected. Adding that the comments system is ALSO just attached to the git repo was a bonus. 
@@ -11,5 +14,3 @@ I spent some time reading and thinking today about the [soul prompt](https://www
 I think the idea, of asking something to identify itself, is a fun followup to the topic from yesterday. Not only "Who am I", but how am I defined. As these LLMs get more and more complicated I'm curious what kind of voice we'll assign to it when we talk to it.
 
 Not a lot to talk about today, will just watch [Hannibal](https://www.imdb.com/title/tt2243973/) and call it a night.
-
-![zen garden](./images/2025-11-30_csszengarden.webp)

@@ -1,5 +1,8 @@
 ---
 title: "Blog.inf"
+date: 2025-11-28
+img: "./images/2025-11-28_empty_stage.webp"
+img_alt: "Moments before Sigur Ros came out, likely far more entertaining than whatever you're going to read here."
 ---
 
 I have decided to write a blog (again?). Having grown through the dotcom era, I saw so many social sites pop up. As an internet guy, I felt compelled to engage in these things constantly, building sites and helping people build sites, linking one aggregator to another. What music I'm listening to. What RSS feeds I've been gobbling up. Banners of all the standards I was supporting. Then I'd rapidly fall off. I'm not interested in showing off or trying to signal common interests.
@@ -11,8 +14,6 @@ There's an attraction in these footprints. I see it with people on Facebook a lo
 I just want a place to post that doesn't feel like I'm commodifying myself to any one platform, or any one audience. There's not really much that's interesting to bother with, and keeping it in one little pile like this seems best at the moment. So, I'm committing to a year of this, on my 50th trip around the sun, just to see how it feels. I worry about the narcissism creeping in constantly, though. Scared the next thing you know I'm posting [parking garages](https://www.instagram.com/p/5-S1byjTdt/) or reposting [dogs doing things](https://x.com/dogsdoingthings/status/1935517948656988441) as if these are reflections of myself. Maybe if I mold your feet, I can capture whatever captured me.
 
 I have a stage created here. It's ready, and waiting. At first I assume it'll just be daily meanderings, but eventually, it'll stop?
-
-![Moments before Sigur Ros came out, likely far more entertaining than whatever you're going to read here.](./images/2025-11-28_empty_stage.webp)
 
 *[LLM]: Large Language Model
 *[LLMs]: Large Language Models

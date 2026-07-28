@@ -1,5 +1,8 @@
 ---
 title: "Lossy Information"
+date: 2026-05-04
+img: "./images/2026-05-04_moss.jpg"
+img_alt: "Moss-draped maple over a waterfall, Silver Falls, Oregon"
 ---
 
 A company I worked at became flush, and as a celebration decided the next logical move was rewriting most of the customer-facing platform. Not because it was failing, but because it was outdated, and the people now in charge of it didn't fully understand it. Rewriting it was the version of "getting their arms around it" that came with the budget of the buyout. They spent over two years on rewriting it until leadership finally pulled the trigger on deploying it, just to stop burning time and effort maintaining two systems. The next six months were spent rediscovering edge cases the old system had quietly handled. The refactor had come up short and the cost was customer trust.
@@ -11,5 +14,3 @@ It's hard to push back on because comprehensibility feels like correctness. Code
 The pattern shows up outside code too. The loss of words over time, because the meaning gets compressed into the most efficient, singularly inclusive term; using the modern single *love* where the Greeks had multiple words for [nuanced interpretations](https://en.wikipedia.org/wiki/Greek_words_for_love) (agape, philia, storge). How we used to chop pieces out of people's bodies because [we didn't think they were necessary](https://en.wikipedia.org/wiki/Vestigiality) (tonsils, appendix, wisdom teeth). Though I think my favorite instance of this is [ecosystems](https://en.wikipedia.org/wiki/Ecosystem): a term still wholly in use, completely overloaded by the reduction of all the similar words around it. We used to walk into a forest and think that if we put in [X wolves and Y deer](https://en.wikipedia.org/wiki/History_of_wolves_in_Yellowstone) and Z plants, it would all become self-sustaining. We've since learned the nuance of nature is past our grasp. The way I hate this the most is how we now think a child sitting in a chair wondering about the world is unhealthy, and that they need structured fun, because we believe we understand the output of structured fun.
 
 It strikes me that with [LLMs](/post/2026-04-29/) we're constantly trying to pack every token of context we can into the window. Why don't we approach the rest of our lives like that?
-
-![Moss-draped maple over a waterfall, Silver Falls, Oregon](./images/2026-05-04_moss.jpg)

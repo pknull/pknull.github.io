@@ -458,11 +458,26 @@ def load_posts():
         img = normalize_content_url(raw_img) if isinstance(raw_img, str) and raw_img else first_image(body)
         title = meta.get("title")
         title = str(title).strip() if title else None
+        img_alt = str(meta.get("img_alt") or "").strip()
+        quote = meta.get("quote")
+        quote = str(quote).strip() if quote else None
+        closing = []
+        if isinstance(raw_img, str) and raw_img and raw_img not in body:
+            closing.append(f"![{img_alt}]({raw_img})")
+        if quote:
+            closing.append(f"*{quote}*")
+        if closing:
+            body = body + "\n\n" + "\n\n".join(closing)
+        fm_date = meta.get("date")
+        date = str(fm_date).strip() if fm_date else slug
+        gptzero = meta.get("gptzero")
         post = {
             "slug": slug,
             "title": title,
-            "date": slug,
-            "displayDate": to_display_date(slug),
+            "quote": quote,
+            "gptzero": gptzero,
+            "date": date,
+            "displayDate": to_display_date(date),
             "blurb": meta.get("blurb") or compute_blurb(body),
             "img": img,
             "body_md": body,
@@ -1007,7 +1022,7 @@ def render_post_page(post, posts):
     return (
         '<p class="back-link"><a href="/blog/">← All entries</a></p>'
         '<article class="post">'
-        '<header class="post-hd"><h1>{title}</h1><div class="post-meta"><span class="mono">notebook entry</span>{date_span}<span class="mono dim">{minutes} min read</span></div></header>'
+        '<header class="post-hd"><h1>{title}</h1><div class="post-meta"><span class="mono">notebook entry</span>{date_span}<span class="mono dim">{minutes} min read</span>{gptzero_span}</div></header>'
         '<div class="post-body">{body}</div>'
         '{nav}'
         "</article>"
@@ -1019,6 +1034,11 @@ def render_post_page(post, posts):
             else ""
         ),
         minutes=minutes,
+        gptzero_span=(
+            f'<span class="mono dim">{post["gptzero"]}% human</span>'
+            if post.get("gptzero") is not None
+            else ""
+        ),
         body=body_html,
         nav=render_post_navigation(posts, post["slug"]),
     )
