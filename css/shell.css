@@ -556,6 +556,14 @@ tbody tr:hover{ background: var(--stripe); }
   margin-bottom: 8px;
 }
 .post-feat-meta-sep{ opacity: .4; }
+.post-feat-meta-title{
+  font-family: var(--f-sans);
+  font-weight: 600;
+  font-size: 1.12rem;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+.post-feat-link:hover .post-feat-meta-title{ color: var(--accent); }
 .post-feat-blurb{
   margin: 0;
   color: var(--ink);

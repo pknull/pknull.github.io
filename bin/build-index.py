@@ -723,12 +723,18 @@ def render_featured_posts(posts):
             '<li class="post-feat"><a class="post-feat-link" href="{href}">'
             '<div class="post-feat-img">{img}</div>'
             '<div class="post-feat-body">'
-            '<div class="post-feat-meta"><span class="post-feat-meta-date">{date}</span></div>'
+            '<div class="post-feat-meta"><span class="post-feat-meta-date">{date}</span>{title_seg}</div>'
             '<p class="post-feat-blurb">{blurb}</p>'
             "</div></a></li>".format(
                 href=html.escape(post["path"], quote=True),
                 img=img_html,
                 date=html.escape(post["displayDate"]),
+                title_seg=(
+                    '<span class="post-feat-meta-sep">—</span>'
+                    f'<span class="post-feat-meta-title">{html.escape(post["title"])}</span>'
+                    if post.get("title")
+                    else ""
+                ),
                 blurb=html.escape(post["blurb"] or "(entry)"),
             )
         )
