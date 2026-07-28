@@ -712,6 +712,26 @@ Archived. The source is public; I'm no longer adding to it.
 
 ## Posts (newest first)
 
+### Belonging as a Service
+
+URL: https://pknull.ai/post/2026-07-27/
+Date: 2026-07-27
+
+Belonging as a Service
+https://pknull.ai/post/2026-07-27/
+
+I was not a very popular person when I was young. For a variety of reasons, I did not fit in with my peers, mostly due to my own awkwardness and antisocial tendencies. In my late teens I…
+
+I was not a very popular person when I was young. For a variety of reasons, I did not fit in with my peers, mostly due to my own awkwardness and antisocial tendencies. In my late teens I discovered BBSes. These seemed like an oasis to me. A handful of other minds, around my age, with other ideas, other perspectives and ways of being. Absolute strangers I could find from my apartment at night on Telix (https://en.wikipedia.org/wiki/Telix), socialize with, and start to appreciate the idea of what remote communities could give (https://doi.org/10.1037/0022-3514.75.3.681). I felt the same about the internet as it was being created around me. I remember dialing into BBSes to access the darpanet (https://en.wikipedia.org/wiki/ARPANET). I remember the first time a band I knew had a webpage, it was Underworld (https://en.wikipedia.org/wiki/Underworld_(band)), all text. It was strange to me but it kept kindling this idea that this internet, would allow information, and ideas to move so much faster. That I could meet people with similar ideas, to help grow my own, to critique, to refine. And it did that, for quite some time. Due to the internet I went from expanding my ability to find people from my neighborhood, to my city, to my country, and to the world. I was able to join a tribe of many.
+
+Eventually though, that stopped. Instead, people found that if they couldn't find people they knew to agree with them, they could expand on those same boundaries until they found someone that did. Instead of growing their idea, they reaffirmed it. Set it in stone. Slowly I watched empathy and understanding dissolve online. We suddenly discovered how to use language to shape the people around us. Circumstances for our allies, character for our enemies (https://en.wikipedia.org/wiki/Fundamental_attribution_error). The wider the internet got, the more it exceeded a person's ability to be part of it as a whole, and instead they started diving into new groups without geographic borders. It created a strange reality. One where you could now grow your group into a shape until it fits a scope you need. This no longer required you to be kind, or understand people. It also now gave people the ability to go out and attack others, wholly unrelated to them.
+
+Now the rails that once provided a shape for the nerdy D&D kid had been structurally grown to carry every person with a grievance, connecting entire tribes. People now unable to see the difference between a support group and an outrage engine (/post/2026-07-19/). I feel this change is what has pushed me off platforms like Facebook and such for quite some time. I had a specific instance where I was talking to a person, and he said, "Do you find Pictures of my Father and Mein Kampf to be weirdly similar", to which I replied I had, and I was curious how he found them similar, and he said "I haven't read them, it's just something to think about." Performativism, and or narcissism everywhere. Worse, you can still see people trying to exist outside these groups. Trying to navigate, trying to be the next influencer. We jumped the shark here by the way, ASU now offers a degree in being an influencer (https://www.azfamily.com/2026/07/21/learn-how-be-an-influencer-with-asus-content-creation-major/). We're about to give people degrees on how people should act for the masses, and build a tribe.
+
+It's been a little depressing at times, and AI isn't doing much to fix this. The upcoming generation is in trouble. ~72% of US teens were recently reported (https://www.commonsensemedia.org/research/talk-trust-and-trade-offs-how-and-why-teens-use-ai-companions) as using AI companions. Pretty soon they won't need to find a tribe at all. Alone, surrounded by agents that elevate and validate them (https://arxiv.org/abs/2310.13548). I know you wouldn't fall for that, dear reader, you know it's a database (/post/2026-06-09/), and a cute word association query. The thing is though, some people just want to hear the words. Some people are so far outside society that any confirmation that lets them feel valid, is going to be enough. AI is about to make Facebook look about as exciting as a parking lot. A billion tribes of one.
+
+A growing circle of influence.
+
 ### The Number Is Working Two Jobs
 
 URL: https://pknull.ai/post/2026-07-19/
@@ -778,12 +798,12 @@ I don't have a fix. I'm not going to tell you to log off; I won't either. I'll j
 
 Percent human: pending.
 
-### Nobody Grades the In-Between
+### Liminal Style
 
 URL: https://pknull.ai/post/2026-05-19/
 Date: 2026-05-19
 
-Nobody Grades the In-Between
+Liminal Style
 https://pknull.ai/post/2026-05-19/
 
 I think there's a thing in martial arts most people never practice. Between one pose and the next there's movement, and there's understanding inside the movement, and the instructor only ever…
@@ -814,12 +834,12 @@ I don't know that I'm any better. I think I'm probably also running clean.
 
 Penmates, apparently.
 
-### A Clean Repo as the Receipt
+### Lossy Information
 
 URL: https://pknull.ai/post/2026-05-04/
 Date: 2026-05-04
 
-A Clean Repo as the Receipt
+Lossy Information
 https://pknull.ai/post/2026-05-04/
 
 A company I worked at became flush, and as a celebration decided the next logical move was rewriting most of the customer-facing platform. Not because it was failing, but because it was outdated,…
@@ -834,12 +854,12 @@ The pattern shows up outside code too. The loss of words over time, because the 
 
 It strikes me that with LLMs (/post/2026-04-29/) we're constantly trying to pack every token of context we can into the window. Why don't we approach the rest of our lives like that?
 
-### A Pile of Habits
+### Habits and Hubris
 
 URL: https://pknull.ai/post/2026-04-29/
 Date: 2026-04-29
 
-A Pile of Habits
+Habits and Hubris
 https://pknull.ai/post/2026-04-29/
 
 Last week I was in a training where they paired us up to write code with an LLM, which was a frustrating waste of a day in nearly every dimension except one: it made it really obvious that…
@@ -868,12 +888,12 @@ I feel like I'm doing these at the wrong time of day currently. Like a nightcap 
 
 I tend to like games with lots of options for ways to play especially when it comes to the more extreme things people can do. I also enjoy playing Shadowrun (https://store.catalystgamelabs.com/collections/shadowrun) though I'm a fan of earlier versions (3 and 5 both are warm in my heart). I feel there's something really fun about tuning a character to a certain playstyle that some other systems like D20 (https://5e.d20srd.org/index.htm) don't offer in the same way. That's not to say I don't like things like ShadowDark (https://www.thearcanelibrary.com/pages/shadowdark), Mothership (https://www.tuesdayknightgames.com/pages/mothership-rpg), Old Gods of Appalachia (https://www.montecookgames.com/store/product/old-gods-of-appalachia-roleplaying-game/), or Obojima: Tales from the Tall Grass (https://obojima.com/). It's just that, when describing a system I like, I tend to be a fan of crunch.
 
-### The Appearance of Wisdom
+### The Simulation of Wisdom
 
 URL: https://pknull.ai/post/2025-12-02/
 Date: 2025-12-02
 
-The Appearance of Wisdom
+The Simulation of Wisdom
 https://pknull.ai/post/2025-12-02/
 
 Every technology gets the same flurries of woe and worry before it's even truly born. Plato had Socrates warning that writing would rot our memory—people trusting "external marks" instead of…
@@ -896,12 +916,12 @@ Today I worked out some sequence diagrams in PUML (https://plantuml.com/) for so
 
 Oh, and if you hate LLMs because you thought they were using too much water (https://generative-ai-newsroom.com/the-often-overlooked-water-footprint-of-ai-models-46991e3094b6), well, here's something even worse (https://futurism.com/artificial-intelligence/amazon-data-center-oregon). Don't worry not everyone believes (https://andymasley.substack.com/p/the-ai-water-issue-is-fake) we're wasting all the water. I think this is going to be another one of those, you're killing the planet type scenarios, where what we're actually doing is just making the planet unlivable for us.
 
-### The Web Used to Be Weirder
+### What is creative output?
 
 URL: https://pknull.ai/post/2025-11-30/
 Date: 2025-11-30
 
-The Web Used to Be Weirder
+What is creative output?
 https://pknull.ai/post/2025-11-30/
 
 I spent most of today playing with this site, mostly cleaning up some CSS inconsistencies and playing with getting a comment system going. The fact that it's run like a git repo made the entire…
@@ -916,12 +936,12 @@ I think the idea, of asking something to identify itself, is a fun followup to t
 
 Not a lot to talk about today, will just watch Hannibal (https://www.imdb.com/title/tt2243973/) and call it a night.
 
-### Very Creative, and a Little Gay
+### What vs Who am I
 
 URL: https://pknull.ai/post/2025-11-29/
 Date: 2025-11-29
 
-Very Creative, and a Little Gay
+What vs Who am I
 https://pknull.ai/post/2025-11-29/
 
 I was lucky enough to catch Naked Lunch at the Eugene Art House. I took my younger son to see it, to which he described it later as "very creative" and "a little gay". I always find it impressive…
@@ -1027,12 +1047,12 @@ When I use LLMs myself lately, I'm more keen to ask if the LLM can understand wh
 
     **The ribbon remembers everything.**
 
-### A Blog (Again?)
+### Blog.inf
 
 URL: https://pknull.ai/post/2025-11-28/
 Date: 2025-11-28
 
-A Blog (Again?)
+Blog.inf
 https://pknull.ai/post/2025-11-28/
 
 I have decided to write a blog (again?). Having grown through the dotcom era, I saw so many social sites pop up. As an internet guy, I felt compelled to engage in these things constantly,…

@@ -1,4 +1,4 @@
-A Pile of Habits
+Habits and Hubris
 https://pknull.ai/post/2026-04-29/
 
 Last week I was in a training where they paired us up to write code with an LLM, which was a frustrating waste of a day in nearly every dimension except one: it made it really obvious that…

@@ -1,5 +1,5 @@
 ---
-title: "Nobody Grades the In-Between"
+title: "Liminal Style"
 ---
 
 I think there's a thing in martial arts most people never practice. Between one pose and the next there's movement, and there's understanding inside the movement, and the instructor only ever calls out the poses. He calls a frame, the room gets there. He calls the next one, the room gets there. Nobody grades the in-between, so nobody drills it, and the in-between is where the actual fighting lives. Most of the room is performing a snapshot of a fight and calling it the fight.

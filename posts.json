@@ -1,5 +1,13 @@
 [
   {
+    "slug": "2026-07-27",
+    "date": "2026-07-27",
+    "displayDate": "2026.07.27",
+    "blurb": "I was not a very popular person when I was young. For a variety of reasons, I did not fit in with my peers, mostly due to my own awkwardness and antisocial tendencies. In my late teens I…",
+    "title": "Belonging as a Service",
+    "img": "/images/2026-07-27_cubicle-1440.webp"
+  },
+  {
     "slug": "2026-07-19",
     "date": "2026-07-19",
     "displayDate": "2026.07.19",
@@ -20,7 +28,7 @@
     "date": "2026-05-19",
     "displayDate": "2026.05.19",
     "blurb": "I think there's a thing in martial arts most people never practice. Between one pose and the next there's movement, and there's understanding inside the movement, and the instructor only ever…",
-    "title": "Nobody Grades the In-Between",
+    "title": "Liminal Style",
     "img": "/images/2026-05-19_pose-1440.webp"
   },
   {
@@ -28,7 +36,7 @@
     "date": "2026-05-04",
     "displayDate": "2026.05.04",
     "blurb": "A company I worked at became flush, and as a celebration decided the next logical move was rewriting most of the customer-facing platform. Not because it was failing, but because it was outdated,…",
-    "title": "A Clean Repo as the Receipt",
+    "title": "Lossy Information",
     "img": "/images/2026-05-04_moss-1440.webp"
   },
   {
@@ -36,7 +44,7 @@
     "date": "2026-04-29",
     "displayDate": "2026.04.29",
     "blurb": "Last week I was in a training where they paired us up to write code with an LLM, which was a frustrating waste of a day in nearly every dimension except one: it made it really obvious that…",
-    "title": "A Pile of Habits",
+    "title": "Habits and Hubris",
     "img": "/images/2026-04-29_tulip-1440.webp"
   },
   {
@@ -52,7 +60,7 @@
     "date": "2025-12-02",
     "displayDate": "2025.12.02",
     "blurb": "Every technology gets the same flurries of woe and worry before it's even truly born. Plato had Socrates warning that writing would rot our memory—people trusting \"external marks\" instead of…",
-    "title": "The Appearance of Wisdom",
+    "title": "The Simulation of Wisdom",
     "img": "/images/2025-12-02_flaminglips-1440.webp"
   },
   {
@@ -68,7 +76,7 @@
     "date": "2025-11-30",
     "displayDate": "2025.11.30",
     "blurb": "I spent most of today playing with this site, mostly cleaning up some CSS inconsistencies and playing with getting a comment system going. The fact that it's run like a git repo made the entire…",
-    "title": "The Web Used to Be Weirder",
+    "title": "What is creative output?",
     "img": "/images/2025-11-30_csszengarden-1440.webp"
   },
   {
@@ -76,7 +84,7 @@
     "date": "2025-11-29",
     "displayDate": "2025.11.29",
     "blurb": "I was lucky enough to catch Naked Lunch at the Eugene Art House. I took my younger son to see it, to which he described it later as \"very creative\" and \"a little gay\". I always find it impressive…",
-    "title": "Very Creative, and a Little Gay",
+    "title": "What vs Who am I",
     "img": "/images/2025-11-29_mugwriter-1440.webp"
   },
   {
@@ -84,7 +92,7 @@
     "date": "2025-11-28",
     "displayDate": "2025.11.28",
     "blurb": "I have decided to write a blog (again?). Having grown through the dotcom era, I saw so many social sites pop up. As an internet guy, I felt compelled to engage in these things constantly,…",
-    "title": "A Blog (Again?)",
+    "title": "Blog.inf",
     "img": "/images/2025-11-28_empty_stage-1440.webp"
   }
 ]

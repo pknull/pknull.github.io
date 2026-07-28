@@ -220,6 +220,27 @@
       }
     ]
   },
+  "/images/2026-07-27_cubicle.jpg": {
+    "intrinsic_height": 1840,
+    "intrinsic_width": 3264,
+    "variants": [
+      {
+        "height": 271,
+        "url": "/images/2026-07-27_cubicle-480.webp",
+        "width": 480
+      },
+      {
+        "height": 541,
+        "url": "/images/2026-07-27_cubicle-960.webp",
+        "width": 960
+      },
+      {
+        "height": 812,
+        "url": "/images/2026-07-27_cubicle-1440.webp",
+        "width": 1440
+      }
+    ]
+  },
   "/images/meta_headshot.webp": {
     "intrinsic_height": 1079,
     "intrinsic_width": 809,

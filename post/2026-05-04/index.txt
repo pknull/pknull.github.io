@@ -1,4 +1,4 @@
-A Clean Repo as the Receipt
+Lossy Information
 https://pknull.ai/post/2026-05-04/
 
 A company I worked at became flush, and as a celebration decided the next logical move was rewriting most of the customer-facing platform. Not because it was failing, but because it was outdated,…
