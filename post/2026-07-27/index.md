@@ -4,6 +4,8 @@ date: 2026-07-27
 img: "./images/2026-07-27_cubicle.jpg"
 img_alt: "Terminals in a beige cubicle."
 quote: "A growing circle of influence."
+gptzero: 100
+gptzero_class: H
 ---
 
 I was not a very popular person when I was young. For a variety of reasons, I did not fit in with my peers, mostly due to my own awkwardness and antisocial tendencies. In my late teens I discovered BBSes. These seemed like an oasis to me. A handful of other minds, around my age, with other ideas, other perspectives and ways of being. Absolute strangers I could find from my apartment at night on [Telix](https://en.wikipedia.org/wiki/Telix), socialize with, and start to appreciate the idea of [what remote communities could give](https://doi.org/10.1037/0022-3514.75.3.681). I felt the same about the internet as it was being created around me. I remember dialing into BBSes to access the [darpanet](https://en.wikipedia.org/wiki/ARPANET). I remember the first time a band I knew had a webpage, it was [Underworld](https://en.wikipedia.org/wiki/Underworld_(band)), all text. It was strange to me but it kept kindling this idea that this internet, would allow information, and ideas to move so much faster. That I could meet people with similar ideas, to help grow my own, to critique, to refine. And it did that, for quite some time. Due to the internet I went from expanding my ability to find people from my neighborhood, to my city, to my country, and to the world. I was able to join a tribe of many.

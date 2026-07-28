@@ -3,6 +3,8 @@ title: "Lossy Information"
 date: 2026-05-04
 img: "./images/2026-05-04_moss.jpg"
 img_alt: "Moss-draped maple over a waterfall, Silver Falls, Oregon"
+gptzero: 91
+gptzero_class: C
 ---
 
 A company I worked at became flush, and as a celebration decided the next logical move was rewriting most of the customer-facing platform. Not because it was failing, but because it was outdated, and the people now in charge of it didn't fully understand it. Rewriting it was the version of "getting their arms around it" that came with the budget of the buyout. They spent over two years on rewriting it until leadership finally pulled the trigger on deploying it, just to stop burning time and effort maintaining two systems. The next six months were spent rediscovering edge cases the old system had quietly handled. The refactor had come up short and the cost was customer trust.

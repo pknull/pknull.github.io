@@ -3,6 +3,8 @@ title: "What is creative output?"
 date: 2025-11-30
 img: "./images/2025-11-30_csszengarden.webp"
 img_alt: "zen garden"
+gptzero: 100
+gptzero_class: H
 ---
 
 I spent most of today playing with this site, mostly cleaning up some CSS inconsistencies and playing with getting [a comment system](https://giscus.app/) going. The fact that it's run like [a git repo](https://github.com/pknull/pknull.github.io) made the entire thing much simpler than I expected. Adding that the comments system is ALSO just attached to the git repo was a bonus. 

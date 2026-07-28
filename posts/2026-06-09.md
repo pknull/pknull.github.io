@@ -4,6 +4,8 @@ date: 2026-06-09
 img: "./images/2026-06-09_polyps.jpg"
 img_alt: "Occasions, all the way down."
 quote: "Percent human: pending."
+gptzero: 100
+gptzero_class: A
 ---
 
 A while back I fed a paragraph of my own fiction into [GPTZero](https://gptzero.me), the way you'd press a bruise. Not to prove the machine wrote it; to find out how much of it was still me. There's a number it gives you, a percent-human, and I sat there auditing my own sentences like a customs officer going through his own luggage. (That's the embarrassing part. There's a worse one near the end.)

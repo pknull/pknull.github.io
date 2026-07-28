@@ -4,6 +4,8 @@ date: 2026-07-19
 img: "./images/2026-07-19_fog.jpg"
 img_alt: "Something entirely unrelated. Not AI generated."
 quote: "Withdrawn, not consumed."
+gptzero: 100
+gptzero_class: A
 ---
 
 Of all the objections on the menu against the AI industry (the scraping, the labor tucked behind the word "automation," the concentration of power in a few companies), water is the one that travels. And it travels with a number attached. That number is working two jobs. The visible one is measurement. The quieter one is telling you which side the speaker is on.

@@ -471,11 +471,13 @@ def load_posts():
         fm_date = meta.get("date")
         date = str(fm_date).strip() if fm_date else slug
         gptzero = meta.get("gptzero")
+        gptzero_class = str(meta.get("gptzero_class") or "").strip().upper() or None
         post = {
             "slug": slug,
             "title": title,
             "quote": quote,
             "gptzero": gptzero,
+            "gptzeroClass": gptzero_class,
             "date": date,
             "displayDate": to_display_date(date),
             "blurb": meta.get("blurb") or compute_blurb(body),
@@ -1035,8 +1037,13 @@ def render_post_page(post, posts):
         ),
         minutes=minutes,
         gptzero_span=(
-            f'<span class="mono dim">{post["gptzero"]}% human</span>'
+            '<span class="mono dim">{pct}% <abbr title="{word}">{letter}</abbr></span>'.format(
+                pct=post["gptzero"],
+                letter=post["gptzeroClass"],
+                word={"H": "Human", "A": "AI", "C": "Collab"}[post["gptzeroClass"]],
+            )
             if post.get("gptzero") is not None
+            and post.get("gptzeroClass") in ("H", "A", "C")
             else ""
         ),
         body=body_html,
