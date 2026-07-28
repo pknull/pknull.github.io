@@ -1,5 +1,5 @@
 ---
-title: "The Web Used to Be Weirder"
+title: "What is creative output?"
 ---
 
 I spent most of today playing with this site, mostly cleaning up some CSS inconsistencies and playing with getting [a comment system](https://giscus.app/) going. The fact that it's run like [a git repo](https://github.com/pknull/pknull.github.io) made the entire thing much simpler than I expected. Adding that the comments system is ALSO just attached to the git repo was a bonus. 

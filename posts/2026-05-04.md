@@ -1,5 +1,5 @@
 ---
-title: "A Clean Repo as the Receipt"
+title: "Lossy Information"
 ---
 
 A company I worked at became flush, and as a celebration decided the next logical move was rewriting most of the customer-facing platform. Not because it was failing, but because it was outdated, and the people now in charge of it didn't fully understand it. Rewriting it was the version of "getting their arms around it" that came with the budget of the buyout. They spent over two years on rewriting it until leadership finally pulled the trigger on deploying it, just to stop burning time and effort maintaining two systems. The next six months were spent rediscovering edge cases the old system had quietly handled. The refactor had come up short and the cost was customer trust.
