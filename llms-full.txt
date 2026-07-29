@@ -1,5 +1,5 @@
 # PKNULL.AI — Full Content Mirror
-> Single-file inlined-content mirror for agent crawlers. Generated 2026-07-28. Canonical HTML at https://pknull.ai/.
+> Single-file inlined-content mirror for agent crawlers. Generated 2026-07-29. Canonical HTML at https://pknull.ai/.
 > Per-page sources also available at /<path>/index.md (markdown) and /<path>/index.txt (plain text). See https://pknull.ai/llms.txt for the structured index.
 
 ## Site Overview
@@ -711,6 +711,18 @@ Archived. The source is public; I'm no longer adding to it.
 
 
 ## Posts (newest first)
+
+### 2026.07.29
+
+URL: https://pknull.ai/post/2026-07-29/
+Date: 2026-07-29
+
+2026.07.29
+https://pknull.ai/post/2026-07-29/
+
+Listen.
+
+Listen, Move, Feel
 
 ### Belonging as a Service
 

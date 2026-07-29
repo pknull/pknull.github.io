@@ -241,6 +241,27 @@
       }
     ]
   },
+  "/images/2026-07-29_sashes.jpg": {
+    "intrinsic_height": 3000,
+    "intrinsic_width": 4000,
+    "variants": [
+      {
+        "height": 360,
+        "url": "/images/2026-07-29_sashes-480.webp",
+        "width": 480
+      },
+      {
+        "height": 720,
+        "url": "/images/2026-07-29_sashes-960.webp",
+        "width": 960
+      },
+      {
+        "height": 1080,
+        "url": "/images/2026-07-29_sashes-1440.webp",
+        "width": 1440
+      }
+    ]
+  },
   "/images/meta_headshot.webp": {
     "intrinsic_height": 1079,
     "intrinsic_width": 809,
