@@ -1,6 +1,7 @@
 ---
 title: "The Simulation of Wisdom"
 date: 2025-12-02
+kind: "essay"
 img: "./images/2025-12-02_flaminglips.jpg"
 img_alt: "We love the distraction of spectacle."
 gptzero:

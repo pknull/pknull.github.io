@@ -1,6 +1,7 @@
 ---
 title: "The Number Is Working Two Jobs"
 date: 2026-07-19
+kind: "essay"
 img: "./images/2026-07-19_fog.jpg"
 img_alt: "Something entirely unrelated. Not AI generated."
 quote: "Withdrawn, not consumed."

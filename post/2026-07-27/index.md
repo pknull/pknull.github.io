@@ -1,6 +1,7 @@
 ---
 title: "Belonging as a Service"
 date: 2026-07-27
+kind: "essay"
 img: "./images/2026-07-27_cubicle.jpg"
 img_alt: "Terminals in a beige cubicle."
 quote: "A growing circle of influence."
