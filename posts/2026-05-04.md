@@ -1,6 +1,7 @@
 ---
 title: "Lossy Information"
 date: 2026-05-04
+kind: "essay"
 img: "./images/2026-05-04_moss.jpg"
 img_alt: "Moss-draped maple over a waterfall, Silver Falls, Oregon"
 gptzero:

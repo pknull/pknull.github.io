@@ -1,6 +1,7 @@
 ---
 title: "Percent Human: Pending"
 date: 2026-06-09
+kind: "essay"
 img: "./images/2026-06-09_polyps.jpg"
 img_alt: "Occasions, all the way down."
 quote: "Percent human: pending."

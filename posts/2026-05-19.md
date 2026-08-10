@@ -1,6 +1,7 @@
 ---
 title: "Liminal Style"
 date: 2026-05-19
+kind: "essay"
 img: "./images/2026-05-19_pose.jpg"
 img_alt: "The graded part."
 quote: "Penmates, apparently."

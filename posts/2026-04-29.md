@@ -1,6 +1,7 @@
 ---
 title: "Habits and Hubris"
 date: 2026-04-29
+kind: "essay"
 img: "./images/2026-04-29_tulip.jpg"
 img_alt: "tulip"
 gptzero:
