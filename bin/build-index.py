@@ -996,7 +996,7 @@ def render_blog_page(posts):
             )
         groups_html = "".join(sections)
     return (
-        '<header class="page-hd"><p class="hd-kicker dim"><a href="/">← home</a></p><h1>Blog</h1><p class="page-lede">Notebook entries, newest first.</p></header>'
+        '<header class="page-hd"><p class="hd-kicker dim"><a href="/">← home</a></p><h1>Blog</h1><p class="page-lede">Newest entries first.</p></header>'
         + groups_html
     )
 
@@ -1587,7 +1587,7 @@ def main():
             page_kind="blog",
             main_class="main",
             title="Blog",
-            description="Notebook entries, newest first.",
+            description="Newest entries first.",
             canonical=absolute_url(blog_path()),
             json_ld=render_jsonld(
                 jsonld_breadcrumbs([("Home", home_path()), ("Blog", blog_path())])
