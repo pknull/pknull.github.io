@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Legacy · PKNULL.AI</title>
+  <meta name="description" content="This record is the journal of Content9999. He is a Chronicler Mediator from the region of Borca. He is currently residing at a Cluster in the city of Justitian, otherwise known as &#34;The Righteous…">
+  <meta name="author" content="PKnull">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="build-id" content="54661be7ee4d">
+
+  <script>
+    (function(){
+      try {
+        var stored = localStorage.getItem('pk-mode');
+        var mode = stored === 'dark' || stored === 'light' || stored === 'auto' ? stored : 'auto';
+        var resolved = mode === 'auto'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : mode;
+        if (resolved === 'dark') document.documentElement.setAttribute('data-mode', 'dark');
+      } catch (e) {}
+    })();
+  </script>
+
+  <script>
+    (function() {
+      function routePathFromHash(hash) {
+        if (!hash || hash === '#' || hash === '#main') return null;
+        if (hash.indexOf('#/') === 0) {
+          var raw = hash.slice(2);
+          if (!raw) return '/';
+          if (raw === 'blog') return '/blog/';
+          if (raw === 'projects') return '/projects/';
+          if (raw.indexOf('post/') === 0) return '/post/' + raw.slice(5).replace(/\/+$/, '') + '/';
+          if (raw.indexOf('projects/') === 0) return '/projects/' + raw.slice(9).replace(/\/+$/, '') + '/';
+          return null;
+        }
+
+        var rawLegacy = hash.slice(1);
+        if (!rawLegacy || rawLegacy === 'main') return null;
+        if (rawLegacy === 'blog') return '/blog/';
+        if (rawLegacy.indexOf('blog:') === 0) return '/post/' + rawLegacy.slice(5).replace(/\/+$/, '') + '/';
+        if (rawLegacy === 'meta') return '/';
+        if (rawLegacy === 'asha') return '/projects/asha/';
+        if (rawLegacy === 'thallus') return '/projects/thallus/';
+        return null;
+      }
+
+      var path = routePathFromHash(window.location.hash);
+      if (path) window.location.replace(path + window.location.search);
+    })();
+  </script>
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    var gaLoaded = false;
+
+    function loadGoogleAnalytics() {
+      if (gaLoaded) return;
+      gaLoaded = true;
+
+      var script = document.createElement('script');
+      script.async = true;
+      script.src = 'https://www.googletagmanager.com/gtag/js?id=G-YBVLPYGBNY';
+      document.head.appendChild(script);
+
+      gtag('consent', 'default', {
+        'ad_storage': 'denied',
+        'ad_user_data': 'denied',
+        'ad_personalization': 'denied',
+        'analytics_storage': 'granted'
+      });
+      gtag('js', new Date());
+      gtag('config', 'G-YBVLPYGBNY');
+    }
+
+    if (localStorage.getItem('analytics_consent') === 'granted') {
+      loadGoogleAnalytics();
+    }
+  </script>
+
+  <meta property="og:title" content="Legacy · PKNULL.AI">
+  <meta property="og:description" content="This record is the journal of Content9999. He is a Chronicler Mediator from the region of Borca. He is currently residing at a Cluster in the city of Justitian, otherwise known as &#34;The Righteous…">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://pknull.ai/post/2026-08-09/">
+  <meta property="og:image" content="https://pknull.ai/images/2026-08-09_gate-1440.webp">
+  <meta property="og:image:width" content="1440">
+  <meta property="og:image:height" content="1084">
+  
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Legacy · PKNULL.AI">
+  <meta name="twitter:description" content="This record is the journal of Content9999. He is a Chronicler Mediator from the region of Borca. He is currently residing at a Cluster in the city of Justitian, otherwise known as &#34;The Righteous…">
+  <meta name="twitter:image" content="https://pknull.ai/images/2026-08-09_gate-1440.webp">
+
+  <link rel="canonical" href="https://pknull.ai/post/2026-08-09/">
+  <link rel="alternate" type="application/atom+xml" title="Legacy · PKNULL.AI" href="/feed.xml">
+
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/google/source-serif-4-400-normal-latin.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/google/ibm-plex-sans-400-normal-latin.woff2" crossorigin>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css" integrity="sha384-fRuya36Gb/YRGgzq/ichTstZs3FgqUTsL6+s+RTc8uT0oRO5zHMymXMJ+cS2dh3s" crossorigin="anonymous" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="/css/_fonts.css?v=54661be7ee4d">
+  <link rel="stylesheet" href="/css/shell.css?v=54661be7ee4d">
+  <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+  <link id="hljs-theme" rel="stylesheet" href="/css/hljs-light.css?v=54661be7ee4d" disabled>
+  <script defer src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js" integrity="sha384-F/bZzf7p3Joyp5psL90p/p89AZJsndkSoGwRpXcZhleCWhd8SnRuoYo4d0yirjJp" crossorigin="anonymous"></script>
+  <noscript><style>.now-strip,.consent-banner,#giscus-container{display:none!important}</style></noscript>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Legacy","datePublished":"2026-08-09","dateModified":"2026-08-09","author":{"@type":"Person","name":"Louis Grenzebach","url":"https://pknull.ai/"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://pknull.ai/post/2026-08-09/"},"url":"https://pknull.ai/post/2026-08-09/","wordCount":3836,"description":"This record is the journal of Content9999. He is a Chronicler Mediator from the region of Borca. He is currently residing at a Cluster in the city of Justitian, otherwise known as \"The Righteous…","image":"https://pknull.ai/images/2026-08-09_gate-1440.webp"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://pknull.ai/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://pknull.ai/blog/"},{"@type":"ListItem","position":3,"name":"Legacy","item":"https://pknull.ai/post/2026-08-09/"}]}</script>
+</head>
+<body>
+
+<a href="#main" class="skip-link">Skip to main content</a>
+
+<div class="shell">
+  <div class="now-strip" role="region" aria-label="Currently">
+    <div class="now-strip-inner">
+      <span class="now-item">
+        <span class="live-dot" aria-hidden="true"></span>
+        <span class="now-key">NOW</span>
+        <span class="now-val" id="now-val-now">…</span>
+      </span>
+      <span class="now-item">
+        <span class="now-key">READING</span>
+        <span class="now-val" id="now-val-reading">…</span>
+      </span>
+      <span class="now-item">
+        <span class="now-key">GAMING</span>
+        <span class="now-val" id="now-val-gaming">…</span>
+      </span>
+      <span class="now-item">
+        <span class="now-key">BUILDING</span>
+        <span class="now-val" id="now-val-building">…</span>
+      </span>
+    </div>
+  </div>
+
+  <header class="nb-hd">
+    <a href="/" class="brand" aria-label="PKNULL home">
+      <span class="brand-glyph" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="32" height="32" shape-rendering="crispEdges">
+          <g fill="currentColor">
+            <rect x="5" y="0" width="1" height="1"/><rect x="6" y="0" width="1" height="1"/><rect x="7" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/><rect x="9" y="0" width="1" height="1"/><rect x="10" y="0" width="1" height="1"/><rect x="11" y="0" width="1" height="1"/><rect x="12" y="0" width="1" height="1"/>
+            <rect x="3" y="1" width="1" height="1"/><rect x="4" y="1" width="1" height="1"/><rect x="5" y="1" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="8" y="1" width="1" height="1"/><rect x="9" y="1" width="1" height="1"/><rect x="10" y="1" width="1" height="1"/><rect x="11" y="1" width="1" height="1"/>
+            <rect x="3" y="2" width="1" height="1"/><rect x="4" y="2" width="1" height="1"/><rect x="5" y="2" width="1" height="1"/><rect x="6" y="2" width="1" height="1"/><rect x="7" y="2" width="1" height="1"/><rect x="8" y="2" width="1" height="1"/><rect x="9" y="2" width="1" height="1"/><rect x="10" y="2" width="1" height="1"/><rect x="11" y="2" width="1" height="1"/><rect x="12" y="2" width="1" height="1"/>
+            <rect x="3" y="3" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="11" y="3" width="1" height="1"/><rect x="12" y="3" width="1" height="1"/>
+            <rect x="2" y="4" width="1" height="1"/><rect x="3" y="4" width="1" height="1"/><rect x="12" y="4" width="1" height="1"/><rect x="13" y="4" width="1" height="1"/>
+            <rect x="1" y="5" width="1" height="1"/><rect x="3" y="5" width="1" height="1"/><rect x="12" y="5" width="1" height="1"/><rect x="14" y="5" width="1" height="1"/>
+            <rect x="1" y="6" width="1" height="1"/><rect x="3" y="6" width="1" height="1"/><rect x="4" y="6" width="1" height="1"/><rect x="5" y="6" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/><rect x="7" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="9" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/><rect x="11" y="6" width="1" height="1"/><rect x="12" y="6" width="1" height="1"/><rect x="14" y="6" width="1" height="1"/>
+            <rect x="1" y="7" width="1" height="1"/><rect x="5" y="7" width="1" height="1"/><rect x="6" y="7" width="1" height="1"/><rect x="9" y="7" width="1" height="1"/><rect x="10" y="7" width="1" height="1"/><rect x="14" y="7" width="1" height="1"/>
+            <rect x="2" y="8" width="1" height="1"/><rect x="3" y="8" width="1" height="1"/><rect x="12" y="8" width="1" height="1"/><rect x="13" y="8" width="1" height="1"/>
+            <rect x="1" y="9" width="1" height="1"/><rect x="2" y="9" width="1" height="1"/><rect x="4" y="9" width="1" height="1"/><rect x="11" y="9" width="1" height="1"/><rect x="13" y="9" width="1" height="1"/><rect x="14" y="9" width="1" height="1"/>
+            <rect x="0" y="10" width="1" height="1"/><rect x="3" y="10" width="1" height="1"/><rect x="5" y="10" width="1" height="1"/><rect x="6" y="10" width="1" height="1"/><rect x="7" y="10" width="1" height="1"/><rect x="8" y="10" width="1" height="1"/><rect x="9" y="10" width="1" height="1"/><rect x="10" y="10" width="1" height="1"/><rect x="12" y="10" width="1" height="1"/><rect x="15" y="10" width="1" height="1"/>
+            <rect x="0" y="11" width="1" height="1"/><rect x="3" y="11" width="1" height="1"/><rect x="6" y="11" width="1" height="1"/><rect x="7" y="11" width="1" height="1"/><rect x="8" y="11" width="1" height="1"/><rect x="9" y="11" width="1" height="1"/><rect x="12" y="11" width="1" height="1"/><rect x="15" y="11" width="1" height="1"/>
+            <rect x="1" y="12" width="1" height="1"/><rect x="2" y="12" width="1" height="1"/><rect x="3" y="12" width="1" height="1"/><rect x="7" y="12" width="1" height="1"/><rect x="8" y="12" width="1" height="1"/><rect x="12" y="12" width="1" height="1"/><rect x="13" y="12" width="1" height="1"/><rect x="14" y="12" width="1" height="1"/>
+            <rect x="2" y="13" width="1" height="1"/><rect x="7" y="13" width="1" height="1"/><rect x="8" y="13" width="1" height="1"/><rect x="13" y="13" width="1" height="1"/>
+            <rect x="3" y="14" width="1" height="1"/><rect x="4" y="14" width="1" height="1"/><rect x="5" y="14" width="1" height="1"/><rect x="6" y="14" width="1" height="1"/><rect x="7" y="14" width="1" height="1"/><rect x="8" y="14" width="1" height="1"/><rect x="9" y="14" width="1" height="1"/><rect x="10" y="14" width="1" height="1"/><rect x="11" y="14" width="1" height="1"/><rect x="12" y="14" width="1" height="1"/>
+            <rect x="2" y="15" width="1" height="1"/><rect x="3" y="15" width="1" height="1"/><rect x="4" y="15" width="1" height="1"/><rect x="5" y="15" width="1" height="1"/><rect x="6" y="15" width="1" height="1"/><rect x="9" y="15" width="1" height="1"/><rect x="10" y="15" width="1" height="1"/><rect x="11" y="15" width="1" height="1"/><rect x="12" y="15" width="1" height="1"/><rect x="13" y="15" width="1" height="1"/>
+          </g>
+        </svg>
+      </span>
+      <span class="brand-name">PKNULL</span>
+      <span class="brand-domain">.ai</span>
+    </a>
+    <nav class="nb-nav" aria-label="Main">
+      <a href="/" data-route="home">Home</a>
+      <a href="/blog/" data-route="blog" class="on" aria-current="page">Blog</a>
+      <a href="/projects/" data-route="projects">Projects</a>
+      <a href="/resume/" data-route="resume">Résumé</a>
+    </nav>
+    <div class="nb-meta">
+      <a class="raw-md" href="index.md" rel="alternate" type="text/markdown" aria-label="View this page as Markdown">MACHINE</a>
+      <button id="mode-toggle" class="mode-toggle" type="button" aria-label="Cycle color mode">AUTO</button>
+    </div>
+  </header>
+
+  <main id="main" class="main main--post" tabindex="-1" data-page-kind="post">
+    <p class="back-link"><a href="/blog/">← All entries</a></p><article class="post"><header class="post-hd"><h1>Legacy</h1><div class="post-meta"><span class="mono">notebook entry</span><span class="mono dim">2026.08.09</span><span class="mono dim">20 min read</span></div></header><div class="post-body"><h3>About</h3>
+<p>This record is the journal of Content9999. He is a <a href="https://degenesis.com/world/cults/chroniclers">Chronicler</a> Mediator from the region of <a href="https://degenesis.com/world/cultures/borca">Borca</a>. He is currently residing at a Cluster in the city of <a href="https://degenesis.com/world/stories/borca/justitian">Justitian</a>, otherwise known as "The Righteous Fist". </p>
+<p><a href="https://degenesis.com/profile/charactergenerator/characters/auth0_7227_content9999">Character Sheet [Locked]</a></p>
+<h3>Bios</h3>
+<p>The machinations of the brain. Everything Content9999 did began and frequently ended there without any sign of being thrust into the world unwelcome. Content9999 would often be found daydreaming between his ever-consistent tasks of reviewing, categorizing, and cataloging the various pieces of equipment that were brought in. How they were acquired never concerned him. Each was a puzzle unto itself, waiting to tickle him in the back of his head. A new challenge to increase his Score.</p>
+<p>His daydreams would frequently drift to the topic of how he arrived here. How on that day gone past, he was staring at the fields as the wind blew across. Engrossed by the pulsing waves, Content9999 jumped when the Chronicler spoke to him. His parents were standing next to the Chronicler as he began a series of verbal tests. He would describe folding shapes, and then after a series of described manglings on the folded object, Content9999 would have to explain the unfolded pattern in the form back. The Chronicler then pulled out a toy of shifting pieces. Content9999 arranged them as requested quickly, repeatedly, and the Chronicler heaved crackling noises through his voicebox. He asked the parents if he could take the boy for additional testing. He couldn't recall his parent's response specifically; he could barely even remember their faces. The Chronicler took him by the hand and led him off to his new life at the Cluster. He remembered arriving first in the city. Justitian, he would later learn. A sprawl of buildings, then farmland again. He remembered the speakers every so often overhead playing bits of music. Announcements he didn't quite understand the meaning of. Eventually, he arrived at the Cluster. He was taken in, and he again was tested. His reward was the encoded barcode brand all his now brothers had. In the Cluster, forthwith his home, he was taught science, mathematics, and computing. Eventually, he was shown his first artifact, which he quickly deduced the function of and most of how it operated. Some of his brothers seemed impressed. His mental aptitude for understanding the variety of artifacts his caretakers brought to him only caused them to get him more. He became quick to deduce their purpose. Eventually, he could repair them to some degree of working order. Then he ultimately started to combine them. The word prodigy had been whispered at one point, despite his brothers generally refraining from such verbiage.</p>
+<p>All these years later, his tasks were relatively straightforward now. Examine the artifact, infer its purpose and catalog it away. His Score had been ever increasing and had finally crossed a necessary threshold.  He would be upgraded to the rank of Mediator and would begin to receive "important" tasks outside the Cluster. Maybe he would get to meet scrappers, drive the bargaining prices. Perhaps he could work as an emissary to new bygone troves. There was excitement in him, and he was eager to get to work in his new role. The armor he'd just been issued gave him a perhaps unwarranted sense of pride. Regardless he would be careful and precise as always, seeking the result that would be best for himself and the Chroniclers.</p>
+<h3>Entries</h3>
+<h4>Day0 - Embargo</h4>
+<blockquote>
+<p>IRL // S0 // 2021-08-14 2595 // XP 0+0===0 // PTs 20+0===20</p>
+<p>EGO 12/12 // Spore 0/10 // FW 0/10 // Trauma 0/4</p>
+<p>Party - Guy, Party, Neif, Walter</p>
+<p>EGO (-2) 10/12 (Taken)</p>
+</blockquote>
+<p>Having just sold an artifact to another chronicler, we were heading back to Justitian. On our path, we came across a sign labeled Tumbler. </p>
+<p>This town appeared as a few metal shacks of various sizes. There was an inn which comprised of a long metal building with silos. There was also a Chronicler Alcove, a watchtower, some Debris piles, and other smaller buildings.</p>
+<p>A large man with a wide-brimmed hat mans the watchtower. He came down the ladder and gave a winded introduction. He informed us he was the judge of this town. His name was Magnus. He is followed by a little girl he introduced as Merle and as his wife.</p>
+<p>The mother of Merle runs the inn. Her name is Mrs. Decroix, or you can also call her Mama.</p>
+<p>I go to the Alcove to check in with my Cluster. Here I meet Token, Chronicler of the Alcove. I note that Token seems skittish and has a project in hand. He has a [ zero score receiver, destreamed ]  that he is wrapping in duct tape.</p>
+<p>After a brief introduction and finding there is no way to reach out to my Cluster here, I decided to rejoin the group and go into the inn. The inn seems rustic and dirty. Individuals covered in soot with the bottom half of faces masked sit in the back corner. I take a seat and watch the Inn Keeper. She brings us five bowls to the table filled with meat and brown fluid and gives one to each member of my party. I decided to head back to the Alcove to eat with Token without my mask. </p>
+<p>I try to make small talk with Token about his duct tape project and eat my stew. He tells me there are chroniclers in the town known as Shutters. Token seems very tense, but I can't understand why. He doesn't reveal any more information outside of the Shutters being in town, so I take my bowl and head back to the inn.</p>
+<p>In the inn, a man is receiving shocks from one of the Shutters. The other Shutter is engaged with my party yelling about how it's "not our problem." We question his actions, at which point the man yells at us. He insists it's "not our problem." This Chronicler's behavior shakes me.</p>
+<blockquote>
+<p>EGO (-1) 9/12</p>
+</blockquote>
+<p><strong><em>Fight starts</em></strong></p>
+<p><em>Round 1</em></p>
+<ol>
+<li>Walter tackles the man after his terrifying scream and takes him to the ground.</li>
+<li>Shutter1 tries to escape Walter but fails.</li>
+<li>Guy yells at Shutter2, and his response was to grab Mama and use her as a shield.</li>
+<li>Party moved towards Shutter2 defensively.</li>
+<li>Unfortunately, Neif threw a ceramic bowl at Shutter2 but hit Mama in the face.</li>
+<li>I pick up the Shocker the Shutter dropped after Walter tackles him.</li>
+</ol>
+<blockquote>
+<p>I have gained a [ Shocker 15/16 ]</p>
+</blockquote>
+<p><em>Round 2</em></p>
+<ol>
+<li>Walter continues to choke out the Shutter1.</li>
+<li>Shutter1 tries to escape but fails.</li>
+<li>Party runs to Shutter2 by the bar and attempts to disarm.</li>
+<li>Neif runs to the bar to attack Shutter2.</li>
+<li>I yell for Walter to release Shutter1 as I apply shocker to the head, incapacitating him.</li>
+<li>Guy moves towards the bar to attack Shutter2 as well.</li>
+</ol>
+<p><em>Round 3</em></p>
+<ol>
+<li>Shutter2 rushes towards the door after slamming Mama to the ground. He attacks Party on his way and knocks her out with his shocker.</li>
+<li>Guy attacks him with his Splayer firmly.</li>
+<li>Neif also swings at and hits the Shutter.</li>
+<li>Walter is being run at from behind. He turns around and then swings at, and knocks Shutter2 out.</li>
+</ol>
+<p><strong><em>Fight ends</em></strong></p>
+<p>Walter begins looting; however, he only collects the shocker from Shutter2. I collect the barcodes from the Shutters. As I do, I note small triangle-shaped holes cut into their right earlobes. Guy tries to orient Mama, and she directs him to help Gaztek. Guy informs that he's going to be OK. I check the pile of drafts, and it appears to be approximately 2000 in total. It is an unusual amount of freshly printed drafts. Walter and Neif help Mama take Gaztek to his room. Guy picks up Party and takes her to a room at the inn.</p>
+<p>I decide to question Token some more about who these people are. He informs me that the drafts I have are counterfeit. And that he had already announced this to the Cluster. The drafts are the reason the Cluster sent those Shutters to this town. Token informs me that the drafts came from a "false alcove" located in the bygone warehouse area. Token asks if I'll deliver his duct tape project to the site as an artifact. I set out to ask the party for their opinion.</p>
+<p>I ask the party for confirmation, and they agree to help investigate the bygone warehouse. Guy and I head back to the Alcove to collect direction from Token on reaching the "false alcove."  He gives us a map and his duct tape artifact. Token will talk to Gaztek to find out what he sold for the 2000 false drafts. I encourage Guy to work with me to convince the party that we should leave immediately before the Cluster sends more agents. We head back to the inn to engage the party. The party agrees.</p>
+<p>We head to the bygone warehouses. When we arrive, we are practically in jungle-like terrain. It is decided Walter and I will stay back while the rest of the team goes in to negotiate a trade. Walter climbs to the top of the canopy to try and locate the main building. He finds a large building but, unfortunately, is unable to determine a path to it. Guy gives weapons to Party and Nief, and they begin walking away into the jungle.</p>
+<p>When they return, they inform us they were unable to find the main warehouse. We drill Walter about some of the details and realize that we may have passed the main building. Walter climbs up the trees again to get a better sense of our position against the building. He returns seemingly successfully and gives directions to Party. Guy suggests we follow the party closely in case there are any issues. We follow as they head to the building.</p>
+<p>Once we're there, Guy, Neif, and Party head into the warehouse. Walter and I wait outside.</p>
+<p>Several minutes later, there is an explosion, and the main entrance begins closing. We wait to see if our team makes it out. Once the gate closes, we realize they may be trapped, and we'll need to find another entrance into the building.</p>
+<blockquote>
+<p>XP || Gaztek lives +2</p>
+</blockquote>
+<h4>Day0.1 - Embargo</h4>
+<blockquote>
+<p>Online // S2 // 2021-08-29 2595 // XP 0+2===2 // PTs 20+0===20</p>
+<p>EGO 9/12 // Spore 0/10 // FW 0/10 // Trauma 0/4</p>
+</blockquote>
+<p>Skipped</p>
+<h4>Day0.2 - Embargo</h4>
+<blockquote>
+<p>IRL // S3 // 2021-09-11 2595 // XP 2+0===2 // PTs 20+0===20</p>
+<p>EGO 9/12 // Spore 0/10 // FW 0/10 // Trauma 0/4</p>
+</blockquote>
+<p>We begin by checking out the only visible door to the warehouse. After a close examination, we find we lack the tools or skills to force the door open. Walter and I decided to walk the perimeter to see if there was a way to the roof while inspecting the side of the building for other entrances. After discovering no other entries, we head for the top. I climb a tree to the roof and find Walter examining an antennae relay. We climbed down the antennae through the roof into the building, where the antennae penetrated the ceiling. The darkness inside is palpable, and I end up using my suit as a flashlight.</p>
+<p>After a length of time, we reach the base of the antennae. It appears bolted to a platform made of shipping containers. There is cabling from the antennae that extends into the darkness surrounding this building. It seems to be a series of welded shipping containers that form a larger container.</p>
+<p>We pick up two cables and tie them to the antennae for climbing down the side of the container. We try to secure a line between ourselves, but it slips, and I fall on my tailbone when I test it.</p>
+<blockquote>
+<p>FW 1/10 (fell during tie test)</p>
+</blockquote>
+<p>I try to tie Walter and myself together again and succeed. We climb down the containers to a platform a few container lengths down. There is a hole in the large container we just scaled down (the size of a missing container). There's also a bridge to a suspended container, and we can see the ground in the distance.</p>
+<p>We decide to turn off my suit and scan for ambient light. We notice a flickering coming from the container hole and a light out in the distance waving intermittently. We decide to check out the hole in the container structure.</p>
+<p>We wandered in, checked the nearest door to discover the occupants of this place locked it. Decide to head down the stairs. Come to a bridge and an entrance into the middle block of containers.  Begin walking down what seems to be a hall. After a short exploration, Walter and I decided this may take us deeper into the complex without achieving our soft goal of finding our team. We decide to backtrack and get back to the container bridges.</p>
+<p>We continue walking through a series of suspended containers and ramps till we reach the floor. We realize we've descended much further than the depth seen from the outside. I turn on my light, scan, and find two sets of footprints with the prints of an animal next to them. Also, we occasionally see signs suggesting the direction of our travel. We continuously travel in the opposite direction.</p>
+<p>Eventually, we hear Guy yelling out for Walter. Walter begins yelling back. Finally, we reconnected with the team. The meeting is short-lived, however, as we hear some growling coming from outside the container. We begin examining inside the container to get an assessment of the situation. We heard a slamming noise outside as a container crashed down from the darkness of the ceiling. It knocked up an immense cloud of dust, making the atmosphere fog-like as the dust hung in the air. Someone steps towards us from the fog and announces, "No one fucks with the Blacksmith. You're in my wilderness now".</p>
+<blockquote>
+<p><strong><em>Blacksmith</em></strong></p>
+<ul>
+<li>Scrapper</li>
+<li>Embargoed</li>
+<li>Undesirable</li>
+<li>Travels with an unknown apocolyptic</li>
+</ul>
+</blockquote>
+<p>After this announcement, he slips back into the dust fog. We did some additional exploration around the container to see if we could find anything of use; however, we can find nothing but a charred chronicler workbench. We notice the creatures circling the container, but due to Guy's lantern swinging too close to one of the creatures, we discover they are scared of the light. I again turn on my suit to scare the pack away or push them into a perimeter. We notice a door that we can assume is the door we interacted with from outside. However, we see the ramp to the door extends the length of the building and that to get to it, we'll need to travel back to the other end of the building. We decide we'll have to head back towards the other side of the building. We immediately face a fork. There's the path Walter and I came from and a different way that we hadn't traveled yet. We decided to take the route we hadn't traveled on since we hadn't noticed the door ramp from whence we came.</p>
+<p>We start this path only almost immediately to find a woman dressed in chronicler clothing. Upon closer inspection, however, she is not a Chronicler. She is clutching a blinking object to her chest. I try to approach and communicate with her, but she drops the item and triggers a trap causing an immense object to swing into the containers above us. This object causes a domino-type reaction in the containers sending them toppling into us and leaving us with little to do except run to avoid being crushed. We all managed to back out quickly, though some of our members were still hit by debris.</p>
+<blockquote>
+<p>FW 1/10 (Hit by falling debris, armor negated damage)</p>
+</blockquote>
+<p>I asked Party to fetch the item held by the chronicler from the wreckage of collapsed containers. She brings it back, and I examine it. It seems to be a remote, probably what had been used to trigger the container collapse. I put the remote into my pocket. We obviously will need to take the other path now. At the fork again, there's only one way forward. The direction every sign we've seen has told us.</p>
+<blockquote>
+<p>XP || None</p>
+</blockquote>
+<h4>Day0.3 - Embargo</h4>
+<blockquote>
+<p>IRL // S4 // 2021-09-26 2595 // XP 2+0===2 // PTs 20+0===20</p>
+<p>EGO 9/12 // Spore 0/10 // FW 1/10 // Trauma 0/4</p>
+</blockquote>
+<p>We begin walking the direction of the arrows. We eventually start coming across the signs again, and choose to just follow them. At this point I'm letting the fighters of the team walk ahead. Eventually we hit a ramp and begin heading up. As we walk across a container Walter suddenly falls through the roof to his mid section. I rush over to lay my staff across him so that he doesn't continue falling into the container. A gendo jumps onto the container. Party rushes over and tries to kick it off but misses. Nief tries to assist Walter in getting out of the hole. Guy walks over to the gendo.  As Walter is freed from the hole he rushes towards the gendo that Party was trying to kick. He swings his foot at it and connects. The gendo however seemed unphased. Another gendo leaps out of the hole that Walter was stuck in. It rushes Nief and takes a fairly significant bite. The dog near Walter also takes a bite at his leg. The dogs seem set on crippling us. Party raises her rifle and fires off a shot but it appears to miss. Guy tries to stare down the gendo but it seems to go nowhere and the gendo is now focused on him. I stand up and light up my suit and scream "ENOUGH" at the gendos. Walter unsheaths an arm blade and stabs the nearest gendo in the head. Party kicks the gendo in the face. I run up to the gendo everyone is attacking however the gendo leaps of the container and runs off. The party is a little worse for wear now. Guy begins wrapping himself with a bandage.</p>
+<p>We all head forward which at this point is back towards the ground. Guy begins patching everyones wounds.</p>
+<blockquote>
+<p>FW 0/10 (Guy heals me)</p>
+</blockquote>
+<p>We come to a series of ramps that lead up into hanging containers. Nief gets out a flashlight and scans around. We notice a stairway to the exit path. I begin walking the paths towards the staircase. </p>
+<p>Suddenly a loudpseaker system fires up and someone (presuming the Blacksmith) begins speaking - "You want your old den back? How about I send you your friend first?" The woman we saw earlier pushes a hanging payload down the delivery cable. I dodge, however Guy gets hit and falls from the platform he was on with the payload. We begin to hear gendo growling below. Walter jumps down to defend Guy. The growling gets louder. The gendos appear and they immediately dive after the payload and Walter. Walter tries to grapple the gendo but gets bit. Party jumps down into the mix. I yell "NO" into the metal corridor hoping to scare the animals away. One of the animals leave however Guy sets the other one on fire. Party checks the body. I yell out "I'm tired of the games, we're trying to leave. What do you want?" As we wait for a response the flaming dog dies and casts a light across the floow where Walter, Guy and Party are.</p>
+<p>The group on the ground come back up to us. We keep following the signs and are now facing the giant container building that Walter and I entered earlier. We eventually come to a door, with no handles. There's a gap underneath with many cables coming out and running down into darkness. Party begins to try to open the door. She's unsuccessful. Party and Walter try to check it together.  They fail, and then try again, repeatedly. Eventually however Walter eventually dislocates his shoulder. Guy helps him reset it. I try to use one of the cables as a makeshift rope for climbing. However it's tethered to something at the bottom of the pit. Walter beging severing all of the cables.</p>
+<p>We begin travelling through the containers. Eventually over time we arrive to a room with a giant printer. Attached to the printer are cables witha variety of symbols. After some consideration and study I determine this is a system for determining how the drafts are verified and someone is trying to replicate this.</p>
+<blockquote>
+<p>+1 Secrets - Studying the machine reveals parts of how drafts are legitimized.</p>
+</blockquote>
+<p>I grab some of the code drafts and and put them in my cloak. We continue leaving. We find another room filed with image screens. As we enter the screens begin lighting up. </p>
+<blockquote>
+<ul>
+<li>bald man - scrapper - embargo - trial subject 1, 3000 drafts</li>
+<li>Empty hallways of shipping containers</li>
+<li>Closed circuit camera</li>
+</ul>
+</blockquote>
+<p>I find a tiny quadraped robot (shaped like a frog) on the workbench. It begins jumping around until it jumps into my hand. I try to speak to it but it doesn't really respond. I invite it to ride along with us and it jumps into my cloak. Party insists on naming it and decides to call it Pakistan. </p>
+<p>We continue walking through the hallways, the image screens occasionally show a hallway with someone running through it. Walter after checking oneof the hatches we pass determines we're actually going down. Frustrated but we continue. At some point a man with a sledgehammer hits Walters foot. Walter and Guy pursue, but eventually lose the chase. The rest of the group catches up. Guy closes the hatch. We continue wandering the halls seemingly aimlessly. Whenever we come across an open hatch Guy tries to close it. The Blacksmith drops behind us and takes a swing at me, I dodge and counter attack with my shock stick but miss. He then begins running away again.</p>
+<blockquote>
+<p>Ego 6/12 (Spent 3 Ego to secure hit against Blacksmith)</p>
+</blockquote>
+<p>I scream for him to wait. But he continues running and drops into one of the hatches. We go back the way we were headed and continue the long straight journey. After going down repeatedly we eventually start to head back up.
+Occasionally we now hit turns in the path. The sound of fire is around us, but we're not aware of the source. Eventually though we find a hatch, and the fire noise is definitely louder here. Walter peeks in to the room. I decide to jump down into the room to investigate. It has lots of switches, an entrance, an exit, and a giant burning machine (a forge).</p>
+<h4>Day0.4 - Embargo</h4>
+<blockquote>
+<p>IRL // S4 // 2021-09-26 2595 // XP 2+0===2 // PTs 20+0===20</p>
+<p>EGO 6/12 // Spore 0/10 // FW 0/10 // Trauma 0/4</p>
+</blockquote>
+<p><picture><source type="image/webp" srcset="/images/2026-08-09_gate-480.webp 480w, /images/2026-08-09_gate-960.webp 960w, /images/2026-08-09_gate-1440.webp 1440w" sizes="(max-width: 720px) 100vw, 720px"><img src="/images/2026-08-09_gate-960.webp" alt="Nothing departing." width="960" height="723" loading="lazy" decoding="async"></picture></p>
+<p><em>Four sessions, one prodigy, and a frog named Pakistan.</em></p></div><nav class="post-nav"><a href="/post/2026-07-27/">← 2026.07.27</a><span></span></nav></article>
+  </main>
+
+  <section id="giscus-container" class="giscus-section" data-term="2026-08-09">
+    <h2>Comments</h2>
+    
+    <button id="giscus-load" class="button-primary giscus-load" type="button">Load comments</button>
+    
+    <div class="giscus"></div>
+  </section>
+
+  <div id="status" role="status" aria-live="polite" class="sr-only"></div>
+
+  <footer class="nb-ft">
+    <div class="ft-col">
+      <div class="ft-hd">Validate</div>
+      <div class="validation-badges">
+        <a href="https://validator.w3.org/nu/?doc=https%3A%2F%2Fpknull.ai%2Fpost%2F2026-08-09%2F"><img loading="lazy" src="/images/badge-html5.svg" alt="Valid HTML5" width="80" height="15"></a>
+        <a href="https://jigsaw.w3.org/css-validator/validator?uri=https%3A%2F%2Fpknull.ai%2Fcss%2Fshell.css&profile=css3svg"><img loading="lazy" src="/images/badge-css3.svg" alt="Valid CSS" width="80" height="15"></a>
+        <a href="https://www.w3.org/WAI/WCAG21/quickref/"><img loading="lazy" src="/images/badge-wcag.svg" alt="WCAG 2.1 AA" width="80" height="15"></a>
+      </div>
+    </div>
+    <div class="ft-col">
+      <div class="ft-hd">Sigils</div>
+      <div class="footer-icons">
+        <img loading="lazy" src="/images/pk-glyph.svg" alt="" width="32" height="32">
+        <img loading="lazy" src="/images/null.svg" alt="" width="32" height="32">
+        <a href="/maze/" aria-label="Enter the Dreadful Engine"><img loading="lazy" src="/images/aas-sigil.svg" alt="" width="32" height="32"></a>
+        <img loading="lazy" src="/images/pookimon.svg" alt="" width="32" height="32">
+      </div>
+    </div>
+    <div class="ft-col">
+      <div class="ft-hd">Contact</div>
+      <a href="mailto:louis.grenzebach@gmail.com">email</a>
+    </div>
+    <div class="ft-col ft-col-wide">
+      <div class="ft-hd">Colophon</div>
+      <p class="ft-colophon">Set in IBM Plex Sans, Source Serif 4, and JetBrains Mono Nerd Font. One theme, on purpose.</p>
+      <p class="ft-license">© 2026 pk · CC BY 4.0 · <span class="ft-formula" aria-hidden="true">{x[t] == (a t)/(2 E^(I t)) + (a E^(I t) t)/2}</span></p>
+    </div>
+  </footer>
+</div>
+
+<div id="consent-banner" class="consent-banner" role="dialog" aria-modal="true" aria-labelledby="consent-title" aria-describedby="consent-desc" hidden>
+  <p id="consent-title"><strong>Analytics</strong></p>
+  <p id="consent-desc">This site uses cookies for anonymous analytics.</p>
+  <div class="consent-buttons">
+    <button id="consent-accept" class="button-primary">Accept</button>
+    <button id="consent-decline">Decline</button>
+  </div>
+</div>
+
+<script defer src="/js/app.js?v=54661be7ee4d"></script>
+
+</body>
+</html>
