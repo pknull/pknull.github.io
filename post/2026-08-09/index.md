@@ -4,8 +4,11 @@ date: 2026-08-09
 img: "./images/2026-08-09_gate.jpg"
 img_alt: "Nothing departing."
 kind: "log entry"
+blurb: "This record is the journal of Content9999. He is a Chronicler Mediator from the region of Borca, residing at a Cluster in the city of Justitian."
 quote: "Four sessions, one prodigy, and a frog named Pakistan."
 ---
+
+*Run from the scenario "Embargo" in [Degenesis: Katharsys](https://degenesis.com/) (SIN, Book 02, p. 337), a starter adventure the book pitches at beginners. The plot is theirs. Content9999, and the frog, are ours.*
 
 ## About
 
