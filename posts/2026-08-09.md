@@ -3,6 +3,7 @@ title: "Legacy"
 date: 2026-08-09
 img: "./images/2026-08-09_gate.jpg"
 img_alt: "Nothing departing."
+kind: "log entry"
 quote: "Four sessions, one prodigy, and a frog named Pakistan."
 ---
 

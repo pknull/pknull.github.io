@@ -489,6 +489,7 @@ def load_posts():
             "gptzeroClass": gptzero_class,
             "date": date,
             "displayDate": to_display_date(date),
+            "kind": (str(meta.get("kind")).strip() or "notebook entry") if meta.get("kind") else "notebook entry",
             "blurb": meta.get("blurb") or compute_blurb(body),
             "img": img,
             "body_md": body,
@@ -1033,12 +1034,13 @@ def render_post_page(post, posts):
     return (
         '<p class="back-link"><a href="/blog/">← All entries</a></p>'
         '<article class="post">'
-        '<header class="post-hd"><h1>{title}</h1><div class="post-meta"><span class="mono">notebook entry</span>{date_span}<span class="mono dim">{minutes} min read</span>{gptzero_span}</div></header>'
+        '<header class="post-hd"><h1>{title}</h1><div class="post-meta"><span class="mono">{kind}</span>{date_span}<span class="mono dim">{minutes} min read</span>{gptzero_span}</div></header>'
         '<div class="post-body">{body}</div>'
         '{nav}'
         "</article>"
     ).format(
         title=html.escape(post.get("title") or post["displayDate"]),
+        kind=html.escape(post["kind"]),
         date_span=(
             f'<span class="mono dim">{html.escape(post["displayDate"])}</span>'
             if post.get("title")
@@ -1465,7 +1467,7 @@ def jsonld_article(post):
         "mainEntityOfPage": {"@type": "WebPage", "@id": post["canonical"]},
         "url": post["canonical"],
         "wordCount": post["word_count"],
-        "description": post["blurb"] or f'Notebook entry from {post["displayDate"]}.',
+        "description": post["blurb"] or f'{post["kind"][:1].upper()}{post["kind"][1:]} from {post["displayDate"]}.',
     }
     if post.get("img"):
         payload["image"] = absolute_url(largest_variant(post["img"]))
@@ -1609,7 +1611,7 @@ def main():
                 page_kind="post",
                 main_class="main main--post",
                 title=post.get("title") or post["displayDate"],
-                description=post["blurb"] or f'Notebook entry from {post["displayDate"]}.',
+                description=post["blurb"] or f'{post["kind"][:1].upper()}{post["kind"][1:]} from {post["displayDate"]}.',
                 canonical=post["canonical"],
                 og_image=post_og,
                 og_image_width=dims[0],
