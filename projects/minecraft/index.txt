@@ -1,6 +1,7 @@
 MC Datapacks
 https://pknull.ai/projects/minecraft/
-coding / inactive
+coding / active
+Languages: mcfunction, Python
 
 Two datapacks for Minecraft 1.21: quality-of-life crafting recipes, and a hunter-vs-hunted PvP minigame.
 

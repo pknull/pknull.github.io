@@ -34,6 +34,7 @@ class ReferenceParser(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.ids: list[str] = []
+        self.tags_by_id: dict[str, str] = {}
         self.references: list[tuple[str, str]] = []
         self.images: list[dict[str, str | None]] = []
 
@@ -41,6 +42,7 @@ class ReferenceParser(HTMLParser):
         values = dict(attrs)
         if values.get("id"):
             self.ids.append(values["id"] or "")
+            self.tags_by_id[values["id"] or ""] = tag
 
         attr = {"a": "href", "img": "src", "script": "src", "link": "href"}.get(tag)
         if attr and values.get(attr):
@@ -129,6 +131,28 @@ class GeneratedSiteTests(unittest.TestCase):
 
 
 class GeneratorEdgeCaseTests(unittest.TestCase):
+    def test_weather_location_is_explicit_and_metric(self) -> None:
+        parser = ReferenceParser()
+        parser.feed((ROOT / "index.html").read_text())
+        self.assertEqual("button", parser.tags_by_id.get("now-val-now"))
+
+        app = (ROOT / "js" / "app.js").read_text()
+        self.assertIn("navigator.geolocation.getCurrentPosition", app)
+        self.assertIn("temperature_unit=celsius", app)
+        self.assertNotIn("temperature_unit=fahrenheit", app)
+        self.assertIn("pk-weather-location-v1", app)
+
+    def test_projects_declare_and_render_principal_languages(self) -> None:
+        projects = BUILD.load_projects()
+        self.assertTrue(projects)
+        for project in projects:
+            with self.subTest(project=project["slug"]):
+                self.assertTrue(project["languages"])
+                rendered = BUILD.render_project_languages(project)
+                self.assertIn('class="proj-languages"', rendered)
+                for language in project["languages"]:
+                    self.assertIn(language, rendered)
+
     def test_security_expiry_handles_leap_day(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             target = Path(directory) / "security.txt"

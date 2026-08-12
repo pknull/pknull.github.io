@@ -2,6 +2,7 @@
 title: "termart"
 kind: coding
 state: active
+languages: [Rust]
 order: 5
 lede: "Generative art for the terminal. Bonsai trees, animated visualizations, ratatui in Rust."
 etymology:

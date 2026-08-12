@@ -2,6 +2,7 @@
 title: "botcore"
 kind: coding
 state: active
+languages: [Python]
 order: 4
 lede: "Python bot framework with Claude SDK integration. Discord sessions, command registry, conversation state across messages."
 etymology:

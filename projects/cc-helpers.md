@@ -2,6 +2,7 @@
 title: "CC-Helpers"
 kind: coding
 state: active
+languages: [GDScript, Rust]
 order: 6
 lede: "Two small tools for managing Claude Code sessions: a TUI session manager and a virtual-office visualizer."
 etymology:

@@ -1,6 +1,7 @@
 Thallus
 https://pknull.ai/projects/thallus/
 coding / active
+Languages: Rust, TypeScript
 
 Umbrella repo for local-first AI agent infrastructure: Egregore, Familiar, Servitor, Scry, and thallus-core coordinated by a shared architecture contract.
 

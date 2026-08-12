@@ -1,6 +1,7 @@
 PKNULL.AI
 https://pknull.ai/projects/pknull-ai/
 coding / active
+Languages: HTML, JavaScript, Python, CSS
 
 The site itself: a hand-built personal notebook and workshop index, generated as a static multipage site from Markdown, JSON, and a small Python build step.
 

@@ -445,15 +445,59 @@
     95: 'thunder', 96: 'thunder', 99: 'thunder'
   };
 
-  function fetchWeather(coords, tz) {
-    if (!coords || coords.length !== 2) return Promise.resolve(null);
-    var cacheKey = 'pk-weather-cache';
-    var ttl = 30 * 60 * 1000;
+  var WEATHER_CACHE_KEY = 'pk-weather-cache-v2';
+  var WEATHER_LOCATION_KEY = 'pk-weather-location-v1';
+  var WEATHER_CACHE_TTL = 30 * 60 * 1000;
+
+  function weatherLocationKey(coords) {
+    if (!coords || coords.length !== 2) return '';
+    return String(coords[0]) + ',' + String(coords[1]);
+  }
+
+  function validWeatherCoords(coords) {
+    return coords && coords.length === 2 &&
+      typeof coords[0] === 'number' && isFinite(coords[0]) &&
+      typeof coords[1] === 'number' && isFinite(coords[1]) &&
+      coords[0] >= -90 && coords[0] <= 90 &&
+      coords[1] >= -180 && coords[1] <= 180;
+  }
+
+  function roundWeatherCoords(latitude, longitude) {
+    var coords = [
+      Math.round(Number(latitude) * 100) / 100,
+      Math.round(Number(longitude) * 100) / 100
+    ];
+    return validWeatherCoords(coords) ? coords : null;
+  }
+
+  function readStoredWeatherLocation() {
     try {
-      var raw = localStorage.getItem(cacheKey);
+      var raw = localStorage.getItem(WEATHER_LOCATION_KEY);
+      if (!raw) return null;
+      var stored = JSON.parse(raw);
+      var coords = stored && [stored.lat, stored.lon];
+      return validWeatherCoords(coords) ? coords : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function storeWeatherLocation(coords) {
+    try {
+      localStorage.setItem(WEATHER_LOCATION_KEY, JSON.stringify({
+        lat: coords[0],
+        lon: coords[1]
+      }));
+    } catch (e) {}
+  }
+
+  function fetchWeather(coords, tz) {
+    if (!validWeatherCoords(coords)) return Promise.resolve(null);
+    try {
+      var raw = localStorage.getItem(WEATHER_CACHE_KEY);
       if (raw) {
         var cached = JSON.parse(raw);
-        var fresh = cached && (Date.now() - cached.t) < ttl;
+        var fresh = cached && (Date.now() - cached.t) < WEATHER_CACHE_TTL;
         var sameLoc = cached && cached.lat === coords[0] && cached.lon === coords[1];
         if (fresh && sameLoc) return Promise.resolve(cached.v);
       }
@@ -463,7 +507,7 @@
       '?latitude=' + encodeURIComponent(coords[0]) +
       '&longitude=' + encodeURIComponent(coords[1]) +
       '&current=temperature_2m,weather_code' +
-      '&temperature_unit=fahrenheit' +
+      '&temperature_unit=celsius' +
       (tz ? '&timezone=' + encodeURIComponent(tz) : '');
 
     return fetch(url, { cache: 'default' })
@@ -476,7 +520,7 @@
           label: WMO_LABELS[data.current.weather_code] || ''
         };
         try {
-          localStorage.setItem(cacheKey, JSON.stringify({
+          localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({
             t: Date.now(),
             lat: coords[0],
             lon: coords[1],
@@ -491,14 +535,12 @@
   }
 
   function readCachedWeather(coords) {
-    if (!coords || coords.length !== 2) return null;
-    var cacheKey = 'pk-weather-cache';
-    var ttl = 30 * 60 * 1000;
+    if (!validWeatherCoords(coords)) return null;
     try {
-      var raw = localStorage.getItem(cacheKey);
+      var raw = localStorage.getItem(WEATHER_CACHE_KEY);
       if (!raw) return null;
       var cached = JSON.parse(raw);
-      var fresh = cached && (Date.now() - cached.t) < ttl;
+      var fresh = cached && (Date.now() - cached.t) < WEATHER_CACHE_TTL;
       var sameLoc = cached && cached.lat === coords[0] && cached.lon === coords[1];
       return fresh && sameLoc ? cached.v : null;
     } catch (e) {
@@ -526,7 +568,97 @@
     });
   }
 
-  var nowWeatherRequested = false;
+  var nowWeatherContext = null;
+  var nowWeatherRequestedFor = {};
+
+  function paintNowWeather(context, weather) {
+    if (!context || !context.nowEl) return;
+    var bits = [];
+    if (context.loc) bits.push(context.loc);
+    if (weather && typeof weather.temp === 'number') {
+      bits.push(weather.temp + '°C' + (weather.label ? ' ' + weather.label : ''));
+    }
+    var str = bits.join(' · ');
+    if (context.nowEl.textContent !== str) context.nowEl.textContent = str;
+    context.nowEl.setAttribute(
+      'aria-label',
+      (str ? 'Current conditions: ' + str + '. ' : '') +
+      'Use your current location for weather.'
+    );
+    context.nowEl.title = 'Use your current location for weather';
+  }
+
+  function requestNowWeather(context, reportFailure, force) {
+    if (!context || !validWeatherCoords(context.coords)) return;
+    var key = context.key;
+    if (!force && nowWeatherRequestedFor[key]) return;
+    nowWeatherRequestedFor[key] = true;
+    fetchWeather(context.coords, context.tz).then(function(weather) {
+      var current = nowWeatherContext;
+      if (!current || current.key !== key) return;
+      paintNowWeather(current, weather);
+      if (!weather && reportFailure) {
+        showToast('Weather unavailable; keeping the local readout.', 'error');
+      }
+    });
+  }
+
+  function setNowLocationBusy(nowEl, busy) {
+    nowEl.disabled = busy;
+    nowEl.setAttribute('aria-busy', busy ? 'true' : 'false');
+    if (busy) {
+      nowEl.textContent = 'LOCATING…';
+      nowEl.setAttribute('aria-label', 'Finding your current location.');
+    }
+  }
+
+  function bindNowLocationControl(nowEl) {
+    if (!nowEl || nowEl.dataset.locationBound === 'true') return;
+    nowEl.dataset.locationBound = 'true';
+    nowEl.addEventListener('click', function() {
+      if (!navigator.geolocation) {
+        showToast('Location is unavailable in this browser; showing Eugene.', 'error');
+        return;
+      }
+
+      setNowLocationBusy(nowEl, true);
+      navigator.geolocation.getCurrentPosition(function(position) {
+        var coords = roundWeatherCoords(
+          position.coords.latitude,
+          position.coords.longitude
+        );
+        setNowLocationBusy(nowEl, false);
+        if (!coords) {
+          if (nowWeatherContext) {
+            paintNowWeather(nowWeatherContext, readCachedWeather(nowWeatherContext.coords));
+          }
+          showToast('Location returned invalid coordinates; keeping the existing readout.', 'error');
+          return;
+        }
+
+        storeWeatherLocation(coords);
+        nowWeatherContext = {
+          nowEl: nowEl,
+          coords: coords,
+          tz: 'auto',
+          loc: 'LOCAL',
+          key: weatherLocationKey(coords)
+        };
+        paintNowWeather(nowWeatherContext, readCachedWeather(coords));
+        requestNowWeather(nowWeatherContext, true, true);
+      }, function() {
+        setNowLocationBusy(nowEl, false);
+        var current = nowWeatherContext;
+        if (current) paintNowWeather(current, readCachedWeather(current.coords));
+        var retained = current && current.loc === 'LOCAL' ? 'the saved location' : 'Eugene';
+        showToast('Location unavailable; keeping ' + retained + '.', 'error');
+      }, {
+        enableHighAccuracy: false,
+        timeout: 8000,
+        maximumAge: 6 * 60 * 60 * 1000
+      });
+    });
+  }
 
   function renderNowStrip(meta, posts, reading, gaming, coding) {
     var nowEl = document.getElementById('now-val-now');
@@ -607,26 +739,29 @@
       }
 
       if (!nowEl) return;
-      var loc = now.location || '';
       var age = posts.length ? daysAgo(posts[0].date) : null;
-
-      function paint(weather) {
-        var bits = [];
-        if (loc) bits.push(loc);
-        if (weather && typeof weather.temp === 'number') {
-          bits.push(weather.temp + '°F' + (weather.label ? ' ' + weather.label : ''));
-        }
-        if (age) bits.push('last entry ' + age);
-        var str = bits.join(' · ');
-        if (nowEl.textContent !== str) nowEl.textContent = str;
+      var lastEntryEl = document.getElementById('hero-last-entry');
+      if (lastEntryEl) {
+        lastEntryEl.textContent = age ? ' · LAST ENTRY ' + age.toUpperCase() : '';
       }
+      var storedCoords = readStoredWeatherLocation();
+      var coords = storedCoords || now.coords;
+      nowWeatherContext = {
+        nowEl: nowEl,
+        coords: coords,
+        tz: storedCoords ? 'auto' : now.timezone,
+        loc: storedCoords ? 'LOCAL' : (now.location || ''),
+        key: weatherLocationKey(coords)
+      };
+      bindNowLocationControl(nowEl);
 
-      var cachedWeather = readCachedWeather(now.coords);
-      paint(cachedWeather);
-      if (!cachedWeather && now.coords && now.coords.length === 2 && !nowWeatherRequested) {
-        nowWeatherRequested = true;
+      var cachedWeather = readCachedWeather(coords);
+      paintNowWeather(nowWeatherContext, cachedWeather);
+      if (!cachedWeather && validWeatherCoords(coords) && !nowWeatherRequestedFor[nowWeatherContext.key]) {
+        var initialKey = nowWeatherContext.key;
         afterFirstInteraction(function() {
-          fetchWeather(now.coords, now.timezone).then(paint);
+          var current = nowWeatherContext;
+          if (current && current.key === initialKey) requestNowWeather(current, false, false);
         });
       }
     }

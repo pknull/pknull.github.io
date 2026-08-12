@@ -2,6 +2,7 @@
 title: "mplay"
 kind: coding
 state: archived
+languages: [Rust]
 order: 9
 lede: "TUI MPRIS music client. Rust + ratatui."
 etymology:

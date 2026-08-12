@@ -1,5 +1,5 @@
 # PKNULL.AI — Full Content Mirror
-> Single-file inlined-content mirror for agent crawlers. Generated 2026-08-10. Canonical HTML at https://pknull.ai/.
+> Single-file inlined-content mirror for agent crawlers. Generated 2026-08-12. Canonical HTML at https://pknull.ai/.
 > Per-page sources also available at /<path>/index.md (markdown) and /<path>/index.txt (plain text). See https://pknull.ai/llms.txt for the structured index.
 
 ## Site Overview
@@ -257,6 +257,7 @@ Tags: coding / active
 Asha
 https://pknull.ai/projects/asha/
 coding / active
+Languages: Python, Shell
 
 A multi-harness AI workflow system: persistent identity, session memory, and domain-specific plugins for Claude Code, OpenAI Codex, and GitHub Copilot CLI, installed via direct symlink mount.
 
@@ -407,6 +408,7 @@ Tags: coding / active
 Thallus
 https://pknull.ai/projects/thallus/
 coding / active
+Languages: Rust, TypeScript
 
 Umbrella repo for local-first AI agent infrastructure: Egregore, Familiar, Servitor, Scry, and thallus-core coordinated by a shared architecture contract.
 
@@ -535,6 +537,7 @@ Tags: writing / active
 The Hush
 https://pknull.ai/projects/hush/
 writing / active
+Languages: English
 
 A cosmic horror novel in long-form revision. Reality stays mundane; the protagonist's experience of it does not.
 
@@ -552,6 +555,7 @@ Tags: coding / active
 botcore
 https://pknull.ai/projects/botcore/
 coding / active
+Languages: Python
 
 Python bot framework with Claude SDK integration. Discord sessions, command registry, conversation state across messages.
 
@@ -569,6 +573,7 @@ Tags: coding / active
 termart
 https://pknull.ai/projects/termart/
 coding / active
+Languages: Rust
 
 Generative art for the terminal. Bonsai trees, animated visualizations, ratatui in Rust.
 
@@ -586,6 +591,7 @@ Tags: coding / active
 CC-Helpers
 https://pknull.ai/projects/cc-helpers/
 coding / active
+Languages: GDScript, Rust
 
 Two small tools for managing Claude Code sessions: a TUI session manager and a virtual-office visualizer.
 
@@ -603,6 +609,7 @@ Tags: coding / active
 PKNULL.AI
 https://pknull.ai/projects/pknull-ai/
 coding / active
+Languages: HTML, JavaScript, Python, CSS
 
 The site itself: a hand-built personal notebook and workshop index, generated as a static multipage site from Markdown, JSON, and a small Python build step.
 
@@ -660,6 +667,7 @@ Tags: coding / inactive
 RPG Tools
 https://pknull.ai/projects/rpg-tools/
 coding / inactive
+Languages: Python
 
 Three small Python libraries for tabletop RPG bots: dice expressions, weighted random selection, card draws.
 
@@ -676,11 +684,12 @@ The three together cover most of the random-generation needs of a small RPG bot.
 ### MC Datapacks
 
 URL: https://pknull.ai/projects/minecraft/
-Tags: coding / inactive
+Tags: coding / active
 
 MC Datapacks
 https://pknull.ai/projects/minecraft/
-coding / inactive
+coding / active
+Languages: mcfunction, Python
 
 Two datapacks for Minecraft 1.21: quality-of-life crafting recipes, and a hunter-vs-hunted PvP minigame.
 
@@ -700,6 +709,7 @@ Tags: coding / archived
 mplay
 https://pknull.ai/projects/mplay/
 coding / archived
+Languages: Rust
 
 TUI MPRIS music client. Rust + ratatui.
 

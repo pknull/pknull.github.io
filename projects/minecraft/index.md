@@ -1,7 +1,8 @@
 ---
 title: "MC Datapacks"
 kind: coding
-state: inactive
+state: active
+languages: [mcfunction, Python]
 order: 8
 lede: "Two datapacks for Minecraft 1.21: quality-of-life crafting recipes, and a hunter-vs-hunted PvP minigame."
 etymology:

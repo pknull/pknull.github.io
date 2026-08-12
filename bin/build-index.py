@@ -520,11 +520,20 @@ def load_projects():
         if not meta.get("title"):
             print(f"  ! skipping {path.name}: frontmatter missing required `title`", file=sys.stderr)
             continue
+        languages_raw = meta.get("languages") or []
+        if isinstance(languages_raw, str):
+            languages = [languages_raw.strip()] if languages_raw.strip() else []
+        elif isinstance(languages_raw, list):
+            languages = [str(language).strip() for language in languages_raw if str(language).strip()]
+        else:
+            print(f"  ! {path.name}: ignoring non-list `languages` frontmatter", file=sys.stderr)
+            languages = []
         project = {
             "slug": slug,
             "title": meta["title"],
             "kind": meta.get("kind", "coding"),
             "state": meta.get("state", "active"),
+            "languages": languages,
             "lede": meta.get("lede", ""),
             "links": meta.get("links") or [],
             "etymology": meta.get("etymology"),
@@ -568,6 +577,7 @@ def build_projects_json(projects):
                 "title": project["title"],
                 "kind": project["kind"],
                 "state": project["state"],
+                "languages": project["languages"],
                 "lede": project["lede"],
                 "links": project["links"],
                 "body": project["body"],
@@ -806,6 +816,7 @@ def render_home_project_card(project):
         '<h3 class="proj-card-name"><span class="proj-dot" aria-hidden="true"></span>{title}</h3>'
         "</div>"
         '<div class="proj-card-state">{kind_label} · {state_label}</div>'
+        "{languages}"
         "{lede}"
         "{etym}"
         "</a></li>"
@@ -816,6 +827,7 @@ def render_home_project_card(project):
         title=html.escape(project["title"]),
         kind_label=html.escape(kind),
         state_label=html.escape(state),
+        languages=render_project_languages(project),
         lede=f'<p class="proj-card-lede">{html.escape(project["lede"])}</p>' if project.get("lede") else "",
         etym=etym_html,
     )
@@ -918,6 +930,18 @@ def pills_for(project):
     )
 
 
+def render_project_languages(project):
+    languages = project.get("languages") or []
+    if not languages:
+        return ""
+    label = "Principal languages: " + ", ".join(languages)
+    items = "".join(
+        f'<span class="proj-language">{html.escape(language)}</span>'
+        for language in languages
+    )
+    return f'<div class="proj-languages" aria-label="{html.escape(label, quote=True)}">{items}</div>'
+
+
 def render_home_page(posts, projects, meta):
     featured = posts[:3]
     rest = posts[3:8]
@@ -926,21 +950,23 @@ def render_home_page(posts, projects, meta):
     return (
         '<section class="hero" aria-labelledby="hero-title">'
         '<div class="hero-body">'
-        '<div class="hero-kicker">EST.2025  /  AUTH.LOUIS.G</div>'
+        '<div class="hero-kicker"><span class="hero-node">[ NODE.00101 ]</span><span class="hero-last-entry" id="hero-last-entry"></span> / EST.2025 / AUTH.LOUIS.G</div>'
         '<h1 class="hero-title" id="hero-title">Engineer, worldbuilder, late-night <em>nightcap</em> blogger. Writing things down before I forget them.</h1>'
         '<p class="hero-lede">Three decades in software, mostly systems and security. Currently in Eugene, building <a href="/projects/asha/">Asha</a> and a cosmic horror novel called <a href="/projects/hush/">The Hush</a>. Updated whenever the day quiets down.</p>'
         '<div class="hero-actions"><a href="/blog/" class="btn-pri">Read the journal →</a><a href="/projects/" class="btn-sec">See the workshop</a></div>'
         '</div>{standing}</section>'
         '<div class="home-split">'
+        '<div class="home-primary">'
         '<section class="col-recent" aria-labelledby="recent-h2">'
         '<div class="col-hd col-hd--major" data-idx="01"><h2 id="recent-h2"><em>Recent entries</em></h2><a href="/blog/">view all {post_count} →</a></div>'
         '{featured}{recent}'
         "</section>"
+        "{about}"
+        "</div>"
         '<section class="col-shop" aria-labelledby="shop-h2">'
-        '<div class="col-hd col-hd--major" data-idx="02"><h2 id="shop-h2"><em>In the workshop</em></h2><a href="/projects/">all projects →</a></div>'
+        '<div class="col-hd col-hd--major" data-idx="02"><h2 id="shop-h2"><em>Workshop</em></h2><a href="/projects/">all →</a></div>'
         "{projects_html}"
         "</section>"
-        "{about}"
         "</div>"
         "{links}"
     ).format(
@@ -1084,10 +1110,11 @@ def render_projects_page(projects):
             else:
                 links_html = f'<div class="proj-card-meta"><a href="{html.escape(project["path"], quote=True)}">Read →</a></div>'
             rendered.append(
-                '<article class="proj-card"><header class="proj-card-hd"><a class="proj-card-name-link" href="{href}"><h2 class="proj-card-name">{title}</h2></a>{pills}</header>{lede}{etym}{links}</article>'.format(
+                '<article class="proj-card"><header class="proj-card-hd"><a class="proj-card-name-link" href="{href}"><h2 class="proj-card-name">{title}</h2></a>{pills}</header>{languages}{lede}{etym}{links}</article>'.format(
                     href=html.escape(project["path"], quote=True),
                     title=html.escape(project["title"]),
                     pills=pills_for(project),
+                    languages=render_project_languages(project),
                     lede=f'<p class="proj-card-lede">{html.escape(project["lede"])}</p>' if project.get("lede") else "",
                     etym=(
                         '<p class="proj-etym"><span class="caps mono">etym.</span> {word}{gloss}</p>'.format(
@@ -1121,9 +1148,10 @@ def render_project_detail_page(project):
         ) + "</div>"
 
     header_html = (
-        '<header class="proj-card-hd"><div class="proj-card-name-static"><h1 class="proj-card-name">{title}</h1></div>{pills}</header>{lede}{etym}{links}'.format(
+        '<header class="proj-card-hd"><div class="proj-card-name-static"><h1 class="proj-card-name">{title}</h1></div>{pills}</header>{languages}{lede}{etym}{links}'.format(
             title=html.escape(project["title"]),
             pills=pills_for(project),
+            languages=render_project_languages(project),
             lede=f'<p class="proj-card-lede">{html.escape(project["lede"])}</p>' if project.get("lede") else "",
             etym=(
                 '<p class="proj-etym"><span class="caps mono">etym.</span> {word}{gloss}</p>'.format(
@@ -1229,6 +1257,8 @@ def project_to_plaintext(project) -> str:
     bits = " / ".join(t for t in (project.get("kind"), project.get("state")) if t)
     if bits:
         header.append(bits)
+    if project.get("languages"):
+        header.append("Languages: " + ", ".join(project["languages"]))
     if project.get("lede"):
         header.append("")
         header.append(project["lede"])
@@ -1485,6 +1515,8 @@ def jsonld_project(project):
     }
     if project.get("lede"):
         payload["description"] = project["lede"]
+    if project.get("languages"):
+        payload["keywords"] = project["languages"]
     return payload
 
 
