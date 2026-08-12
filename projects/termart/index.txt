@@ -1,6 +1,7 @@
 termart
 https://pknull.ai/projects/termart/
 coding / active
+Languages: Rust
 
 Generative art for the terminal. Bonsai trees, animated visualizations, ratatui in Rust.
 

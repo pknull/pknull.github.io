@@ -2,6 +2,7 @@
 title: "RPG Tools"
 kind: coding
 state: inactive
+languages: [Python]
 order: 7
 lede: "Three small Python libraries for tabletop RPG bots: dice expressions, weighted random selection, card draws."
 etymology:

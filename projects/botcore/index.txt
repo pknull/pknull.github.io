@@ -1,6 +1,7 @@
 botcore
 https://pknull.ai/projects/botcore/
 coding / active
+Languages: Python
 
 Python bot framework with Claude SDK integration. Discord sessions, command registry, conversation state across messages.
 

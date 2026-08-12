@@ -1,6 +1,7 @@
 mplay
 https://pknull.ai/projects/mplay/
 coding / archived
+Languages: Rust
 
 TUI MPRIS music client. Rust + ratatui.
 

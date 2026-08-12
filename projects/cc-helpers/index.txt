@@ -1,6 +1,7 @@
 CC-Helpers
 https://pknull.ai/projects/cc-helpers/
 coding / active
+Languages: GDScript, Rust
 
 Two small tools for managing Claude Code sessions: a TUI session manager and a virtual-office visualizer.
 
