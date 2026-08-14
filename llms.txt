@@ -26,7 +26,7 @@ The tone is personal but technical. It mixes notebook-style writing, software pr
 
 ## Notable Projects
 
-- Asha: A multi-harness AI workflow system: persistent identity, session memory, and domain-specific plugins for Claude Code, OpenAI Codex, and GitHub Copilot CLI, installed via direct symlink mount.
+- Asha: A multi-harness AI workflow system: persistent identity, compact explicit memory, and domain-specific plugins for Claude Code, OpenAI Codex, GitHub Copilot CLI, and OpenCode.
 - Thallus: Umbrella repo for local-first AI agent infrastructure: Egregore, Familiar, Servitor, Scry, and thallus-core coordinated by a shared architecture contract.
 - The Hush: A cosmic horror novel in long-form revision. Reality stays mundane; the protagonist's experience of it does not.
 - PKNULL.AI: The site itself: a hand-built personal notebook and workshop index, generated as a static multipage site from Markdown, JSON, and a small Python build step.
@@ -94,7 +94,7 @@ Machine-readable lists of all published content:
 
 ### Projects
 
-- [Asha](https://pknull.ai/projects/asha/index.md) - coding / active - A multi-harness AI workflow system: persistent identity, session memory, and domain-specific plugins for Claude Code, OpenAI Codex, and GitHub Copilot CLI, installed via direct symlink mount.
+- [Asha](https://pknull.ai/projects/asha/index.md) - coding / active - A multi-harness AI workflow system: persistent identity, compact explicit memory, and domain-specific plugins for Claude Code, OpenAI Codex, GitHub Copilot CLI, and OpenCode.
 - [Thallus](https://pknull.ai/projects/thallus/index.md) - coding / active - Umbrella repo for local-first AI agent infrastructure: Egregore, Familiar, Servitor, Scry, and thallus-core coordinated by a shared architecture contract.
 - [The Hush](https://pknull.ai/projects/hush/index.md) - writing / active - A cosmic horror novel in long-form revision. Reality stays mundane; the protagonist's experience of it does not.
 - [botcore](https://pknull.ai/projects/botcore/index.md) - coding / active - Python bot framework with Claude SDK integration. Discord sessions, command registry, conversation state across messages.

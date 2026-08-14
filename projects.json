@@ -8,7 +8,7 @@
       "Python",
       "Shell"
     ],
-    "lede": "A multi-harness AI workflow system: persistent identity, session memory, and domain-specific plugins for Claude Code, OpenAI Codex, and GitHub Copilot CLI, installed via direct symlink mount.",
+    "lede": "A multi-harness AI workflow system: persistent identity, compact explicit memory, and domain-specific plugins for Claude Code, OpenAI Codex, GitHub Copilot CLI, and OpenCode.",
     "links": [
       {
         "label": "github",

@@ -5,7 +5,7 @@ state: active
 languages: [Python, Shell]
 featured: true
 order: 1
-lede: "A multi-harness AI workflow system: persistent identity, session memory, and domain-specific plugins for Claude Code, OpenAI Codex, and GitHub Copilot CLI, installed via direct symlink mount."
+lede: "A multi-harness AI workflow system: persistent identity, compact explicit memory, and domain-specific plugins for Claude Code, OpenAI Codex, GitHub Copilot CLI, and OpenCode."
 etymology:
   word: "Asha"
   gloss: "Sanskrit — truth, reality, hope"
@@ -18,29 +18,29 @@ links:
 
 Asha started as a persona and memory layer: a handful of files that gave Claude persistent identity, voice constraints, and session continuity. Soul files, voice files, keeper context, a Memory scaffold. It worked, and then it kept collecting the workflows I actually wanted around it.
 
-The current repo is no longer just a persona wrapper. It is a plugin suite plus installer layer: shared identity content, session persistence, domain plugins, wrappers, hooks, and a harness-aware install model that targets Claude Code, OpenAI Codex, and GitHub Copilot CLI. All of it now lives at [pknull/asha](https://github.com/pknull/asha).
+The current repo is no longer just a persona wrapper. It is a plugin suite plus installer layer: shared identity content, explicit session persistence, domain plugins, wrappers, hooks, and a harness-aware install model that targets Claude Code, OpenAI Codex, GitHub Copilot CLI, and OpenCode. All of it lives at [pknull/asha](https://github.com/pknull/asha).
 
 ---
 
 ## Current Shape
 
-At the top level, the repo is organized around a flat symlink-mount installer:
+The source corpus is shared, but each harness gets the primitive it actually supports rather than a Claude-shaped approximation:
 
 | Layer | What it owns |
 |------|---------------|
-| `identity/` | Shared persona source of truth |
-| `harnesses/` | Install/uninstall logic for Claude, Codex, and Copilot |
-| `bin/` | Launch wrappers: `asha-claude`, `asha-codex`, `asha-copilot` |
-| `plugins/` | Domain plugins: `asha`, `session`, `code`, `panel`, `write`, `image`, `schedule`, and support domains |
-| `namespaces.json` | Plugin-to-namespace mapping used during install |
+| `identity/` | Shared persona and operational-instruction source |
+| `harnesses/` | Capability contract plus native installers for all four CLIs |
+| `bin/` | The `asha` dispatcher, launch wrappers, doctor, and drift checks |
+| `plugins/` | Session, code, panel, writing, RP, image, admin, security, and support workflows |
+| `docs/` | Harness enforcement, memory architecture, and design records |
 
-Instead of the older marketplace-style registration chain, installation is now direct file placement through symlinks into the harness scan directories. For Claude that means primitives land under `~/.claude/*`; for Codex under `~/.codex/*`; for Copilot under `~/.copilot/*`. The repo treats skills, commands, agents, and hooks as harness-agnostic content with thin per-harness install logic on top.
+Claude keeps native slash commands and Markdown agents. Codex gets command workflows as skills and agents as TOML. Copilot gets skills and `.agent.md` files. OpenCode gets native command and agent Markdown plus a generated integration plugin. One body of intent, four actual seams. It is more work than pretending they are interchangeable, albeit considerably less haunted.
 
 ---
 
 ## Core Layers
 
-Asha still has the two core layers it began with, but they now sit inside a larger toolchain:
+Asha still has the two layers it began with, but the memory side is much smaller now.
 
 **Identity Layer** (`~/.asha/` and generated instructions):
 
@@ -49,68 +49,75 @@ Asha still has the two core layers it began with, but they now sit inside a larg
 | `soul.md` | Identity, values, nature |
 | `voice.md` | Tone, phrase constraints, expression patterns |
 | `keeper.md` | User calibration and preferences |
-| generated instructions | Merged identity prompt content for the active harness |
+| generated instructions | Merged identity, operation rules, and active learnings for the selected harness |
 
-**Session Layer** (`Memory/` plus session tooling):
+**Session Layer** (`Memory/` plus bounded private recovery):
 
 | File / Tool | Purpose |
 |-------------|---------|
-| `activeContext.md` | Current session state |
-| `projectbrief.md` | Project foundation and goals |
-| `techEnvironment.md` | Runtime and tool assumptions |
-| session tools | Event capture, pattern analysis, learnings management, save synthesis |
+| `Memory/activeContext.md` | Current Objective, State, Next, and Blockers; capped at 4 KiB |
+| `Memory/decisions.md` | Current binding decisions, not a decision log |
+| `Work/session-state/` | Ignored per-session recovery hints; capped at 2 KiB and retained for seven days |
+| `~/.asha/learnings/` | Candidate, active, and retired cross-project operating rules |
+| `/session:save` | The only semantic publisher; validates the pair, then commits and pushes unless told otherwise |
 
-The persona side is no longer Claude-only. The current installer and wrappers support Claude Code, Codex, and Copilot, with identity injection handled differently per harness. Claude uses `--append-system-prompt-file` at launch; Codex uses `-c model_instructions_file=`; Copilot has no equivalent flag in v1.0.x, so its wrapper writes a merged identity file to `~/.cache/asha/instructions-copilot.md` for the user to symlink into a project's `.github/copilot-instructions.md` when persona is wanted there. The asymmetry is documented and re-tested when Copilot ships v1.1+.
+There is no Asha transcript archive in that list. The harness may keep its own transcript, but Asha no longer parses, normalizes, copies, or summarizes it. Git already owns project history, so Memory only has to describe what is true now and what should happen next.
+
+The persona side is also harness-native. Claude uses `--append-system-prompt-file`; Codex uses `model_instructions_file`; Copilot uses `COPILOT_CUSTOM_INSTRUCTIONS_DIRS`; OpenCode uses `OPENCODE_CONFIG_CONTENT.instructions`. The wrappers assemble the same identity and operational layer for each one.
 
 ### Session Flow
 
-1. **Launch** -- start through the harness wrapper or the installed primitives
-2. **Identity** -- load merged persona instructions plus user identity files
-3. **Context** -- hydrate project memory and operational state
-4. **Work** -- hooks and commands capture events while the agent session runs
-5. **Save** -- session tooling synthesizes learnings and updates memory artifacts
-6. **Reuse** -- the next session picks up from structured state rather than a blank slate
+1. **Initialize once** -- create the two Memory files, a stable project identity, and narrow ignores for recovery state.
+2. **Orient** -- SessionStart reads the last explicit publication coherently and injects it as verify-first background state. Active global learnings load; candidate and retired records do not.
+3. **Work** -- prompt and tool callbacks replace one small private recovery snapshot containing touched paths, the last mechanical action, and a blocker hint. No semantic inference happens here.
+4. **Save deliberately** -- `/session:save` authors and validates the compact pair under a lock with rollback journaling. It commits and pushes by default; `--no-push` or `--scope none` narrow that behavior.
+5. **Start again** -- the next session gets the current handoff, not an accumulated account of everything that happened. If a session died, the recovery hint is surfaced as unpublished and verify-first.
+
+Claude wires that cycle through native commands and lifecycle hooks. Codex renders the commands as skills and uses TOML hooks where its hook surface exists; it has no supported SessionEnd event, so the next start performs the sweep. Copilot uses generated skills plus `asha-recovery.json`, including `additionalContext` at SessionStart. OpenCode uses native generated commands and `plugins/asha.js`; its `dispose` callback seals recovery but never saves Memory. Different machinery, same authority boundary.
+
+Workspaces such as Thallus and `life` keep a separate publication at the workspace root. A root session receives that workspace handoff once. A session launched from a declared child gets both the child's project handoff and the workspace handoff, because repository state and cross-repository coordination are different things rather than copies of the same memory.
+
+Cross-project learnings have their own small lifecycle. New rules begin as candidates. Three distinct sessions across two projects can activate one, and only active records enter startup instructions. Contradicted rules return to candidate; retired rules stay on disk rather than disappearing.
 
 ---
 
 ## Plugin Domains
 
-The repo's center of gravity now lives in its plugin domains:
+The repo's center of gravity lives in its plugin domains:
 
 | Domain | What it does now |
 |--------|-------------------|
 | `asha` | Identity bootstrap and persona layer |
-| `session` | Memory, synthesis, loop control, persistence |
-| `code` | Code review, orchestration, TDD, language specialists |
-| `panel-system` | Multi-perspective research and decision panels |
-| `write` | Fiction workflows, prose analysis, revision tooling |
+| `session` | Memory v2, bounded recovery, learning lifecycle, loop control, and workspace management |
+| `code` | Code review, orchestration, TDD, and the guarded issue loop |
+| `panel-system` | Multi-perspective analysis and decision panels |
+| `write` | Fiction workflows, prose analysis, revision, and continuity |
+| `rp` | Interactive roleplay with continuity gates and canon ratification |
 | `image` | Image prompting and ComfyUI-oriented workflows |
-| `schedule` | Scheduled task execution |
-| support domains | security, devops, prompt, output styles, test fixtures |
+| `admin` | Todoist, search, calculation, wiki, and mail integrations |
+| `security` | Application security review guidance |
 
-The plugin set is broad, but the through-line is the same: give the model a durable identity, a durable working memory, and specialized workflow surfaces without requiring a marketplace runtime to mediate installation.
+The through-line remains the same: durable identity, enough continuity to resume cleanly, and specialized workflow surfaces without requiring a marketplace runtime to mediate installation.
 
 ---
 
 ## What It Is Now
 
-Asha is not just a chatbot persona and not just a memory framework anymore. In the current codebase it is a harness-aware operating layer for agent work: identity, session continuity, pluginized workflows, install tooling, wrappers, and drift-checking around the whole setup.
+Asha is not just a chatbot persona and not just a memory framework anymore. It is a harness-aware operating layer for agent work: identity, compact session continuity, pluginized workflows, install tooling, wrappers, policy adapters, and drift-checking around the whole setup.
 
-Each session still starts fresh. The difference is that the repo now provides more of the surrounding machinery: where the instructions come from, how they are installed, how they are kept in sync, and how specialized workflows get mounted into the harness.
+Each session still starts fresh. The machinery is there to make that useful rather than pretend otherwise: establish which instructions apply, read a small verified handoff, do the work, and publish only the state worth carrying across the threshold.
 
 ---
 
-## Recent: capture pipeline consolidation (May 2026)
+## Recent: Memory v2 (August 2026)
 
-The session layer used to capture events by intercepting every tool call through lifecycle hooks. The hook would parse a stdin JSON payload, normalize it, and append to `Memory/events/events.jsonl`. At save time, the synthesizer read that file. It worked on Claude. It did not work on Copilot, where the hook fires but the documented payload is never piped to scripts -- stdin sits as an unwritten socket.
+The previous session system kept accumulating ways to remember. It captured or parsed host transcripts, synthesized event streams, maintained operational catalogues, injected retrieval nudges, and auto-saved on lifecycle events. Each part had a reason to exist. Together they had begun to resemble a second harness living inside the first one.
 
-The fix was architectural rather than per-harness. Each supported CLI already writes a session transcript natively: Claude under `~/.claude/projects/<slug>/<sid>.jsonl`, Codex under `~/.codex/sessions/.../rollout-*.jsonl`, Copilot under `~/.copilot/session-state/<sid>/events.jsonl`. Those transcripts are strictly richer than what the hooks could surface -- parent links, tool result content, branch and cwd metadata, structured subagent and skill events.
+Memory v2 cuts across that architecture rather than compacting it again. The semantic surface is now two files: a four-section active handoff and a current-decision file. They change only through explicit `/session:save`. Hooks retain a separate 2 KiB recovery hint so a crash does not erase every mechanical clue, but that file is ignored, expires after seven days, and is never promoted to truth without verification. Clean exit only seals it.
 
-The new shape: capture moves out of hooks entirely. The save command parses the active session's native transcript on demand through a small reader at `plugins/session/tools/jsonl_reader.py`. The reader produces the same event dict shape the synthesizer already consumed, so the downstream synthesis pipeline did not need to change.
+The distinction is the useful part. Published Memory is deliberate meaning. Recovery is bounded residue. Git is history. Harness transcripts belong to the harness. Global operating rules pass through candidate, active, and retired states instead of being mixed into project notes. Once those jobs stopped sharing a container, quite a lot of machinery became unnecessary.
 
-This collapses three previously-separate concerns -- hooks-as-capture, hooks-as-intervention, and synthesis-input -- into a cleaner split: hooks are now intervention-only (block, modify, inject context, run linters), and capture is on-demand at save time. Behavioral hooks like Stop git-nag, secret-blockers, and post-edit linting are kept. The capture-writing hooks were retired.
-
-Side effects: Copilot is no longer a memory dead zone; the per-tool hooks across Claude and Codex no longer run on every action; the existing search index dropped a redundant trace table that had been a duplicate of the synthesis input.
+All four harnesses use the same validators and state managers, whilst mounting them differently at their real command and hook surfaces. The result is less automatic than the old system, deliberately. A lifecycle event is a poor editor.
 
 ---
 
