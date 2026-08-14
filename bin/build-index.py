@@ -64,6 +64,30 @@ DEFAULT_OG_IMAGE_HEIGHT = 1079
 AUTHOR_NAME = "Louis Grenzebach"
 AUTHOR_URL = "https://pknull.ai/"
 PICTURE_DEFAULT_SIZES = "(max-width: 720px) 100vw, 720px"
+HERO_DESCRIPTORS = (
+    "Engineer",
+    "Worldbuilder",
+    "Writer",
+    "Keeper",
+    "Coder",
+    "Game Master",
+    "Referee",
+    "Game Designer",
+    "Pilot",
+    "Martial Artist",
+    "Aquarist",
+    "Builder",
+    "Curator",
+    "Lorekeeper",
+    "Discordian",
+)
+EDGE_ROTATION_PHRASES = (
+    "holding it like water",
+    "freshest cut on the longest circle",
+    "not yet flag free",
+    "blackbirds I did wrong",
+    "an aged meat in the club",
+)
 
 POST_SLUG_PATTERN = re.compile(r"^(\d{4})-(\d{2})-(\d{2})$")
 FRONTMATTER_PATTERN = re.compile(r"\A---\s*\n(.*?)\n---\s*\n", re.DOTALL)
@@ -866,7 +890,7 @@ def render_about(meta):
         return ""
     return (
         '<aside class="home-about" aria-labelledby="about-h2">'
-        '<div class="col-hd col-hd--major" data-idx="03"><h2 id="about-h2"><em>About</em></h2></div>'
+        '<div class="col-hd col-hd--major col-hd--solo" data-idx="03"><h2 id="about-h2"><em>About</em></h2></div>'
         '<div class="about-body">'
         '{portrait}'
         '<div class="about-bio">{bio}</div>'
@@ -901,7 +925,7 @@ def render_link_groups(links):
         )
     return (
         '<section class="home-links" aria-labelledby="elsewhere-h2">'
-        '<div class="col-hd col-hd--major" data-idx="04"><h2 id="elsewhere-h2"><em>Elsewhere</em></h2></div>'
+        '<div class="col-hd col-hd--major col-hd--solo" data-idx="04"><h2 id="elsewhere-h2"><em>Elsewhere</em></h2></div>'
         '<div class="link-grid">{groups}</div>'
         "</section>"
     ).format(groups="".join(groups))
@@ -947,11 +971,12 @@ def render_home_page(posts, projects, meta):
     rest = posts[3:8]
     home_projects = projects[:4]
     standing = (meta.get("standing") or [])[:6]
+    hero_descriptors = html.escape(json.dumps(HERO_DESCRIPTORS), quote=True)
     return (
         '<section class="hero" aria-labelledby="hero-title">'
         '<div class="hero-body">'
         '<div class="hero-kicker"><span class="hero-node">[ NODE.00101 ]</span><span class="hero-last-entry" id="hero-last-entry"></span> / EST.2025 / AUTH.LOUIS.G</div>'
-        '<h1 class="hero-title" id="hero-title">Engineer, worldbuilder, late-night <em>nightcap</em> blogger. Writing things down before I forget them.</h1>'
+        '<h1 class="hero-title" id="hero-title" aria-label="Engineer, worldbuilder, and writer. Writing things down before we forget them."><span class="hero-descriptor" id="hero-descriptor" aria-hidden="true" data-descriptors="{hero_descriptors}">{hero_descriptor}</span>, writing things down before we forget them.</h1>'
         '<p class="hero-lede">Three decades in software, mostly systems and security. Currently in Eugene, building <a href="/projects/asha/">Asha</a> and a cosmic horror novel called <a href="/projects/hush/">The Hush</a>. Updated whenever the day quiets down.</p>'
         '<div class="hero-actions"><a href="/blog/" class="btn-pri">Read the journal →</a><a href="/projects/" class="btn-sec">See the workshop</a></div>'
         '</div>{standing}</section>'
@@ -971,6 +996,8 @@ def render_home_page(posts, projects, meta):
         "{links}"
     ).format(
         standing=render_standing(standing),
+        hero_descriptors=hero_descriptors,
+        hero_descriptor=html.escape(HERO_DESCRIPTORS[0]),
         post_count=len(posts),
         featured=render_featured_posts(featured),
         recent=render_recent_post_list(rest),
@@ -1354,6 +1381,8 @@ def page_context(
     giscus_term="",
     json_ld="",
     markdown_url="/llms.txt",
+    edge_label="",
+    edge_labels="",
 ):
     full_title = f"{title} · {SITE_NAME}" if title else SITE_NAME
     return {
@@ -1374,6 +1403,8 @@ def page_context(
         "validator_url": validator_url_for(canonical),
         "json_ld": json_ld,
         "markdown_url": markdown_url,
+        "edge_label": edge_label,
+        "edge_labels": edge_labels,
     }
 
 
@@ -1606,6 +1637,10 @@ def main():
             description="Engineer, worldbuilder, late-night blogger. Personal writing, projects, and workshop notes.",
             canonical=absolute_url(home_path()),
             markdown_url="/llms.txt",
+            edge_label="PK / 00101 / EUG / " + EDGE_ROTATION_PHRASES[0].upper(),
+            edge_labels=json.dumps(
+                ["PK / 00101 / EUG / " + phrase.upper() for phrase in EDGE_ROTATION_PHRASES]
+            ),
             json_ld=render_jsonld(jsonld_website(), jsonld_blog_home(posts)),
         ),
     )

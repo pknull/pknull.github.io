@@ -131,6 +131,25 @@ class GeneratedSiteTests(unittest.TestCase):
 
 
 class GeneratorEdgeCaseTests(unittest.TestCase):
+    def test_home_hero_renders_rotating_descriptors(self) -> None:
+        rendered = BUILD.render_home_page([], [], {})
+        self.assertIn('id="hero-descriptor"', rendered)
+        self.assertIn('data-descriptors=', rendered)
+        for descriptor in BUILD.HERO_DESCRIPTORS:
+            self.assertIn(descriptor, rendered)
+        self.assertIn("writing things down before we forget them.", rendered)
+
+    def test_home_edge_label_contains_rotating_phrases(self) -> None:
+        rendered = (ROOT / "index.html").read_text()
+        self.assertIn('data-edge-label="PK / 00101 / EUG / HOLDING IT LIKE WATER"', rendered)
+        self.assertIn("data-edge-labels=", rendered)
+        for phrase in BUILD.EDGE_ROTATION_PHRASES:
+            self.assertIn(phrase.upper(), rendered)
+
+    def test_home_headers_without_actions_use_two_column_grid(self) -> None:
+        rendered = BUILD.render_home_page([], [], {"bio": ["Bio"], "links": {"Web": []}})
+        self.assertEqual(2, rendered.count("col-hd--major col-hd--solo"))
+
     def test_weather_location_is_explicit_and_metric(self) -> None:
         parser = ReferenceParser()
         parser.feed((ROOT / "index.html").read_text())

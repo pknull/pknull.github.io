@@ -799,6 +799,128 @@
     });
   }
 
+  function readRotationItems(element, attribute) {
+    if (!element) return [];
+    try {
+      var items = JSON.parse(element.getAttribute(attribute) || '[]');
+      return Array.isArray(items) ? items.filter(function(item) {
+        return typeof item === 'string' && item;
+      }) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  var SCRAMBLE_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  var SCRAMBLE_TRIES = 8;
+
+  function randomScrambleCharacter(model) {
+    if (!/[A-Za-z]/.test(model || '')) return model || '';
+    var character = SCRAMBLE_ALPHABET[Math.floor(Math.random() * SCRAMBLE_ALPHABET.length)];
+    return model === model.toLowerCase() ? character.toLowerCase() : character;
+  }
+
+  function scrambleValue(previousText, nextText, render, onComplete) {
+    var length = Math.max(previousText.length, nextText.length);
+    var sharedLength = 0;
+    var frame = 0;
+    while (sharedLength < previousText.length && sharedLength < nextText.length &&
+           previousText[sharedLength] === nextText[sharedLength]) {
+      sharedLength += 1;
+    }
+
+    function renderFrame() {
+      var output = '';
+      var settled = true;
+
+      for (var index = 0; index < length; index += 1) {
+        var nextCharacter = nextText[index] || '';
+        var previousCharacter = previousText[index] || '';
+        var attempts = frame - (index - sharedLength);
+
+        if (index < sharedLength) {
+          output += nextCharacter;
+          continue;
+        }
+
+        if (!nextCharacter) {
+          if (attempts < 0) {
+            output += previousCharacter;
+            settled = false;
+          } else if (attempts < SCRAMBLE_TRIES) {
+            output += randomScrambleCharacter(previousCharacter);
+            settled = false;
+          }
+          continue;
+        }
+
+        if (attempts >= SCRAMBLE_TRIES) {
+          output += nextCharacter;
+        } else if (attempts < 0) {
+          output += previousCharacter;
+          settled = false;
+        } else {
+          output += randomScrambleCharacter(nextCharacter);
+          settled = false;
+        }
+      }
+
+      render(output);
+      if (settled) {
+        if (onComplete) onComplete();
+        return;
+      }
+      frame += 1;
+      window.setTimeout(renderFrame, 45);
+    }
+
+    renderFrame();
+  }
+
+  function initHeroRotations() {
+    var descriptorEl = document.getElementById('hero-descriptor');
+    var mainEl = document.getElementById('main');
+    var descriptors = readRotationItems(descriptorEl, 'data-descriptors');
+    var edgeLabels = readRotationItems(mainEl, 'data-edge-labels');
+    if (descriptors.length < 2 && edgeLabels.length < 2) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var descriptorIndex = 0;
+    var edgeIndex = 0;
+    var changing = false;
+    window.setInterval(function() {
+      if (document.hidden || changing) return;
+      changing = true;
+      var descriptorWillChange = descriptors.length > 1 && descriptorEl;
+      var edgeWillChange = edgeLabels.length > 1 && mainEl;
+      var pendingChanges = (descriptorWillChange ? 1 : 0) + (edgeWillChange ? 1 : 0);
+      function finishChange() {
+        pendingChanges -= 1;
+        if (pendingChanges === 0) changing = false;
+      }
+
+      if (descriptorWillChange) {
+        descriptorIndex = (descriptorIndex + 1) % descriptors.length;
+        scrambleValue(
+          descriptorEl.textContent,
+          descriptors[descriptorIndex],
+          function(value) { descriptorEl.textContent = value; },
+          finishChange
+        );
+      }
+      if (edgeWillChange) {
+        edgeIndex = (edgeIndex + 1) % edgeLabels.length;
+        scrambleValue(
+          mainEl.getAttribute('data-edge-label') || '',
+          edgeLabels[edgeIndex],
+          function(value) { mainEl.setAttribute('data-edge-label', value); },
+          finishChange
+        );
+      }
+      if (pendingChanges === 0) changing = false;
+    }, 5000);
+  }
+
   seedNowStrip();
 
   document.addEventListener('DOMContentLoaded', function() {
@@ -810,6 +932,7 @@
     if (window.hljs) hljs.highlightAll();
     addCodeCopyButtons(mainEl || document);
     initNowStrip();
+    initHeroRotations();
 
     if (giscusContainer && giscusLoadBtn) {
       giscusLoadBtn.addEventListener('click', function() {

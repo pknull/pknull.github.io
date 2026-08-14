@@ -441,13 +441,8 @@ tbody tr:hover{ background: var(--stripe); }
   color: var(--ink);
   text-wrap: balance;
 }
-.hero-title em{
-  font-family: var(--f-mono);
-  font-style: normal;
-  font-weight: 500;
-  color: var(--accent);
-  font-size: .82em;
-  padding: 0 .15em;
+.hero-title .hero-descriptor{
+  white-space: nowrap;
 }
 .hero-lede{
   font-family: var(--f-serif);
@@ -1398,6 +1393,9 @@ pre.expanded .code-toolbar{ right: var(--s-5); }
   margin-bottom: var(--s-5);
   border-bottom: 0;
 }
+.col-hd--major.col-hd--solo{
+  grid-template-columns: auto minmax(0, 1fr);
+}
 .col-hd--major::before{
   content: "[ " attr(data-idx) " ]";
   font-family: var(--f-mono);
@@ -1479,14 +1477,12 @@ pre.expanded .code-toolbar{ right: var(--s-5); }
   color: var(--accent);
 }
 
-/* ── Hero coordinate readout + nightcap brackets (item 4) ───── */
+/* ── Hero coordinate readout + rotating labels ────────────── */
 .hero-kicker::before{
   content: none;
 }
 .hero-node{ color: var(--accent); }
 .hero-last-entry{ color: var(--ink-3); }
-.hero-title em::before{ content: "["; opacity: .7; }
-.hero-title em::after{  content: "]"; opacity: .7; }
 
 /* ── Night ledger homepage experiment ─────────────────────────
    The palette was already specific. The conventional portfolio hierarchy
@@ -1498,9 +1494,9 @@ pre.expanded .code-toolbar{ right: var(--s-5); }
   isolation: isolate;
 }
 .main[data-page-kind="home"]::before{
-  content: "PK / 00101 / EUG";
+  content: attr(data-edge-label);
   position: fixed;
-  top: 50%;
+  bottom: calc(50% - 150px);
   left: max(12px, calc((100vw - var(--wide)) / 2 - var(--folio-gutter)));
   color: var(--ink-3);
   font-family: var(--f-mono);
@@ -1508,7 +1504,7 @@ pre.expanded .code-toolbar{ right: var(--s-5); }
   letter-spacing: .16em;
   line-height: 1;
   writing-mode: vertical-rl;
-  transform: translateY(-50%) rotate(180deg);
+  transform: rotate(180deg);
   opacity: .72;
 }
 
@@ -1562,13 +1558,11 @@ pre.expanded .code-toolbar{ right: var(--s-5); }
 }
 .main[data-page-kind="home"] .hero-title{
   max-width: 21ch;
+  min-height: 3.06em;
   font-size: clamp(2.65rem, 4vw, 3.5rem);
   line-height: 1.02;
   letter-spacing: -.035em;
   margin-bottom: var(--s-5);
-}
-.main[data-page-kind="home"] .hero-title em{
-  white-space: nowrap;
 }
 .main[data-page-kind="home"] .hero-lede{
   max-width: 52ch;
@@ -1793,6 +1787,7 @@ pre.expanded .code-toolbar{ right: var(--s-5); }
   }
   .main[data-page-kind="home"] .hero-title{
     max-width: none;
+    min-height: 4.12em;
     font-size: clamp(2.15rem, 9.4vw, 2.65rem);
     line-height: 1.03;
   }

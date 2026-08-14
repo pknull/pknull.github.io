@@ -177,7 +177,7 @@
     </div>
   </header>
 
-  <main id="main" class="{{ main_class }}" tabindex="-1" data-page-kind="{{ page_kind }}">
+  <main id="main" class="{{ main_class }}" tabindex="-1" data-page-kind="{{ page_kind }}"{% if edge_label %} data-edge-label="{{ edge_label }}" data-edge-labels="{{ edge_labels }}"{% endif %}>
     {{ main_html | safe }}
   </main>
 
