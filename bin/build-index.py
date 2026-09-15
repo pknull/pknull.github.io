@@ -71,7 +71,6 @@ HERO_DESCRIPTORS = (
     "Keeper",
     "Coder",
     "Game Master",
-    "Referee",
     "Game Designer",
     "Pilot",
     "Martial Artist",
@@ -85,7 +84,7 @@ EDGE_ROTATION_PHRASES = (
     "holding it like water",
     "freshest cut on the longest circle",
     "not yet flag free",
-    "blackbirds I did wrong",
+    "ravens I betrayed",
     "an aged meat in the club",
 )
 
