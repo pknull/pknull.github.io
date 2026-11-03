@@ -19,3 +19,6 @@ drafts/
 /.asha/control-task.json
 /.asha/result.json
 /.asha/outbox/
+
+# Claude Code local settings and hook trace (per machine)
+.claude/
